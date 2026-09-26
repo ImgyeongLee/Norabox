@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+/* Norabox palette */
+@theme {
+  --color-pine: #132a13;
+  --color-fern: #31572c;
+  --color-leaf: #4f772d;
+  --color-moss: #90a955;
+  --color-lime: #ecf39e;
+  --color-danger: #f28b82;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgb(79 119 45 / 0.35), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgb(144 169 85 / 0.18), transparent 60%),
+    var(--color-pine);
+  background-attachment: fixed;
+  color: var(--color-lime);
+}
+
+::selection {
+  background: var(--color-moss);
+  color: var(--color-pine);
+}
+
+@utility card {
+  @apply rounded-2xl border border-leaf/40 bg-fern/35 backdrop-blur-sm;
+}
+@utility input {
+  @apply w-full rounded-xl border border-leaf/60 bg-pine/70 px-3.5 py-2.5 text-lime placeholder:text-lime/35
+    outline-none transition focus:border-moss focus:ring-2 focus:ring-moss/40 disabled:opacity-60;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
+    disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime/70;
+}
+@utility btn-primary {
+  @apply btn bg-moss text-pine hover:bg-lime;
+}
+@utility btn-secondary {
+  @apply btn border border-leaf bg-fern/60 text-lime hover:bg-leaf/70;
+}
+@utility btn-ghost {
+  @apply btn text-lime/80 hover:bg-fern/60 hover:text-lime;
+}
+@utility btn-danger {
+  @apply btn border border-danger/50 text-danger hover:bg-danger/10;
+}
+@utility icon-btn {
+  @apply inline-flex size-10 items-center justify-center rounded-full text-lime/85 transition hover:bg-fern hover:text-lime
+    disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime/70;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-medium text-lime/85;
+}
+@utility field-error {
+  @apply mt-1.5 text-sm text-danger;
+}
+@utility muted {
+  @apply text-lime/60;
+}
+
+/* Range inputs (volume / seek) */
+input[type="range"].slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--color-moss) 0%,
+    var(--color-moss) var(--fill, 0%),
+    rgb(236 243 158 / 0.18) var(--fill, 0%)
+  );
+  cursor: pointer;
+}
+input[type="range"].slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+input[type="range"].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--color-lime);
+  border: 2px solid var(--color-pine);
+}
+input[type="range"].slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--color-lime);
+  border: 2px solid var(--color-pine);
+}

@@ -1,0 +1,101 @@
+// Norabox data model (PostgreSQL on Neon).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  avatar       Bytes?
+  avatarMime   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  posts Post[]
+  rooms Room[]
+}
+
+model Room {
+  id            String   @id @default(cuid())
+  // Room name exactly as typed; it doubles as the invite code.
+  code          String
+  // Lowercased code, used for lookups so invite codes are case-insensitive.
+  slug          String   @unique
+  // Secret anonymous id of the browser that created the room.
+  ownerClientId String
+  ownerUserId   String?
+  owner         User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  masterVolume  Int      @default(100)
+  // "none" | "one" | "all"
+  loopMode      String   @default("none")
+  currentItemId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items PlaylistItem[]
+  djs   RoomDj[]
+}
+
+model PlaylistItem {
+  id          String   @id @default(cuid())
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  videoId     String
+  title       String
+  channel     String
+  thumbnail   String
+  durationSec Int?
+  position    Int
+  addedBy     String
+  createdAt   DateTime @default(now())
+
+  @@index([roomId, position])
+}
+
+// Members promoted to DJ. `identity` is "u:<userId>" for signed-in users,
+// or "c:<clientId>" for anonymous visitors.
+model RoomDj {
+  roomId   String
+  room     Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  identity String
+
+  @@id([roomId, identity])
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title       String
+  // Optional sub-heading describing the music.
+  description String?
+  body        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tracks PostTrack[]
+
+  @@index([createdAt])
+}
+
+model PostTrack {
+  id          String @id @default(cuid())
+  postId      String
+  post        Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  videoId     String
+  title       String
+  channel     String
+  thumbnail   String
+  durationSec Int?
+  position    Int
+
+  @@index([postId, position])
+}
