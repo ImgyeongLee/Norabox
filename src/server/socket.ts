@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { Server, type Socket } from "socket.io";
 import { prisma } from "@/lib/prisma";
 import { avatarUrlFor } from "@/lib/avatar";
+import { inactiveCutoff, purgeIfExpired } from "@/lib/rooms";
 import { verifySocketToken } from "@/lib/session";
 import { videoSchema } from "@/lib/validation";
 import type {
@@ -26,6 +27,10 @@ const MAX_ITEMS = 500;
 const EMPTY_ROOM_TTL_MS = 60_000;
 /** A member who disconnects (e.g. refreshes the page) keeps their seat this long. */
 const RECONNECT_GRACE_MS = 10_000;
+/** How often occupied rooms are marked active and expired rooms are deleted. */
+const SWEEP_INTERVAL_MS = 10 * 60_000;
+/** Minimum gap between lastActiveAt writes for one room. */
+const TOUCH_THROTTLE_MS = 60_000;
 
 type Member = {
   memberId: string;
@@ -43,6 +48,7 @@ class Room {
   playback: Playback;
   private endTimer: NodeJS.Timeout | null = null;
   unloadTimer: NodeJS.Timeout | null = null;
+  private lastTouch = 0;
 
   constructor(
     private io: IO,
@@ -86,7 +92,17 @@ class Room {
   }
 
   broadcast() {
+    this.touch();
     this.io.to(this.id).emit("room:state", this.snapshot());
+  }
+
+  /** Records activity so the room isn't deleted as inactive (throttled). */
+  touch() {
+    if (Date.now() - this.lastTouch < TOUCH_THROTTLE_MS) return;
+    this.lastTouch = Date.now();
+    prisma.room
+      .update({ where: { id: this.id }, data: { lastActiveAt: new Date() } })
+      .catch((e) => console.error("[room] failed to record activity", e));
   }
 
   current() {
@@ -196,6 +212,7 @@ async function loadRoom(io: IO, slug: string): Promise<Room | null> {
   let pending = loading.get(slug);
   if (!pending) {
     pending = (async () => {
+      await purgeIfExpired(slug);
       const row = await prisma.room.findUnique({
         where: { slug },
         include: { items: { orderBy: { position: "asc" } }, djs: true },
@@ -229,6 +246,25 @@ async function loadRoom(io: IO, slug: string): Promise<Room | null> {
   return pending;
 }
 
+/**
+ * Marks occupied rooms as active, then deletes rooms that have been inactive past
+ * the TTL. Rooms people are in are never deleted, however long they just listen.
+ */
+async function sweepRooms() {
+  try {
+    const occupied = [...rooms.values()].filter((r) => r.members.size > 0).map((r) => r.id);
+    if (occupied.length > 0) {
+      await prisma.room.updateMany({ where: { id: { in: occupied } }, data: { lastActiveAt: new Date() } });
+    }
+    const { count } = await prisma.room.deleteMany({
+      where: { lastActiveAt: { lt: inactiveCutoff() }, id: { notIn: occupied } },
+    });
+    if (count > 0) console.log(`[rooms] deleted ${count} inactive room(s)`);
+  } catch (e) {
+    console.error("[rooms] sweep failed", e);
+  }
+}
+
 const fail = (ack: Ack | undefined, error: string) => ack?.({ ok: false, error });
 const ok = (ack: Ack | undefined) => ack?.({ ok: true });
 
@@ -239,6 +275,9 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
     // Leave other upgrade requests (e.g. Next.js HMR) alone.
     destroyUpgrade: false,
   });
+
+  void sweepRooms();
+  setInterval(sweepRooms, SWEEP_INTERVAL_MS).unref();
 
   io.on("connection", (socket: ClientSocket) => {
     const ctx = () => {
@@ -321,6 +360,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         socket.data.identity = identity;
         if (room.unloadTimer) clearTimeout(room.unloadTimer);
         await socket.join(room.id);
+        room.touch();
 
         ack({ ok: true, memberId: member.memberId, snapshot: room.snapshot() });
         socket.to(room.id).emit("room:state", room.snapshot());

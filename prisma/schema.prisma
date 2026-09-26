@@ -37,11 +37,16 @@ model Room {
   // "none" | "one" | "all"
   loopMode      String   @default("none")
   currentItemId String?
+  // Refreshed while anyone is in the room or anything changes. Rooms idle for
+  // 6 hours are deleted (see src/lib/rooms.ts).
+  lastActiveAt  DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   items PlaylistItem[]
   djs   RoomDj[]
+
+  @@index([lastActiveAt])
 }
 
 model PlaylistItem {

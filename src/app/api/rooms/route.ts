@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { jsonError, readJson, validationError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
+import { purgeIfExpired } from '@/lib/rooms';
 import { roomCodeSchema } from '@/lib/validation';
 
 const createRoomSchema = z.object({
@@ -16,6 +17,8 @@ export async function POST(req: Request) {
     const { name, clientId } = parsed.data;
     const slug = name.toLowerCase();
 
+    // An expired room's name is free again.
+    await purgeIfExpired(slug);
     const existing = await prisma.room.findUnique({ where: { slug }, select: { id: true } });
     if (existing) {
         return jsonError('A room with this name already exists — pick another name or join it instead', 409, {

@@ -74,4 +74,5 @@ database Prisma can create a shadow copy of; with Neon, a dev branch works well)
 ## Notes
 
 - On iOS, a page can't change media volume (the hardware buttons control it), so the volume sliders have no effect there.
+- Rooms are deleted after 6 hours with nobody in them and no changes (playlist and DJs included); the name becomes free again. The realtime server sweeps every 10 minutes, and every room lookup also checks expiry, so it holds while a free-tier host is asleep. The TTL is `ROOM_INACTIVE_TTL_MS` in `src/lib/rooms.ts`.
 - Room state (who's connected, the live position) lives in memory. The playlist, loop mode, room volume and DJs are stored in the database.

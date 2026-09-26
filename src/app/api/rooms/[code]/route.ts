@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { jsonError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
+import { purgeIfExpired } from '@/lib/rooms';
 
 /** Room lookup: used to validate invite codes and to import a room's playlist into a post. */
 export async function GET(_req: Request, ctx: RouteContext<'/api/rooms/[code]'>) {
     const { code } = await ctx.params;
+    await purgeIfExpired(code.toLowerCase());
     const room = await prisma.room.findUnique({
         where: { slug: code.toLowerCase() },
         select: {
