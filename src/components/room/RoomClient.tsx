@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { Avatar } from '@/components/Avatar';
 import { CopyButton } from '@/components/CopyButton';
 import { VideoSearch } from '@/components/VideoSearch';
+import { LikedPanel } from '@/components/room/LikedPanel';
 import { MembersPanel, RoleBadge } from '@/components/room/MembersPanel';
 import { PlayerControls } from '@/components/room/PlayerControls';
 import { Playlist } from '@/components/room/Playlist';
@@ -21,8 +22,8 @@ type Props = { code: string; user: { username: string; avatarUrl: string | null 
 
 const VOLUME_KEY = 'norabox:volume';
 const MUTED_KEY = 'norabox:muted';
-type Tab = 'playlist' | 'search' | 'people';
-const TAB_IDS: Tab[] = ['playlist', 'search', 'people'];
+type Tab = 'playlist' | 'search' | 'liked' | 'people';
+const TAB_IDS: Tab[] = ['playlist', 'search', 'liked', 'people'];
 const tabKey = (code: string) => `norabox:tab:${code.toLowerCase()}`;
 
 function readStoredVolume() {
@@ -82,7 +83,7 @@ export function RoomClient({ code, user }: Props) {
     if (!room.snapshot) {
         return <p className="py-24 text-center text-lime/60">{t.room.joining(code)}</p>;
     }
-    return <RoomView code={code} room={room as RoomReady} />;
+    return <RoomView code={code} room={room as RoomReady} signedIn={!!user} />;
 }
 
 const noopSubscribe = () => () => {};
@@ -160,7 +161,7 @@ function StatusDot({ status }: { status: ConnectionStatus }) {
     );
 }
 
-function RoomView({ code, room }: { code: string; room: RoomReady }) {
+function RoomView({ code, room, signedIn }: { code: string; room: RoomReady; signedIn: boolean }) {
     const router = useRouter();
     const { t, tError } = useI18n();
     const { snapshot, memberId, status, positionOf, act, report } = room;
@@ -226,10 +227,21 @@ function RoomView({ code, room }: { code: string; room: RoomReady }) {
         return null;
     }
 
+    /** Adds songs from the Liked tab: one event for a single song, one batch for "Add all". */
+    async function addVideos(videos: Video[]) {
+        const res =
+            videos.length === 1
+                ? await run('playlist:add', { video: videos[0] })
+                : await run('playlist:addMany', { videos });
+        if (res.ok) setToast(videos.length === 1 ? t.room.added(videos[0].title) : t.likedTab.added(videos.length));
+        return res.ok;
+    }
+
     const inviteLink = () => `${window.location.origin}/room/${code}`;
     const TABS: { id: Tab; label: string }[] = [
         { id: 'playlist', label: t.room.tabs.playlist(snapshot.items.length) },
         { id: 'search', label: t.room.tabs.search },
+        { id: 'liked', label: t.room.tabs.liked },
         { id: 'people', label: t.room.tabs.people(snapshot.members.length) },
     ];
 
@@ -297,7 +309,7 @@ function RoomView({ code, room }: { code: string; room: RoomReady }) {
 
                 {/* Side panel */}
                 <div className="card flex min-h-[24rem] flex-col p-3 sm:p-4 lg:max-h-[calc(100vh-10rem)] lg:sticky lg:top-20">
-                    <div role="tablist" className="mb-3 grid grid-cols-3 gap-1 rounded-xl bg-pine/60 p-1">
+                    <div role="tablist" className="mb-3 grid grid-cols-4 gap-1 rounded-xl bg-pine/60 p-1">
                         {TABS.map((t) => (
                             <button
                                 key={t.id}
@@ -335,6 +347,14 @@ function RoomView({ code, room }: { code: string; room: RoomReady }) {
                                 addedIds={addedIds}
                                 disabled={!canControl}
                                 disabledReason={t.room.searchDenied}
+                            />
+                        )}
+                        {tab === 'liked' && (
+                            <LikedPanel
+                                canControl={canControl}
+                                signedIn={signedIn}
+                                addedIds={addedIds}
+                                onAdd={addVideos}
                             />
                         )}
                         {tab === 'people' && (

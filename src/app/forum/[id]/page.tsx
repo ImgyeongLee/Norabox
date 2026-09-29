@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { DeletePostButton } from '@/components/forum/DeletePostButton';
+import { PostActions } from '@/components/forum/PostActions';
 import { YouTubeEmbed } from '@/components/forum/YouTubeEmbed';
 import { Markdown } from '@/components/Markdown';
 import { avatarUrlFor } from '@/lib/avatar';
@@ -19,6 +20,7 @@ const getPost = cache((id: string) =>
             author: { select: { id: true, username: true, avatarMime: true, updatedAt: true } },
             scenario: { select: { id: true, name: true, writer: true } },
             tracks: { orderBy: { position: 'asc' } },
+            _count: { select: { likes: true } },
         },
     }),
 );
@@ -36,6 +38,9 @@ export default async function PostPage(props: PageProps<'/forum/[id]'>) {
     const [post, user, { t, locale }] = await Promise.all([getPost(id), getCurrentUser(), getI18n()]);
     if (!post) notFound();
     const isAuthor = user?.id === post.authorId;
+    const liked = user
+        ? !!(await prisma.postLike.findUnique({ where: { userId_postId: { userId: user.id, postId: post.id } } }))
+        : false;
     const edited = post.updatedAt.getTime() - post.createdAt.getTime() > 60_000;
 
     return (
@@ -74,6 +79,9 @@ export default async function PostPage(props: PageProps<'/forum/[id]'>) {
                             <DeletePostButton id={post.id} />
                         </div>
                     )}
+                </div>
+                <div className="mt-5">
+                    <PostActions postId={post.id} signedIn={!!user} liked={liked} likeCount={post._count.likes} />
                 </div>
             </header>
 

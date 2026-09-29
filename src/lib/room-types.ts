@@ -60,6 +60,7 @@ export interface ClientToServerEvents {
   "room:loop": (p: { mode: LoopMode }, ack?: Ack) => void;
   "room:masterVolume": (p: { volume: number }, ack?: Ack) => void;
   "playlist:add": (p: { video: Video }, ack?: Ack) => void;
+  "playlist:addMany": (p: { videos: Video[] }, ack?: Ack) => void;
   "playlist:remove": (p: { itemId: string }, ack?: Ack) => void;
   "playlist:reorder": (p: { orderedIds: string[] }, ack?: Ack) => void;
   "member:setRole": (p: { memberId: string; role: "dj" | "listener" }, ack?: Ack) => void;

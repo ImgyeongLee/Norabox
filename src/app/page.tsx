@@ -2,9 +2,34 @@ import Link from "next/link";
 import { CreateRoomForm, JoinRoomForm } from "@/components/home/RoomForms";
 import { getCurrentUser } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
+import { prisma } from "@/lib/prisma";
 
-export default async function Home() {
-  const [user, { t }] = await Promise.all([getCurrentUser(), getI18n()]);
+/** The forum post named by `?import=<postId>` (from a post's Import button), if it exists. */
+async function importingPlaylist(id: unknown) {
+  if (typeof id !== "string" || !/^[a-z0-9]{10,40}$/.test(id)) return null;
+  const post = await prisma.post.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      scenario: { select: { name: true } },
+      tracks: { orderBy: { position: "asc" }, take: 1, select: { thumbnail: true } },
+      _count: { select: { tracks: true } },
+    },
+  });
+  if (!post) return null;
+  return {
+    id: post.id,
+    title: post.title,
+    songCount: post._count.tracks,
+    thumbnail: post.tracks[0]?.thumbnail ?? null,
+    scenario: post.scenario?.name ?? null,
+  };
+}
+
+export default async function Home(props: PageProps<"/">) {
+  const { import: importId } = await props.searchParams;
+  const [user, { t }, importing] = await Promise.all([getCurrentUser(), getI18n(), importingPlaylist(importId)]);
   const link = "font-semibold text-moss underline-offset-4 hover:underline";
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:py-16">
@@ -34,10 +59,10 @@ export default async function Home() {
           )}
         </div>
 
-        <div className="card space-y-6 p-5 sm:p-7">
+        <div id="start-room" className={`card scroll-mt-24 space-y-6 p-5 sm:p-7 ${importing ? "border-moss/70" : ""}`}>
           <div>
             <h2 className="mb-4 text-xl font-bold">{t.home.startRoom}</h2>
-            <CreateRoomForm />
+            <CreateRoomForm importing={importing} />
           </div>
           <div className="flex items-center gap-3 text-xs uppercase tracking-wider text-lime/40">
             <span className="h-px flex-1 bg-leaf/40" /> {t.home.or} <span className="h-px flex-1 bg-leaf/40" />

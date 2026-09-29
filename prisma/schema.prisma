@@ -22,6 +22,7 @@ model User {
 
   posts Post[]
   rooms Room[]
+  likes PostLike[]
 }
 
 model Room {
@@ -105,9 +106,23 @@ model Post {
   updatedAt  DateTime @updatedAt
 
   tracks PostTrack[]
+  likes  PostLike[]
 
   @@index([createdAt])
   @@index([scenarioId])
+}
+
+// A signed-in user's like on a post; their liked posts form the "Liked playlists" list.
+model PostLike {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, postId])
+  @@index([postId])
+  @@index([userId, createdAt])
 }
 
 model PostTrack {

@@ -1,10 +1,7 @@
-/* eslint-disable @next/next/no-img-element -- YouTube thumbnails */
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Avatar } from '@/components/Avatar';
-import { avatarUrlFor } from '@/lib/avatar';
+import { PostCard, postCardSelect } from '@/components/forum/PostCard';
 import { getCurrentUser } from '@/lib/auth';
-import { formatDate } from '@/lib/format';
 import { getI18n } from '@/i18n/server';
 import type { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
@@ -27,7 +24,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
         ...(q ? { OR: [{ title: text }, { scenario: { name: text } }, { scenario: { writer: text } }] } : {}),
     };
 
-    const [{ t, locale }, user, scenario, posts, total] = await Promise.all([
+    const [{ t }, user, scenario, posts, total] = await Promise.all([
         getI18n(),
         getCurrentUser(),
         scenarioId ? prisma.scenario.findUnique({ where: { id: scenarioId }, select: { name: true, writer: true } }) : null,
@@ -36,15 +33,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
             orderBy: { createdAt: 'desc' },
             skip: (page - 1) * PAGE_SIZE,
             take: PAGE_SIZE,
-            select: {
-                id: true,
-                title: true,
-                scenario: { select: { id: true, name: true, writer: true } },
-                createdAt: true,
-                author: { select: { id: true, username: true, avatarMime: true, updatedAt: true } },
-                tracks: { orderBy: { position: 'asc' }, take: 1, select: { videoId: true } },
-                _count: { select: { tracks: true } },
-            },
+            select: postCardSelect,
         }),
         prisma.post.count({ where }),
     ]);
@@ -102,39 +91,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                 <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     {posts.map((p) => (
                         <li key={p.id}>
-                            <Link
-                                href={`/forum/${p.id}`}
-                                className="card group block h-full overflow-hidden transition hover:border-moss/70 hover:bg-fern/50">
-                                <div className="relative aspect-video bg-pine">
-                                    {p.tracks[0] && (
-                                        <img
-                                            src={`https://i.ytimg.com/vi/${p.tracks[0].videoId}/hqdefault.jpg`}
-                                            alt=""
-                                            className="size-full object-cover opacity-85 transition group-hover:opacity-100"
-                                        />
-                                    )}
-                                    <span className="absolute bottom-2 right-2 rounded-full bg-pine/85 px-2.5 py-1 text-xs font-semibold">
-                                        {t.common.songs(p._count.tracks)}
-                                    </span>
-                                </div>
-                                <div className="p-4">
-                                    <h2 className="line-clamp-2 text-lg font-semibold leading-snug">{p.title}</h2>
-                                    {p.scenario && (
-                                        <p className="mt-1 line-clamp-2 text-sm">
-                                            <span className="font-medium text-moss">{p.scenario.name}</span>
-                                            {p.scenario.writer && (
-                                                <span className="text-lime/55"> · {p.scenario.writer}</span>
-                                            )}
-                                        </p>
-                                    )}
-                                    <div className="mt-4 flex items-center gap-2 text-xs text-lime/55">
-                                        <Avatar name={p.author.username} src={avatarUrlFor(p.author)} size="xs" />
-                                        <span className="truncate">{p.author.username}</span>
-                                        <span>·</span>
-                                        <time dateTime={p.createdAt.toISOString()}>{formatDate(p.createdAt, locale)}</time>
-                                    </div>
-                                </div>
-                            </Link>
+                            <PostCard post={p} />
                         </li>
                     ))}
                 </ul>

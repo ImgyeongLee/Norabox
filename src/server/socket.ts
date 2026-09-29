@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { avatarUrlFor } from "@/lib/avatar";
 import { inactiveCutoff, purgeIfExpired } from "@/lib/rooms";
 import { verifySocketToken } from "@/lib/session";
-import { MAX_ROOM_ITEMS } from "@/lib/limits";
+import { z } from "zod";
+import { MAX_POST_TRACKS, MAX_ROOM_ITEMS } from "@/lib/limits";
 import { videoSchema } from "@/lib/validation";
 import type { ErrorCode } from "@/i18n/messages/en";
 import type {
@@ -443,32 +444,39 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
     });
 
     // ---- Playlist (Admin / DJ) ----
-    socket.on("playlist:add", async (p, ack) => {
+    /** Appends songs to the playlist (one DB write, one broadcast); starts playback if nothing is selected. */
+    async function addSongs(videos: unknown[], ack: Ack | undefined) {
       const c = ctx();
       if (!c) return fail(ack, "notInRoom");
       if (c.role === "listener") return fail(ack, "controlOnly");
-      const parsed = videoSchema.safeParse(p?.video);
+      const parsed = z.array(videoSchema).min(1).max(MAX_POST_TRACKS).safeParse(videos);
       if (!parsed.success) return fail(ack, "invalidSong");
       const { room, member } = c;
-      if (room.items.length >= MAX_ROOM_ITEMS) return fail(ack, "playlistFull");
+      if (room.items.length + parsed.data.length > MAX_ROOM_ITEMS) return fail(ack, "playlistFull");
       try {
         const last = await prisma.playlistItem.findFirst({
           where: { roomId: room.id },
           orderBy: { position: "desc" },
           select: { position: true },
         });
-        const row = await prisma.playlistItem.create({
-          data: { ...parsed.data, roomId: room.id, position: (last?.position ?? -1) + 1, addedBy: member.name },
+        const start = (last?.position ?? -1) + 1;
+        const rows = await prisma.playlistItem.createManyAndReturn({
+          data: parsed.data.map((v, i) => ({ ...v, roomId: room.id, position: start + i, addedBy: member.name })),
         });
-        room.items.push({ ...parsed.data, id: row.id, addedBy: row.addedBy });
-        if (!room.playback.itemId) room.setPlayback({ itemId: row.id, position: 0, isPlaying: true });
+        rows.sort((a, b) => a.position - b.position);
+        rows.forEach((row, i) => room.items.push({ ...parsed.data[i], id: row.id, addedBy: row.addedBy }));
+        if (!room.playback.itemId) room.setPlayback({ itemId: rows[0].id, position: 0, isPlaying: true });
         else room.broadcast();
         ok(ack);
       } catch (e) {
         console.error("[room] add failed", e);
         fail(ack, "addFailed");
       }
-    });
+    }
+
+    socket.on("playlist:add", (p, ack) => addSongs([p?.video], ack));
+    // "Add all" from the Liked tab.
+    socket.on("playlist:addMany", (p, ack) => addSongs(Array.isArray(p?.videos) ? p.videos : [], ack));
 
     socket.on("playlist:remove", async (p, ack) => {
       const c = ctx();

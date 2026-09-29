@@ -59,6 +59,13 @@ export function UserMenu({ username, avatarUrl }: { username: string; avatarUrl:
                         className="block rounded-lg px-3 py-2 text-sm hover:bg-fern">
                         {t.nav.sharePlaylist}
                     </Link>
+                    <Link
+                        href="/liked"
+                        role="menuitem"
+                        onClick={() => setOpen(false)}
+                        className="block rounded-lg px-3 py-2 text-sm hover:bg-fern">
+                        {t.nav.liked}
+                    </Link>
                     <button
                         role="menuitem"
                         onClick={logout}
