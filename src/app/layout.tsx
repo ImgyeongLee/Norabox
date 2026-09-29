@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { Header } from "@/components/Header";
 import { I18nProvider } from "@/i18n/client";
@@ -47,6 +48,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             </footer>
           </ConfirmProvider>
         </I18nProvider>
+        {/* Vercel Web Analytics: page views only; does nothing outside Vercel deployments. */}
+        <Analytics />
       </body>
     </html>
   );
