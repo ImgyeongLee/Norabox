@@ -52,6 +52,7 @@ class Room {
   private endTimer: NodeJS.Timeout | null = null;
   unloadTimer: NodeJS.Timeout | null = null;
   private lastTouch = 0;
+  private writes: Promise<unknown> = Promise.resolve();
 
   constructor(
     private io: IO,
@@ -92,6 +93,17 @@ class Room {
       playback: this.playback,
       members,
     };
+  }
+
+  /**
+   * Runs this room's playlist DB writes one at a time, in arrival order. Without it,
+   * two DJs editing at once can deadlock in Postgres or leave the saved order
+   * different from what everyone sees.
+   */
+  persist<T>(task: () => Promise<T>): Promise<T> {
+    const run = this.writes.then(task, task);
+    this.writes = run.catch(() => {});
+    return run;
   }
 
   broadcast() {
@@ -455,14 +467,16 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       const { room, member } = c;
       if (room.items.length + parsed.data.length > MAX_ROOM_ITEMS) return fail(ack, "playlistFull");
       try {
-        const last = await prisma.playlistItem.findFirst({
-          where: { roomId: room.id },
-          orderBy: { position: "desc" },
-          select: { position: true },
-        });
-        const start = (last?.position ?? -1) + 1;
-        const rows = await prisma.playlistItem.createManyAndReturn({
-          data: parsed.data.map((v, i) => ({ ...v, roomId: room.id, position: start + i, addedBy: member.name })),
+        const rows = await room.persist(async () => {
+          const last = await prisma.playlistItem.findFirst({
+            where: { roomId: room.id },
+            orderBy: { position: "desc" },
+            select: { position: true },
+          });
+          const start = (last?.position ?? -1) + 1;
+          return prisma.playlistItem.createManyAndReturn({
+            data: parsed.data.map((v, i) => ({ ...v, roomId: room.id, position: start + i, addedBy: member.name })),
+          });
         });
         rows.sort((a, b) => a.position - b.position);
         rows.forEach((row, i) => room.items.push({ ...parsed.data[i], id: row.id, addedBy: row.addedBy }));
@@ -484,14 +498,16 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       if (!c) return fail(ack, "notInRoom");
       if (c.role === "listener") return fail(ack, "controlOnly");
       const { room } = c;
-      const idx = room.items.findIndex((i) => i.id === p?.itemId);
-      if (idx === -1) return fail(ack, "songNotFound");
+      if (!room.items.some((i) => i.id === p?.itemId)) return fail(ack, "songNotFound");
       try {
-        await prisma.playlistItem.delete({ where: { id: p.itemId } });
+        await room.persist(() => prisma.playlistItem.deleteMany({ where: { id: p.itemId, roomId: room.id } }));
       } catch (e) {
         console.error("[room] remove failed", e);
         return fail(ack, "removeFailed");
       }
+      // Look it up again: the playlist may have changed while we waited (e.g. removed twice at once).
+      const idx = room.items.findIndex((i) => i.id === p.itemId);
+      if (idx === -1) return ok(ack);
       room.items.splice(idx, 1);
       if (room.playback.itemId === p.itemId) {
         const next = room.items[idx] ?? (room.loopMode === "all" ? room.items[0] : undefined);
@@ -519,8 +535,13 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       room.items = ids.map((id) => byId.get(id)!);
       room.broadcast();
       try {
-        await prisma.$transaction(
-          ids.map((id, position) => prisma.playlistItem.update({ where: { id }, data: { position } })),
+        // Writes the order at the time this runs, so the last edit always wins in the DB too.
+        await room.persist(() =>
+          prisma.$transaction(
+            room.items.map((item, position) =>
+              prisma.playlistItem.updateMany({ where: { id: item.id, roomId: room.id }, data: { position } }),
+            ),
+          ),
         );
         ok(ack);
       } catch (e) {
