@@ -2,12 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useI18n } from '@/i18n/client';
 
 export function DeletePostButton({ id }: { id: string }) {
     const router = useRouter();
+    const { t, tError } = useI18n();
     const [busy, setBusy] = useState(false);
     async function remove() {
-        if (!confirm("Delete this post? This can't be undone.")) return;
+        if (!confirm(t.post.confirmDelete)) return;
         setBusy(true);
         const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
         if (res.ok) {
@@ -15,12 +17,12 @@ export function DeletePostButton({ id }: { id: string }) {
             router.refresh();
         } else {
             setBusy(false);
-            alert('Could not delete the post');
+            alert(tError('deletePostFailed'));
         }
     }
     return (
         <button className="btn-danger px-3 py-2" onClick={remove} disabled={busy}>
-            {busy ? 'Deleting…' : 'Delete'}
+            {busy ? t.post.deleting : t.post.delete}
         </button>
     );
 }

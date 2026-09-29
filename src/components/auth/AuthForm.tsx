@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Field } from '@/components/auth/Field';
+import { useI18n } from '@/i18n/client';
 import { useJsonForm } from '@/lib/use-json-form';
 
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
@@ -10,9 +11,11 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
     const params = useSearchParams();
     const next = params.get('next');
     const redirectTo = next?.startsWith('/') && !next.startsWith('//') ? next : '/';
-    const { errors, busy, submit } = useJsonForm();
+    const { errors: codes, busy, submit } = useJsonForm();
+    const { t, tError } = useI18n();
+    const errors = Object.fromEntries(Object.entries(codes).map(([k, v]) => [k, tError(v)]));
 
-    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    async function onSubmit(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
         const body = Object.fromEntries(new FormData(e.currentTarget));
         const ok = await submit(`/api/auth/${mode}`, body);
@@ -28,18 +31,16 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
 
     return (
         <div className="card p-6 sm:p-8">
-            <h1 className="text-2xl font-bold">{isSignup ? 'Create your account' : 'Welcome back'}</h1>
+            <h1 className="text-2xl font-bold">{isSignup ? t.auth.signupTitle : t.auth.loginTitle}</h1>
             <p className="mt-1 text-sm text-lime/60">
-                {isSignup
-                    ? 'An account lets you share playlists on the forum.'
-                    : 'Log in to share playlists on the forum.'}
+                {isSignup ? t.auth.signupLead : t.auth.loginLead}
             </p>
             <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
                 {isSignup && (
-                    <Field label="Username" name="username" autoComplete="username" required error={errors.username} />
+                    <Field label={t.auth.username} name="username" autoComplete="username" required error={errors.username} />
                 )}
                 <Field
-                    label="Email address"
+                    label={t.auth.email}
                     name="email"
                     type="email"
                     autoComplete="email"
@@ -47,7 +48,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
                     error={errors.email}
                 />
                 <Field
-                    label="Password"
+                    label={t.auth.password}
                     name="password"
                     type="password"
                     autoComplete={isSignup ? 'new-password' : 'current-password'}
@@ -56,7 +57,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
                 />
                 {isSignup && (
                     <Field
-                        label="Confirm password"
+                        label={t.auth.passwordConfirm}
                         name="passwordConfirm"
                         type="password"
                         autoComplete="new-password"
@@ -70,13 +71,13 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
                     </p>
                 )}
                 <button className="btn-primary w-full" disabled={busy}>
-                    {busy ? 'Please wait…' : isSignup ? 'Sign up' : 'Log in'}
+                    {busy ? t.auth.wait : isSignup ? t.auth.submitSignup : t.auth.submitLogin}
                 </button>
             </form>
             <p className="mt-6 text-center text-sm text-lime/60">
-                {isSignup ? 'Already have an account? ' : 'New to Norabox? '}
+                {isSignup ? t.auth.haveAccount : t.auth.newHere}
                 <Link href={otherHref} className="font-semibold text-moss hover:underline">
-                    {isSignup ? 'Log in' : 'Sign up'}
+                    {isSignup ? t.auth.submitLogin : t.auth.submitSignup}
                 </Link>
             </p>
         </div>

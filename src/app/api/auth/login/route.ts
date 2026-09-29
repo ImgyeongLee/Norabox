@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({ where: { email }, select: { id: true, passwordHash: true } });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-        return jsonError('Incorrect email or password', 401);
+        return jsonError('badCredentials', 401);
     }
     await startSession(user.id);
     return NextResponse.json({ ok: true });

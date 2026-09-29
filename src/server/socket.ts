@@ -5,7 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { avatarUrlFor } from "@/lib/avatar";
 import { inactiveCutoff, purgeIfExpired } from "@/lib/rooms";
 import { verifySocketToken } from "@/lib/session";
+import { MAX_ROOM_ITEMS } from "@/lib/limits";
 import { videoSchema } from "@/lib/validation";
+import type { ErrorCode } from "@/i18n/messages/en";
 import type {
   Ack,
   ClientToServerEvents,
@@ -22,7 +24,6 @@ type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type ClientSocket = Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
 type SocketData = { roomId?: string; identity?: string };
 
-const MAX_ITEMS = 500;
 /** How long an empty room stays in memory before it is unloaded. */
 const EMPTY_ROOM_TTL_MS = 60_000;
 /** A member who disconnects (e.g. refreshes the page) keeps their seat this long. */
@@ -265,7 +266,8 @@ async function sweepRooms() {
   }
 }
 
-const fail = (ack: Ack | undefined, error: string) => ack?.({ ok: false, error });
+/** Errors are sent as codes (see src/i18n/messages) and shown in each listener's language. */
+const fail = (ack: Ack | undefined, error: ErrorCode) => ack?.({ ok: false, error });
 const ok = (ack: Ack | undefined) => ack?.({ ok: true });
 
 export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?: string[] } = {}) {
@@ -288,15 +290,15 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
 
     /** Wraps a handler that requires the sender to be an Admin or DJ (or Admin only). */
     const guarded =
-      <P,>(adminOnly: boolean, fn: (room: Room, p: P) => string | void) =>
+      <P,>(adminOnly: boolean, fn: (room: Room, p: P) => ErrorCode | void) =>
       (...args: unknown[]) => {
         const last = args[args.length - 1];
         const ack = typeof last === "function" ? (last as Ack) : undefined;
         const payload = (typeof args[0] === "function" ? undefined : args[0]) as P;
         const c = ctx();
-        if (!c) return fail(ack, "You are not in a room");
+        if (!c) return fail(ack, "notInRoom");
         if (adminOnly ? c.role !== "admin" : c.role === "listener") {
-          return fail(ack, adminOnly ? "Only the admin can do that" : "Only the admin or a DJ can do that");
+          return fail(ack, adminOnly ? "adminOnly" : "controlOnly");
         }
         try {
           const err = fn(c.room, payload);
@@ -304,7 +306,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
           ok(ack);
         } catch (e) {
           console.error("[room] handler failed", e);
-          fail(ack, "Something went wrong");
+          fail(ack, "generic");
         }
       };
 
@@ -315,12 +317,12 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       try {
         const code = String(payload?.code ?? "");
         const clientId = String(payload?.clientId ?? "");
-        if (!/^[A-Za-z0-9]{1,32}$/.test(code)) return ack({ ok: false, error: "Invalid room code" });
-        if (!/^[A-Za-z0-9-]{8,64}$/.test(clientId)) return ack({ ok: false, error: "Invalid client id" });
-        if (socket.data.roomId) return ack({ ok: false, error: "Already in a room" });
+        if (!/^[A-Za-z0-9]{1,32}$/.test(code)) return ack({ ok: false, error: "invalidRoomCode" });
+        if (!/^[A-Za-z0-9-]{8,64}$/.test(clientId)) return ack({ ok: false, error: "invalidClient" });
+        if (socket.data.roomId) return ack({ ok: false, error: "alreadyInRoom" });
 
         const room = await loadRoom(io, code.toLowerCase());
-        if (!room) return ack({ ok: false, error: "Room not found" });
+        if (!room) return ack({ ok: false, error: "roomNotFound" });
 
         // Signed-in users present a short-lived token from /api/realtime/token.
         const userId = await verifySocketToken((socket.handshake.auth as { token?: unknown })?.token);
@@ -366,7 +368,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         socket.to(room.id).emit("room:state", room.snapshot());
       } catch (e) {
         console.error("[room] join failed", e);
-        ack({ ok: false, error: "Could not join the room" });
+        ack({ ok: false, error: "joinFailed" });
       }
     });
 
@@ -402,21 +404,21 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       "player:seek",
       guarded(false, (room, p: { position: number }) => {
         const pos = Number(p?.position);
-        if (!Number.isFinite(pos) || pos < 0) return "Invalid position";
+        if (!Number.isFinite(pos) || pos < 0) return "invalidPosition";
         room.seek(pos);
       }),
     );
     socket.on(
       "player:select",
       guarded(false, (room, p: { itemId: string }) => {
-        if (!room.items.some((i) => i.id === p?.itemId)) return "Song not found";
+        if (!room.items.some((i) => i.id === p?.itemId)) return "songNotFound";
         room.setPlayback({ itemId: p.itemId, position: 0, isPlaying: true });
       }),
     );
     socket.on(
       "room:loop",
       guarded(false, (room, p: { mode: LoopMode }) => {
-        if (!["none", "one", "all"].includes(p?.mode)) return "Invalid loop mode";
+        if (!["none", "one", "all"].includes(p?.mode)) return "invalidLoopMode";
         room.loopMode = p.mode;
         prisma.room.update({ where: { id: room.id }, data: { loopMode: p.mode } }).catch(console.error);
         room.broadcast();
@@ -443,12 +445,12 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
     // ---- Playlist (Admin / DJ) ----
     socket.on("playlist:add", async (p, ack) => {
       const c = ctx();
-      if (!c) return fail(ack, "You are not in a room");
-      if (c.role === "listener") return fail(ack, "Only the admin or a DJ can add songs");
+      if (!c) return fail(ack, "notInRoom");
+      if (c.role === "listener") return fail(ack, "controlOnly");
       const parsed = videoSchema.safeParse(p?.video);
-      if (!parsed.success) return fail(ack, "Invalid song");
+      if (!parsed.success) return fail(ack, "invalidSong");
       const { room, member } = c;
-      if (room.items.length >= MAX_ITEMS) return fail(ack, `A playlist can hold up to ${MAX_ITEMS} songs`);
+      if (room.items.length >= MAX_ROOM_ITEMS) return fail(ack, "playlistFull");
       try {
         const last = await prisma.playlistItem.findFirst({
           where: { roomId: room.id },
@@ -464,22 +466,22 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         ok(ack);
       } catch (e) {
         console.error("[room] add failed", e);
-        fail(ack, "Could not add the song");
+        fail(ack, "addFailed");
       }
     });
 
     socket.on("playlist:remove", async (p, ack) => {
       const c = ctx();
-      if (!c) return fail(ack, "You are not in a room");
-      if (c.role === "listener") return fail(ack, "Only the admin or a DJ can remove songs");
+      if (!c) return fail(ack, "notInRoom");
+      if (c.role === "listener") return fail(ack, "controlOnly");
       const { room } = c;
       const idx = room.items.findIndex((i) => i.id === p?.itemId);
-      if (idx === -1) return fail(ack, "Song not found");
+      if (idx === -1) return fail(ack, "songNotFound");
       try {
         await prisma.playlistItem.delete({ where: { id: p.itemId } });
       } catch (e) {
         console.error("[room] remove failed", e);
-        return fail(ack, "Could not remove the song");
+        return fail(ack, "removeFailed");
       }
       room.items.splice(idx, 1);
       if (room.playback.itemId === p.itemId) {
@@ -497,13 +499,13 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
 
     socket.on("playlist:reorder", async (p, ack) => {
       const c = ctx();
-      if (!c) return fail(ack, "You are not in a room");
-      if (c.role === "listener") return fail(ack, "Only the admin or a DJ can reorder songs");
+      if (!c) return fail(ack, "notInRoom");
+      if (c.role === "listener") return fail(ack, "controlOnly");
       const { room } = c;
       const ids = Array.isArray(p?.orderedIds) ? p.orderedIds : [];
       const byId = new Map(room.items.map((i) => [i.id, i]));
       if (ids.length !== room.items.length || new Set(ids).size !== ids.length || !ids.every((id) => byId.has(id))) {
-        return fail(ack, "Playlist changed — try again");
+        return fail(ack, "playlistChanged");
       }
       room.items = ids.map((id) => byId.get(id)!);
       room.broadcast();
@@ -514,7 +516,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         ok(ack);
       } catch (e) {
         console.error("[room] reorder failed", e);
-        fail(ack, "Could not save the new order");
+        fail(ack, "reorderFailed");
       }
     });
 
@@ -523,7 +525,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       "room:masterVolume",
       guarded(true, (room, p: { volume: number }) => {
         const v = Math.round(Number(p?.volume));
-        if (!Number.isFinite(v) || v < 0 || v > 100) return "Invalid volume";
+        if (!Number.isFinite(v) || v < 0 || v > 100) return "invalidVolume";
         room.masterVolume = v;
         prisma.room.update({ where: { id: room.id }, data: { masterVolume: v } }).catch(console.error);
         room.broadcast();
@@ -532,13 +534,13 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
 
     socket.on("member:setRole", async (p, ack) => {
       const c = ctx();
-      if (!c) return fail(ack, "You are not in a room");
-      if (c.role !== "admin") return fail(ack, "Only the admin can change roles");
+      if (!c) return fail(ack, "notInRoom");
+      if (c.role !== "admin") return fail(ack, "adminOnly");
       const { room } = c;
       const target = [...room.members.values()].find((m) => m.memberId === p?.memberId);
-      if (!target) return fail(ack, "That person has left the room");
-      if (room.roleOf(target) === "admin") return fail(ack, "The admin's role can't be changed");
-      if (p.role !== "dj" && p.role !== "listener") return fail(ack, "Invalid role");
+      if (!target) return fail(ack, "memberLeft");
+      if (room.roleOf(target) === "admin") return fail(ack, "adminRoleFixed");
+      if (p.role !== "dj" && p.role !== "listener") return fail(ack, "invalidRole");
       try {
         if (p.role === "dj") {
           await prisma.roomDj.upsert({
@@ -553,7 +555,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         }
       } catch (e) {
         console.error("[room] setRole failed", e);
-        return fail(ack, "Could not change the role");
+        return fail(ack, "roleFailed");
       }
       room.broadcast();
       ok(ack);

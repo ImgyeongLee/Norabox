@@ -21,6 +21,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useState } from 'react';
 import { GripIcon, TrashIcon } from '@/components/icons';
+import { useI18n } from '@/i18n/client';
 import { formatDuration } from '@/lib/format';
 
 export type SortableTrack = {
@@ -55,6 +56,7 @@ export function Playlist<T extends SortableTrack>({
     onSelect,
     emptyText,
 }: Props<T>) {
+    const { t } = useI18n();
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
         useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
@@ -78,7 +80,7 @@ export function Playlist<T extends SortableTrack>({
     }
 
     if (items.length === 0) {
-        return <p className="py-10 text-center text-sm text-lime/50">{emptyText ?? 'No songs yet.'}</p>;
+        return <p className="py-10 text-center text-sm text-lime/50">{emptyText ?? t.playlist.empty}</p>;
     }
 
     return (
@@ -120,6 +122,7 @@ function Row({
     onRemove?: (id: string) => void;
     onSelect?: (id: string) => void;
 }) {
+    const { t } = useI18n();
     const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
         id: item.id,
         disabled: !editable,
@@ -138,7 +141,7 @@ function Row({
                     {...attributes}
                     {...listeners}
                     className="flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-lime/40 hover:text-lime active:cursor-grabbing"
-                    aria-label={`Reorder ${item.title}`}>
+                    aria-label={t.playlist.reorder(item.title)}>
                     <GripIcon className="size-4" />
                 </button>
             ) : (
@@ -149,13 +152,13 @@ function Row({
                 onClick={() => onSelect?.(item.id)}
                 disabled={!onSelect}
                 className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
-                aria-label={onSelect ? `Play ${item.title}` : undefined}>
+                aria-label={onSelect ? t.playlist.play(item.title) : undefined}>
                 <span className="relative shrink-0">
                     <img src={item.thumbnail} alt="" className="aspect-video w-20 rounded-md object-cover" />
                     {playing && (
                         <span
                             className="absolute inset-0 flex items-end justify-center gap-0.5 rounded-md bg-pine/60 pb-1.5"
-                            aria-label="Now playing">
+                            aria-label={t.playlist.nowPlaying}>
                             {[0, 1, 2].map((i) => (
                                 <span
                                     key={i}
@@ -185,7 +188,7 @@ function Row({
                     type="button"
                     onClick={() => onRemove(item.id)}
                     className="icon-btn size-8 shrink-0 text-lime/40 hover:text-danger"
-                    aria-label={`Remove ${item.title}`}>
+                    aria-label={t.playlist.remove(item.title)}>
                     <TrashIcon className="size-4" />
                 </button>
             )}

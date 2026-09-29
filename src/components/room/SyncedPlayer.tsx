@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '@/i18n/client';
 import type { Playback } from '@/lib/room-types';
 import { loadYouTubeApi, YTState, type YTPlayer } from '@/lib/youtube-iframe';
 
@@ -27,6 +28,7 @@ const SEEK_COOLDOWN_MS = 2500;
  * nudges it (play / pause / seek) to match the server.
  */
 export function SyncedPlayer(props: Props) {
+    const { t } = useI18n();
     const host = useRef<HTMLDivElement>(null);
     const player = useRef<YTPlayer | null>(null);
     const [ready, setReady] = useState(false);
@@ -173,24 +175,22 @@ export function SyncedPlayer(props: Props) {
             <div ref={host} className="pointer-events-none absolute inset-0 [&>iframe]:size-full" />
             {!props.videoId && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-pine/90 p-6 text-center">
-                    <p className="text-lg font-semibold">Nothing playing yet</p>
-                    <p className="text-sm text-lime/60">Add a song to the playlist to get the party started.</p>
+                    <p className="text-lg font-semibold">{t.player.nothingPlaying}</p>
+                    <p className="text-sm text-lime/60">{t.player.nothingPlayingHint}</p>
                 </div>
             )}
             {errorFor && errorFor === props.itemId && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-pine/90 p-6 text-center">
-                    <p className="font-semibold">This video can&apos;t be played here</p>
-                    <p className="text-sm text-lime/60">
-                        It may be private, removed, or blocked from embedding. Skip to the next song.
-                    </p>
+                    <p className="font-semibold">{t.player.cantPlay}</p>
+                    <p className="text-sm text-lime/60">{t.player.cantPlayHint}</p>
                 </div>
             )}
             {blocked && props.videoId && !errorFor && (
                 <button
                     onClick={resume}
                     className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-pine/80 text-center">
-                    <span className="btn-primary">Tap to start listening</span>
-                    <span className="text-xs text-lime/60">Your browser paused autoplay</span>
+                    <span className="btn-primary">{t.player.tapToListen}</span>
+                    <span className="text-xs text-lime/60">{t.player.autoplayPaused}</span>
                 </button>
             )}
         </div>

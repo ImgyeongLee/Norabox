@@ -1,65 +1,123 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
-import { VideoSearch } from '@/components/VideoSearch';
-import { Playlist, type SortableTrack } from '@/components/room/Playlist';
+import { useState } from 'react';
+import { TrashIcon } from '@/components/icons';
+import { MarkdownEditor } from '@/components/forum/MarkdownEditor';
+import { ScenarioField } from '@/components/forum/ScenarioField';
+import { YouTubeEmbed } from '@/components/forum/YouTubeEmbed';
+import { formatDuration } from '@/lib/format';
+import { useI18n } from '@/i18n/client';
 import { useJsonForm } from '@/lib/use-json-form';
-import type { Video } from '@/lib/validation';
+import { MAX_POST_TRACKS, MAX_TRACK_DESCRIPTION, type Video } from '@/lib/validation';
+import { parseVideoId } from '@/lib/youtube-url';
 
-type Initial = { id?: string; title: string; description: string; body: string; tracks: Video[] };
+type InitialTrack = Video & { description: string };
+type Initial = { id?: string; title: string; scenario: string; writer: string; tracks: InitialTrack[] };
 
-const withKey = (v: Video): SortableTrack => ({ ...v, id: crypto.randomUUID() });
-const MAX_TRACKS = 50;
+type Song = {
+    key: string;
+    link: string;
+    video: Video | null;
+    loading: boolean;
+    error: string | null;
+    description: string;
+};
+
+const newSong = (): Song => ({
+    key: crypto.randomUUID(),
+    link: '',
+    video: null,
+    loading: false,
+    error: null,
+    description: '',
+});
 
 export function PostEditor({ initial }: { initial?: Initial }) {
     const router = useRouter();
+    const { t, tError } = useI18n();
     const editing = !!initial?.id;
     const [title, setTitle] = useState(initial?.title ?? '');
-    const [description, setDescription] = useState(initial?.description ?? '');
-    const [body, setBody] = useState(initial?.body ?? '');
-    const [tracks, setTracks] = useState<SortableTrack[]>(() => (initial?.tracks ?? []).map(withKey));
-    const { errors, busy, submit } = useJsonForm();
+    const [scenario, setScenario] = useState(initial?.scenario ?? '');
+    const [writer, setWriter] = useState(initial?.writer ?? '');
+    const [songs, setSongs] = useState<Song[]>(() =>
+        initial?.tracks.length
+            ? initial.tracks.map(({ description, ...video }) => ({
+                  ...newSong(),
+                  link: `https://www.youtube.com/watch?v=${video.videoId}`,
+                  video,
+                  description,
+              }))
+            : [newSong()],
+    );
+    const { errors, setErrors, busy, submit } = useJsonForm();
+    // Song keys in the order they were sent, to map server errors like "tracks.2.description" back to cards.
+    const [sentKeys, setSentKeys] = useState<string[]>([]);
 
-    const [importCode, setImportCode] = useState('');
-    const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
-    const addedIds = useMemo(() => new Set(tracks.map((t) => t.videoId)), [tracks]);
+    const update = (key: string, patch: Partial<Song>) =>
+        setSongs((ss) => ss.map((s) => (s.key === key ? { ...s, ...patch } : s)));
 
-    function addTrack(v: Video) {
-        if (tracks.length >= MAX_TRACKS) return `A post can have up to ${MAX_TRACKS} songs`;
-        setTracks((t) => [...t, withKey(v)]);
-        return null;
+    async function changeLink(key: string, link: string) {
+        const id = parseVideoId(link);
+        const current = songs.find((s) => s.key === key);
+        if (!id) {
+            update(key, { link, video: null, loading: false, error: link.trim() ? 'songLinkInvalid' : null });
+            return;
+        }
+        if (current?.video?.videoId === id) return update(key, { link, error: null });
+        update(key, { link, video: null, loading: true, error: null });
+        try {
+            const res = await fetch(`/api/youtube/video?url=${encodeURIComponent(link)}`);
+            const data = await res.json();
+            // Ignore the answer if the link was changed again while we waited.
+            setSongs((ss) =>
+                ss.map((s) =>
+                    s.key === key && s.link === link
+                        ? res.ok
+                            ? { ...s, video: data.video, loading: false, error: null }
+                            : { ...s, loading: false, error: data.error ?? 'videoLookupFailed' }
+                        : s,
+                ),
+            );
+        } catch {
+            setSongs((ss) =>
+                ss.map((s) =>
+                    s.key === key && s.link === link ? { ...s, loading: false, error: 'network' } : s,
+                ),
+            );
+        }
     }
 
-    async function importRoom() {
-        setImportMsg(null);
-        const res = await fetch(`/api/rooms/${encodeURIComponent(importCode)}`);
-        if (!res.ok) return setImportMsg({ ok: false, text: 'No room found with that code' });
-        const data: { code: string; items: Video[] } = await res.json();
-        if (data.items.length === 0)
-            return setImportMsg({ ok: false, text: `Room ${data.code} has an empty playlist` });
-        const room = data.items.slice(0, MAX_TRACKS - tracks.length);
-        setTracks((t) => [...t, ...room.map(withKey)]);
-        setImportMsg({
-            ok: true,
-            text: `Imported ${room.length} song${room.length === 1 ? '' : 's'} from ${data.code}`,
+    function move(index: number, dir: -1 | 1) {
+        setSongs((ss) => {
+            const next = [...ss];
+            const [s] = next.splice(index, 1);
+            next.splice(index + dir, 0, s);
+            return next;
         });
-        setImportCode('');
     }
 
-    async function onSubmit(e: React.FormEvent) {
+    async function onSubmit(e: React.SubmitEvent) {
         e.preventDefault();
+        // Skip untouched cards; every other card needs a loaded video.
+        const filled = songs.filter((s) => s.link.trim() || s.description.trim());
+        const cardErrors: Record<string, string> = {};
+        for (const s of filled) {
+            if (s.loading) cardErrors[`song.${s.key}`] = 'songLoading';
+            else if (!s.video) cardErrors[`song.${s.key}`] = s.error ?? 'songLinkRequired';
+        }
+        if (filled.length === 0) cardErrors.tracks = 'songsRequired';
+        if (Object.keys(cardErrors).length > 0) {
+            setErrors({ ...cardErrors, form: 'fixFields' });
+            return;
+        }
+
+        setSentKeys(filled.map((s) => s.key));
         const payload = {
             title,
-            description,
-            body,
-            tracks: tracks.map(({ videoId, title, channel, thumbnail, durationSec }) => ({
-                videoId,
-                title,
-                channel,
-                thumbnail,
-                durationSec,
-            })),
+            scenario,
+            writer,
+            tracks: filled.map((s) => ({ ...s.video!, description: s.description })),
         };
         const res = await submit<{ id: string }>(
             editing ? `/api/posts/${initial!.id}` : '/api/posts',
@@ -72,12 +130,17 @@ export function PostEditor({ initial }: { initial?: Initial }) {
         }
     }
 
+    const songError = (s: Song) => {
+        const i = sentKeys.indexOf(s.key);
+        return errors[`song.${s.key}`] ?? (i >= 0 ? errors[`tracks.${i}.description`] : undefined);
+    };
+
     return (
         <form onSubmit={onSubmit} className="space-y-6" noValidate>
             <section className="card space-y-4 p-5 sm:p-6">
                 <div>
                     <label htmlFor="title" className="label">
-                        Title
+                        {t.editor.title}
                     </label>
                     <input
                         id="title"
@@ -85,100 +148,143 @@ export function PostEditor({ initial }: { initial?: Initial }) {
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         maxLength={120}
-                        placeholder="Late night lo-fi for coding"
+                        placeholder={t.editor.titlePlaceholder}
+                        aria-invalid={!!errors.title}
                     />
-                    {errors.title && <p className="field-error">{errors.title}</p>}
+                    {errors.title && <p className="field-error">{tError(errors.title)}</p>}
                 </div>
-                <div>
-                    <label htmlFor="description" className="label">
-                        Description{' '}
-                        <span className="font-normal text-lime/45">(optional — shown as the sub-heading)</span>
-                    </label>
-                    <input
-                        id="description"
-                        className="input"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        maxLength={200}
-                        placeholder="Mellow beats, rainy windows, zero lyrics"
-                    />
-                    {errors.description && <p className="field-error">{errors.description}</p>}
-                </div>
-                <div>
-                    <label htmlFor="body" className="label">
-                        Notes <span className="font-normal text-lime/45">(optional)</span>
-                    </label>
-                    <textarea
-                        id="body"
-                        className="input min-h-28 resize-y"
-                        value={body}
-                        onChange={(e) => setBody(e.target.value)}
-                        maxLength={5000}
-                        placeholder="Tell people about this playlist…"
-                    />
-                    {errors.body && <p className="field-error">{errors.body}</p>}
-                </div>
+                <ScenarioField
+                    scenario={scenario}
+                    writer={writer}
+                    onScenario={setScenario}
+                    onWriter={setWriter}
+                    errors={{ scenario: errors.scenario, writer: errors.writer }}
+                />
             </section>
 
-            <section className="card p-5 sm:p-6">
-                <div className="mb-4 flex items-baseline justify-between">
-                    <h2 className="text-lg font-semibold">Songs</h2>
+            <section className="space-y-4">
+                <div className="flex items-baseline justify-between">
+                    <h2 className="text-xl font-bold">{t.editor.songs}</h2>
                     <span className="text-xs text-lime/50">
-                        {tracks.length}/{MAX_TRACKS}
+                        {songs.length}/{MAX_POST_TRACKS}
                     </span>
                 </div>
-                <Playlist
-                    items={tracks}
-                    editable
-                    onReorder={(ids) => setTracks((t) => ids.map((id) => t.find((x) => x.id === id)!))}
-                    onRemove={(id) => setTracks((t) => t.filter((x) => x.id !== id))}
-                    emptyText="Search below or import a room's playlist to add songs."
-                />
-                {errors.tracks && <p className="field-error">{errors.tracks}</p>}
 
-                <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-                    <div>
-                        <h3 className="label">Search YouTube</h3>
-                        <VideoSearch onAdd={addTrack} addedIds={addedIds} disabled={tracks.length >= MAX_TRACKS} />
-                    </div>
-                    <div>
-                        <h3 className="label">Import from a room</h3>
-                        <div className="flex gap-2">
-                            <input
-                                className="input font-mono"
-                                placeholder="Room code"
-                                value={importCode}
-                                onChange={(e) => setImportCode(e.target.value.replace(/[^A-Za-z0-9]/g, ''))}
-                                aria-label="Room code to import"
-                            />
-                            <button
-                                type="button"
-                                className="btn-secondary shrink-0"
-                                onClick={importRoom}
-                                disabled={!importCode}>
-                                Import
-                            </button>
-                        </div>
-                        {importMsg && (
-                            <p className={importMsg.ok ? 'mt-1.5 text-sm text-moss' : 'field-error'}>
-                                {importMsg.text}
-                            </p>
-                        )}
-                    </div>
-                </div>
+                {songs.map((song, i) => {
+                    const err = songError(song);
+                    return (
+                        <article key={song.key} className="card space-y-4 p-4 sm:p-5">
+                            <div className="flex items-center gap-2">
+                                <span className="font-mono text-sm font-semibold text-moss">
+                                    {String(i + 1).padStart(2, '0')}
+                                </span>
+                                <div className="ml-auto flex items-center gap-1">
+                                    <button
+                                        type="button"
+                                        className="icon-btn size-8 text-sm"
+                                        onClick={() => move(i, -1)}
+                                        disabled={i === 0}
+                                        aria-label={t.editor.moveUp(i + 1)}
+                                    >
+                                        ↑
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="icon-btn size-8 text-sm"
+                                        onClick={() => move(i, 1)}
+                                        disabled={i === songs.length - 1}
+                                        aria-label={t.editor.moveDown(i + 1)}
+                                    >
+                                        ↓
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="icon-btn size-8 hover:text-danger"
+                                        onClick={() =>
+                                            setSongs((ss) =>
+                                                ss.length === 1 ? [newSong()] : ss.filter((s) => s.key !== song.key),
+                                            )
+                                        }
+                                        aria-label={t.editor.removeSong(i + 1)}
+                                    >
+                                        <TrashIcon className="size-4" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label htmlFor={`link-${song.key}`} className="label">
+                                    {t.editor.youtubeLink}
+                                </label>
+                                <input
+                                    id={`link-${song.key}`}
+                                    className="input"
+                                    type="url"
+                                    inputMode="url"
+                                    value={song.link}
+                                    onChange={(e) => changeLink(song.key, e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                                    placeholder="https://www.youtube.com/watch?v=…"
+                                    aria-invalid={!!err && !song.video}
+                                />
+                                {song.loading && <p className="mt-1.5 text-sm text-lime/55">{t.editor.loadingVideo}</p>}
+                            </div>
+
+                            {song.video && (
+                                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-start">
+                                    <YouTubeEmbed videoId={song.video.videoId} title={song.video.title} />
+                                    <div className="min-w-0">
+                                        <p className="font-semibold leading-snug">{song.video.title}</p>
+                                        <p className="mt-1 text-sm text-lime/60">
+                                            {t.post.videoBy(song.video.channel)}
+                                            {song.video.durationSec ? ` · ${formatDuration(song.video.durationSec)}` : ''}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <label htmlFor={`desc-${song.key}`} className="label">
+                                    {t.editor.description} <span className="font-normal text-lime/45">{t.common.optional}</span>
+                                </label>
+                                <MarkdownEditor
+                                    id={`desc-${song.key}`}
+                                    value={song.description}
+                                    onChange={(description) => update(song.key, { description })}
+                                    maxLength={MAX_TRACK_DESCRIPTION}
+                                    placeholder={t.editor.descriptionPlaceholder}
+                                />
+                            </div>
+
+                            {(err || (song.error && !song.loading)) && (
+                                <p className="field-error">{tError(err ?? song.error)}</p>
+                            )}
+                        </article>
+                    );
+                })}
+
+                {errors.tracks && <p className="field-error">{tError(errors.tracks)}</p>}
+                <button
+                    type="button"
+                    className="btn-secondary w-full border-dashed"
+                    onClick={() => setSongs((ss) => [...ss, newSong()])}
+                    disabled={songs.length >= MAX_POST_TRACKS}
+                >
+                    {t.editor.addSong}
+                </button>
             </section>
 
             {errors.form && (
                 <p className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
-                    {errors.form}
+                    {tError(errors.form)}
                 </p>
             )}
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <button type="button" className="btn-ghost" onClick={() => router.back()}>
-                    Cancel
+                    {t.common.cancel}
                 </button>
                 <button className="btn-primary" disabled={busy}>
-                    {busy ? 'Saving…' : editing ? 'Save changes' : 'Publish post'}
+                    {busy ? t.common.saving : editing ? t.editor.saveChanges : t.editor.publish}
                 </button>
             </div>
         </form>

@@ -1,28 +1,18 @@
 import type { Video } from "@/lib/validation";
+import { parseVideoId } from "@/lib/youtube-url";
+
+export { parseVideoId };
 
 const API = "https://www.googleapis.com/youtube/v3";
 
-export class YouTubeError extends Error {}
-
-/** Extracts an 11-char video id from a YouTube URL or a bare id. */
-export function parseVideoId(input: string): string | null {
-  const s = input.trim();
-  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
-  let url: URL;
-  try {
-    url = new URL(s);
-  } catch {
-    return null;
+/** `code` is an error code the UI translates; the message is for server logs. */
+export class YouTubeError extends Error {
+  constructor(
+    readonly code: "youtubeNotConfigured" | "youtubeFailed",
+    message: string = code,
+  ) {
+    super(message);
   }
-  const host = url.hostname.replace(/^(www|m|music)\./, "");
-  let id: string | null = null;
-  if (host === "youtu.be") id = url.pathname.slice(1).split("/")[0];
-  else if (host === "youtube.com" || host === "youtube-nocookie.com") {
-    id = url.searchParams.get("v");
-    const m = url.pathname.match(/^\/(?:embed|shorts|live|v)\/([^/?#]+)/);
-    if (!id && m) id = m[1];
-  }
-  return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
 }
 
 /** Parses an ISO 8601 duration like "PT1H2M3S" into seconds. */
@@ -50,12 +40,14 @@ const pickThumb = (t: Thumbs | undefined, id: string) =>
 
 async function api<T>(path: string, params: Record<string, string>): Promise<T> {
   const key = process.env.YOUTUBE_API_KEY;
-  if (!key) throw new YouTubeError("YouTube search is not configured (missing YOUTUBE_API_KEY). You can still paste a YouTube link.");
+  if (!key) throw new YouTubeError("youtubeNotConfigured", "YOUTUBE_API_KEY is not set");
   const qs = new URLSearchParams({ ...params, key });
   const res = await fetch(`${API}/${path}?${qs}`, { cache: "no-store" });
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-    throw new YouTubeError(body?.error?.message ?? `YouTube API error (${res.status})`);
+    const detail = body?.error?.message ?? `YouTube API error (${res.status})`;
+    console.error("[youtube]", detail);
+    throw new YouTubeError("youtubeFailed", detail);
   }
   return res.json() as Promise<T>;
 }

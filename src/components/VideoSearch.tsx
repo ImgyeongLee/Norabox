@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- YouTube thumbnails */
 import { useState } from 'react';
+import { useI18n } from '@/i18n/client';
 import { formatDuration } from '@/lib/format';
 import type { Video } from '@/lib/validation';
 
@@ -15,14 +16,16 @@ type Props = {
 
 /** Search YouTube (or paste a link) and add results. */
 export function VideoSearch({ onAdd, addedIds, disabled, disabledReason }: Props) {
+    const { t, tError } = useI18n();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<Video[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [pending, setPending] = useState<string | null>(null);
 
-    async function search(e: React.FormEvent) {
-        e.preventDefault();
+    // Not a <form>: this component is also used inside the post editor's form, and
+    // forms can't be nested. Enter is handled here so it never submits an outer form.
+    async function search() {
         const q = query.trim();
         if (!q) return;
         setLoading(true);
@@ -30,10 +33,11 @@ export function VideoSearch({ onAdd, addedIds, disabled, disabledReason }: Props
         try {
             const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(q)}`);
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error ?? 'Search failed');
+            if (!res.ok) throw new Error(data.error ?? 'youtubeFailed');
             setResults(data.results);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Search failed');
+            // Server errors are codes; a network failure falls back to a generic message.
+            setError(err instanceof Error ? err.message : 'youtubeFailed');
             setResults(null);
         } finally {
             setLoading(false);
@@ -49,22 +53,33 @@ export function VideoSearch({ onAdd, addedIds, disabled, disabledReason }: Props
 
     return (
         <div>
-            <form onSubmit={search} className="flex gap-2" role="search">
+            <div className="flex gap-2" role="search">
                 <input
+                    type="search"
                     className="input"
-                    placeholder="Search YouTube or paste a link"
+                    placeholder={t.search.placeholder}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    aria-label="Search YouTube"
+                    onKeyDown={(e) => {
+                        if (e.key !== 'Enter') return;
+                        e.preventDefault();
+                        if (!loading) search();
+                    }}
+                    aria-label={t.search.label}
                     disabled={disabled}
                 />
-                <button className="btn-primary shrink-0" disabled={disabled || loading || !query.trim()}>
-                    {loading ? '…' : 'Search'}
+                <button
+                    type="button"
+                    onClick={search}
+                    className="btn-primary shrink-0"
+                    disabled={disabled || loading || !query.trim()}
+                >
+                    {loading ? '…' : t.search.button}
                 </button>
-            </form>
+            </div>
             {disabled && disabledReason && <p className="mt-2 text-sm text-lime/60">{disabledReason}</p>}
-            {error && <p className="field-error">{error}</p>}
-            {results && results.length === 0 && <p className="mt-4 text-sm text-lime/60">No videos found.</p>}
+            {error && <p className="field-error">{tError(error)}</p>}
+            {results && results.length === 0 && <p className="mt-4 text-sm text-lime/60">{t.search.noResults}</p>}
             {results && results.length > 0 && (
                 <ul className="mt-3 divide-y divide-leaf/25">
                     {results.map((v) => {
@@ -89,8 +104,8 @@ export function VideoSearch({ onAdd, addedIds, disabled, disabledReason }: Props
                                     }
                                     disabled={disabled || pending === v.videoId}
                                     onClick={() => add(v)}
-                                    aria-label={`Add ${v.title}`}>
-                                    {pending === v.videoId ? '…' : added ? 'Add again' : 'Add'}
+                                    aria-label={t.search.addLabel(v.title)}>
+                                    {pending === v.videoId ? '…' : added ? t.search.addAgain : t.search.add}
                                 </button>
                             </li>
                         );

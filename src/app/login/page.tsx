@@ -3,8 +3,12 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { getCurrentUser } from '@/lib/auth';
+import { getI18n } from '@/i18n/server';
 
-export const metadata: Metadata = { title: 'Log in' };
+export async function generateMetadata(): Promise<Metadata> {
+    const { t } = await getI18n();
+    return { title: t.meta.login };
+}
 
 export default async function Page() {
     if (await getCurrentUser()) redirect('/');

@@ -16,8 +16,8 @@ export async function POST(req: Request) {
     });
     if (clash) {
         return clash.email === email
-            ? jsonError('An account with this email already exists', 409, { email: 'Email is already registered' })
-            : jsonError('That username is taken', 409, { username: 'Username is taken' });
+            ? jsonError('emailTaken', 409, { email: 'emailTaken' })
+            : jsonError('usernameTaken', 409, { username: 'usernameTaken' });
     }
 
     const user = await prisma.user.create({

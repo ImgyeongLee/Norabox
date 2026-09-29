@@ -17,6 +17,6 @@ export async function GET(_req: Request, ctx: RouteContext<'/api/rooms/[code]'>)
             },
         },
     });
-    if (!room) return jsonError('Room not found', 404);
+    if (!room) return jsonError('roomNotFound', 404);
     return NextResponse.json(room);
 }

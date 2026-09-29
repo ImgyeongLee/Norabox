@@ -13,7 +13,7 @@ function emitAck(socket: RoomSocket, event: keyof ClientToServerEvents, payload?
     return new Promise((resolve) => {
         const args: unknown[] = payload === undefined ? [] : [payload];
         (socket.timeout(8000).emit as (...a: unknown[]) => void)(event, ...args, (err: Error | null, res: AckResult) =>
-            resolve(err ? { ok: false, error: "The server didn't respond — check your connection" } : res),
+            resolve(err ? { ok: false, error: 'serverTimeout' } : res),
         );
     });
 }
@@ -114,7 +114,7 @@ export function useRoom(code: string, name: string | null) {
 
     const act = useCallback(async (event: keyof ClientToServerEvents, payload?: unknown): Promise<AckResult> => {
         const socket = socketRef.current;
-        if (!socket?.connected) return { ok: false, error: 'Not connected — reconnecting…' };
+        if (!socket?.connected) return { ok: false, error: 'notConnected' };
         return emitAck(socket, event, payload);
     }, []);
 

@@ -14,7 +14,8 @@ model User {
   username     String   @unique
   email        String   @unique
   passwordHash String
-  avatar       Bytes?
+  // Set when the user has a profile image; the image itself lives in S3 at
+  // images/avatars/<id> (see src/lib/storage.ts).
   avatarMime   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -75,31 +76,52 @@ model RoomDj {
   @@id([roomId, identity])
 }
 
+// A TRPG scenario that posts are written for. Identified by name + writer
+// (case-insensitive), so posts about the same scenario are grouped together.
+model Scenario {
+  id        String   @id @default(cuid())
+  name      String
+  // null when the writer is unknown.
+  writer    String?
+  // Normalised (trimmed, lowercased) copies used for matching and uniqueness.
+  nameKey   String
+  writerKey String   @default("")
+  createdAt DateTime @default(now())
+
+  posts Post[]
+
+  @@unique([nameKey, writerKey])
+}
+
 model Post {
-  id          String   @id @default(cuid())
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  title       String
-  // Optional sub-heading describing the music.
-  description String?
-  body        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title      String
+  // Optional: a post doesn't have to be about a particular scenario.
+  scenarioId String?
+  scenario   Scenario? @relation(fields: [scenarioId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   tracks PostTrack[]
 
   @@index([createdAt])
+  @@index([scenarioId])
 }
 
 model PostTrack {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   postId      String
-  post        Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post        Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
   videoId     String
   title       String
+  // The video owner (YouTube channel name).
   channel     String
   thumbnail   String
   durationSec Int?
+  // Why this song was chosen, in Markdown.
+  description String?
   position    Int
 
   @@index([postId, position])

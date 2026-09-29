@@ -5,9 +5,11 @@ import { cache } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { DeletePostButton } from '@/components/forum/DeletePostButton';
 import { YouTubeEmbed } from '@/components/forum/YouTubeEmbed';
+import { Markdown } from '@/components/Markdown';
 import { avatarUrlFor } from '@/lib/avatar';
 import { getCurrentUser } from '@/lib/auth';
 import { formatDate, formatDuration } from '@/lib/format';
+import { getI18n } from '@/i18n/server';
 import { prisma } from '@/lib/prisma';
 
 const getPost = cache((id: string) =>
@@ -15,19 +17,23 @@ const getPost = cache((id: string) =>
         where: { id },
         include: {
             author: { select: { id: true, username: true, avatarMime: true, updatedAt: true } },
+            scenario: { select: { id: true, name: true, writer: true } },
             tracks: { orderBy: { position: 'asc' } },
         },
     }),
 );
 
 export async function generateMetadata(props: PageProps<'/forum/[id]'>): Promise<Metadata> {
-    const post = await getPost((await props.params).id);
-    return post ? { title: post.title, description: post.description ?? undefined } : {};
+    const [post, { t }] = await Promise.all([getPost((await props.params).id), getI18n()]);
+    if (!post) return {};
+    const s = post.scenario;
+    const scenario = s && (s.writer ? t.meta.scenarioBy(s.name, s.writer) : s.name);
+    return { title: post.title, description: scenario ? t.meta.postDescription(scenario) : undefined };
 }
 
 export default async function PostPage(props: PageProps<'/forum/[id]'>) {
     const { id } = await props.params;
-    const [post, user] = await Promise.all([getPost(id), getCurrentUser()]);
+    const [post, user, { t, locale }] = await Promise.all([getPost(id), getCurrentUser(), getI18n()]);
     if (!post) notFound();
     const isAuthor = user?.id === post.authorId;
     const edited = post.updatedAt.getTime() - post.createdAt.getTime() > 60_000;
@@ -35,26 +41,35 @@ export default async function PostPage(props: PageProps<'/forum/[id]'>) {
     return (
         <article className="mx-auto max-w-3xl px-4 py-10">
             <Link href="/forum" className="text-sm text-lime/60 hover:text-lime">
-                ← Back to forum
+                {t.post.back}
             </Link>
             <header className="mt-4">
                 <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">{post.title}</h1>
-                {post.description && (
-                    <p className="mt-2 text-lg font-medium text-moss sm:text-xl">{post.description}</p>
+                {post.scenario && (
+                    <p className="mt-2 text-lg sm:text-xl">
+                        <Link
+                            href={`/forum?scenario=${post.scenario.id}`}
+                            className="font-medium text-moss underline-offset-4 hover:underline"
+                            title={t.post.seeScenario}
+                        >
+                            {post.scenario.name}
+                        </Link>
+                        {post.scenario.writer && <span className="text-lime/60"> · {post.scenario.writer}</span>}
+                    </p>
                 )}
                 <div className="mt-5 flex flex-wrap items-center gap-3">
                     <Avatar name={post.author.username} src={avatarUrlFor(post.author)} size="md" />
                     <div className="text-sm">
                         <p className="font-semibold">{post.author.username}</p>
                         <p className="text-lime/55">
-                            <time dateTime={post.createdAt.toISOString()}>{formatDate(post.createdAt)}</time>
-                            {edited && ' · edited'} · {post.tracks.length} song{post.tracks.length === 1 ? '' : 's'}
+                            <time dateTime={post.createdAt.toISOString()}>{formatDate(post.createdAt, locale)}</time>
+                            {edited && ` · ${t.post.edited}`} · {t.common.songs(post.tracks.length)}
                         </p>
                     </div>
                     {isAuthor && (
                         <div className="ml-auto flex gap-2">
                             <Link href={`/forum/${post.id}/edit`} className="btn-secondary px-3 py-2">
-                                Edit
+                                {t.post.edit}
                             </Link>
                             <DeletePostButton id={post.id} />
                         </div>
@@ -62,24 +77,23 @@ export default async function PostPage(props: PageProps<'/forum/[id]'>) {
                 </div>
             </header>
 
-            {post.body && (
-                <div className="card mt-8 whitespace-pre-wrap p-5 leading-relaxed text-lime/85">{post.body}</div>
-            )}
-
-            <ol className="mt-8 space-y-8">
-                {post.tracks.map((t, i) => (
-                    <li key={t.id}>
-                        <div className="mb-2 flex items-baseline gap-3">
-                            <span className="font-mono text-sm text-moss">{String(i + 1).padStart(2, '0')}</span>
+            <ol className="mt-8 space-y-6">
+                {post.tracks.map((track, i) => (
+                    <li key={track.id} className="card space-y-4 p-4 sm:p-5">
+                        <div className="flex items-baseline gap-3">
+                            <span className="font-mono text-sm font-semibold text-moss">
+                                {String(i + 1).padStart(2, '0')}
+                            </span>
                             <div className="min-w-0">
-                                <h2 className="font-semibold leading-snug">{t.title}</h2>
+                                <h2 className="font-semibold leading-snug">{track.title}</h2>
                                 <p className="text-sm text-lime/55">
-                                    {t.channel}
-                                    {t.durationSec ? ` · ${formatDuration(t.durationSec)}` : ''}
+                                    {t.post.videoBy(track.channel)}
+                                    {track.durationSec ? ` · ${formatDuration(track.durationSec)}` : ''}
                                 </p>
                             </div>
                         </div>
-                        <YouTubeEmbed videoId={t.videoId} title={t.title} />
+                        <YouTubeEmbed videoId={track.videoId} title={track.title} />
+                        {track.description && <Markdown className="text-lime/85">{track.description}</Markdown>}
                     </li>
                 ))}
             </ol>

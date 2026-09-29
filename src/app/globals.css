@@ -101,3 +101,89 @@ input[type="range"].slider::-moz-range-thumb {
   background: var(--color-lime);
   border: 2px solid var(--color-pine);
 }
+
+/* Rendered Markdown (song descriptions) */
+.markdown {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.markdown > * + * {
+  margin-top: 0.75em;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  font-weight: 700;
+  line-height: 1.3;
+}
+.markdown h1 { font-size: 1.25em; }
+.markdown h2 { font-size: 1.15em; }
+.markdown h3,
+.markdown h4 { font-size: 1.05em; }
+.markdown a {
+  color: var(--color-moss);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.markdown a:hover {
+  color: var(--color-lime);
+}
+.markdown ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.markdown ol {
+  list-style: decimal;
+  padding-left: 1.6em;
+}
+.markdown li + li {
+  margin-top: 0.25em;
+}
+.markdown blockquote {
+  border-left: 3px solid var(--color-leaf);
+  padding-left: 0.9em;
+  color: rgb(236 243 158 / 0.75);
+}
+.markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: rgb(19 42 19 / 0.8);
+  border: 1px solid rgb(79 119 45 / 0.5);
+  border-radius: 0.35em;
+  padding: 0.1em 0.35em;
+}
+.markdown pre {
+  overflow-x: auto;
+  background: rgb(19 42 19 / 0.8);
+  border-radius: 0.6em;
+  padding: 0.8em 1em;
+}
+.markdown pre code {
+  border: 0;
+  padding: 0;
+  background: none;
+}
+.markdown hr {
+  border-color: rgb(79 119 45 / 0.5);
+}
+.markdown table {
+  border-collapse: collapse;
+}
+.markdown th,
+.markdown td {
+  border: 1px solid rgb(79 119 45 / 0.5);
+  padding: 0.3em 0.6em;
+}
+
+/* Korean: fall back to good Hangul system fonts, and don't break words mid-syllable-block. */
+:root {
+  --font-hangul: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Nanum Gothic";
+}
+body {
+  font-family: var(--font-geist-sans), var(--font-hangul), ui-sans-serif, system-ui, sans-serif;
+}
+:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}

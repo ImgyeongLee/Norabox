@@ -1,77 +1,106 @@
 import { z } from "zod";
+import type { ErrorCode } from "@/i18n/messages/en";
+import { MAX_POST_TRACKS, MAX_TRACK_DESCRIPTION } from "@/lib/limits";
+
+export { MAX_POST_TRACKS, MAX_TRACK_DESCRIPTION };
+
+// Validation messages are error codes (see src/i18n/messages); the UI translates them.
+const e = (code: ErrorCode) => code;
 
 export const ROOM_CODE_RE = /^[A-Za-z0-9]+$/;
 
 export const roomCodeSchema = z
   .string()
   .trim()
-  .min(3, "Room name must be at least 3 characters")
-  .max(32, "Room name must be at most 32 characters")
-  .regex(ROOM_CODE_RE, "Use only letters and numbers — no spaces or special characters");
+  .min(3, e("roomNameShort"))
+  .max(32, e("roomNameLong"))
+  .regex(ROOM_CODE_RE, e("roomNameChars"));
 
 export const usernameSchema = z
   .string()
   .trim()
-  .min(3, "Username must be at least 3 characters")
-  .max(20, "Username must be at most 20 characters")
-  .regex(/^[A-Za-z0-9_]+$/, "Username can contain letters, numbers and underscores");
+  .min(3, e("usernameShort"))
+  .max(20, e("usernameLong"))
+  .regex(/^[A-Za-z0-9_]+$/, e("usernameChars"));
 
 export const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters")
-  .max(128, "Password is too long");
+  .min(8, e("passwordShort"))
+  .max(128, e("passwordLong"));
 
 export const signupSchema = z
   .object({
     username: usernameSchema,
-    email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address")),
+    email: z.string().trim().toLowerCase().pipe(z.email(e("emailInvalid"))),
     password: passwordSchema,
     passwordConfirm: z.string(),
   })
   .refine((d) => d.password === d.passwordConfirm, {
-    message: "Passwords do not match",
+    message: e("passwordsMismatch"),
     path: ["passwordConfirm"],
   });
 
 export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().min(1, "Enter your email"),
-  password: z.string().min(1, "Enter your password"),
+  email: z.string().trim().toLowerCase().min(1, e("emailRequired")),
+  password: z.string().min(1, e("passwordRequired")),
 });
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Enter your current password"),
+    currentPassword: z.string().min(1, e("currentPasswordRequired")),
     newPassword: passwordSchema,
     newPasswordConfirm: z.string(),
   })
   .refine((d) => d.newPassword === d.newPasswordConfirm, {
-    message: "Passwords do not match",
+    message: e("passwordsMismatch"),
     path: ["newPasswordConfirm"],
   });
 
 export const videoSchema = z.object({
-  videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/, "Invalid YouTube video id"),
-  title: z.string().trim().min(1).max(300),
-  channel: z.string().trim().max(200),
-  thumbnail: z.url().max(500),
-  durationSec: z.number().int().positive().max(60 * 60 * 24).nullable(),
+  videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/, e("invalidVideo")),
+  title: z.string().trim().min(1, e("invalidVideo")).max(300, e("invalidVideo")),
+  channel: z.string().trim().max(200, e("invalidVideo")),
+  thumbnail: z.url(e("invalidVideo")).max(500, e("invalidVideo")),
+  durationSec: z.number(e("invalidVideo")).int().positive().max(60 * 60 * 24).nullable(),
 });
 
 export type Video = z.infer<typeof videoSchema>;
 
-export const postSchema = z.object({
-  title: z.string().trim().min(1, "Give your post a title").max(120, "Title is too long"),
-  description: z.string().trim().max(200, "Description is too long").optional().default(""),
-  body: z.string().trim().max(5000, "Text is too long").optional().default(""),
-  tracks: z.array(videoSchema).min(1, "Add at least one song").max(50, "A post can have up to 50 songs"),
-});
+export const postSchema = z
+  .object({
+    title: z.string().trim().min(1, e("titleRequired")).max(120, e("titleLong")),
+    scenario: z.string().trim().max(120, e("scenarioLong")).optional().default(""),
+    writer: z.string().trim().max(80, e("writerLong")).optional().default(""),
+    tracks: z
+      .array(
+        videoSchema.extend({
+          description: z
+            .string()
+            .trim()
+            .max(MAX_TRACK_DESCRIPTION, e("descriptionLong"))
+            .optional()
+            .default(""),
+        }),
+      )
+      .min(1, e("songsRequired"))
+      .max(MAX_POST_TRACKS, e("songsMax")),
+  })
+  .refine((d) => d.scenario || !d.writer, {
+    message: e("writerNeedsScenario"),
+    path: ["writer"],
+  });
 
-/** First error message per field, for showing under form inputs. */
+export type PostInput = z.infer<typeof postSchema>;
+
+/** Normalises a scenario name or writer for matching ("  The Lost Mine " → "the lost mine"). */
+export const scenarioKey = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
+
+/** First error code per field, for showing under form inputs. Unknown (zod default) messages become "invalidInput". */
 export function fieldErrors(error: z.ZodError) {
   const out: Record<string, string> = {};
   for (const issue of error.issues) {
     const key = issue.path.join(".") || "form";
-    out[key] ??= issue.message;
+    out[key] ??= /^[a-zA-Z]+$/.test(issue.message) ? issue.message : e("invalidInput");
   }
   return out;
 }

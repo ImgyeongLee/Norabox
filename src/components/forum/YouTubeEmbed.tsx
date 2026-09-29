@@ -3,9 +3,11 @@
 /* eslint-disable @next/next/no-img-element -- YouTube thumbnails */
 import { useState } from 'react';
 import { PlayIcon } from '@/components/icons';
+import { useI18n } from '@/i18n/client';
 
 /** Lightweight YouTube embed: shows the thumbnail until clicked, then loads the player. */
 export function YouTubeEmbed({ videoId, title }: { videoId: string; title: string }) {
+    const { t } = useI18n();
     const [active, setActive] = useState(false);
     return (
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
@@ -18,7 +20,7 @@ export function YouTubeEmbed({ videoId, title }: { videoId: string; title: strin
                     allowFullScreen
                 />
             ) : (
-                <button onClick={() => setActive(true)} className="group absolute inset-0" aria-label={`Play ${title}`}>
+                <button onClick={() => setActive(true)} className="group absolute inset-0" aria-label={t.embed.play(title)}>
                     <img
                         src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
                         alt=""

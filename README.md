@@ -35,7 +35,8 @@ share the same Neon database and `AUTH_SECRET`:
 
 **2. Next.js app on Vercel**
 
-- Env: `DATABASE_URL`, `AUTH_SECRET`, `YOUTUBE_API_KEY`, `NEXT_PUBLIC_SOCKET_URL=https://<realtime-host>`
+- Env: `DATABASE_URL`, `AUTH_SECRET`, `YOUTUBE_API_KEY`, `NEXT_PUBLIC_SOCKET_URL=https://<realtime-host>`,
+  `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
 - `NEXT_PUBLIC_SOCKET_URL` is baked in at build time, so redeploy after changing it.
 
 Run `npm run db:deploy` against Neon when migrations change.
@@ -55,6 +56,19 @@ The server advances the playlist on its own timer (using the track duration), fo
 
 Volume on each client = admin's room volume × the listener's own volume.
 
+## Languages
+
+English and Korean. The language comes from the visitor's saved choice (the EN / 한국어 switch in
+the header, stored in the `norabox_locale` cookie), otherwise from their browser's `Accept-Language`,
+falling back to English. URLs are the same in both languages, so invite links work for everyone.
+
+- UI text lives in `src/i18n/messages/en.ts` and `ko.ts`. `ko` is typed against `en`, so a missing
+  Korean string fails `npm run typecheck`.
+- Server Components use `await getI18n()` (`src/i18n/server.ts`); Client Components use `useI18n()`
+  (`src/i18n/client.tsx`).
+- The API and realtime server return error *codes* (keys of `errors` in the dictionaries), and the
+  browser shows them in the viewer's language with `tError(code)`.
+
 ## Roles
 
 | | Admin (room creator) | DJ | Listener |
@@ -70,6 +84,14 @@ Signed-in users are recognised by account instead, so the admin role works acros
 
 Schema changes: edit `prisma/schema.prisma`, then `npm run db:migrate -- --name <change>` (needs a
 database Prisma can create a shadow copy of; with Neon, a dev branch works well), and `npm run db:deploy` in production.
+
+## Image storage
+
+Profile images are stored in a private S3 bucket at `images/avatars/<userId>` (one object per user,
+overwritten on change) and served through `/api/users/<id>/avatar`, so the bucket needs no public access
+and no CORS rules. The database only keeps `User.avatarMime` as the "has an image" flag. See
+`src/lib/storage.ts`. The variables are `S3_*` rather than `AWS_*` because Vercel presets `AWS_REGION`
+to the function's own region.
 
 ## Notes
 

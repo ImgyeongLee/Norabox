@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useI18n } from '@/i18n/client';
 import { getClientId } from '@/lib/client-identity';
 import { roomCodeSchema } from '@/lib/validation';
 
@@ -11,14 +12,15 @@ function sanitize(v: string) {
 
 export function CreateRoomForm() {
     const router = useRouter();
+    const { t, tError } = useI18n();
     const [name, setName] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
 
-    async function submit(e: React.FormEvent) {
+    async function submit(e: React.SubmitEvent) {
         e.preventDefault();
         const parsed = roomCodeSchema.safeParse(name);
-        if (!parsed.success) return setError(parsed.error.issues[0].message);
+        if (!parsed.success) return setError(tError(parsed.error.issues[0].message));
         setBusy(true);
         setError(null);
         try {
@@ -28,10 +30,10 @@ export function CreateRoomForm() {
                 body: JSON.stringify({ name: parsed.data, clientId: getClientId() }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error ?? 'Could not create the room');
+            if (!res.ok) throw new Error(data.error ?? 'createRoomFailed');
             router.push(`/room/${data.code}`);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Could not create the room');
+            setError(tError(err instanceof Error ? err.message : 'createRoomFailed'));
             setBusy(false);
         }
     }
@@ -39,13 +41,13 @@ export function CreateRoomForm() {
     return (
         <form onSubmit={submit} noValidate>
             <label htmlFor="room-name" className="label">
-                Room name
+                {t.roomForms.roomName}
             </label>
             <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                     id="room-name"
                     className="input font-mono"
-                    placeholder="e.g. FridayVibes"
+                    placeholder={t.roomForms.roomNamePlaceholder}
                     value={name}
                     onChange={(e) => {
                         setName(sanitize(e.target.value));
@@ -58,11 +60,11 @@ export function CreateRoomForm() {
                     aria-describedby="room-name-hint"
                 />
                 <button className="btn-primary shrink-0" disabled={busy || !name}>
-                    {busy ? 'Creating…' : 'Create room'}
+                    {busy ? t.roomForms.creating : t.roomForms.create}
                 </button>
             </div>
             <p id="room-name-hint" className={error ? 'field-error' : 'mt-1.5 text-xs text-lime/50'}>
-                {error ?? 'Letters and numbers only. Your room name becomes its invite code.'}
+                {error ?? t.roomForms.roomNameHint}
             </p>
         </form>
     );
@@ -70,11 +72,12 @@ export function CreateRoomForm() {
 
 export function JoinRoomForm() {
     const router = useRouter();
+    const { t, tError } = useI18n();
     const [code, setCode] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
 
-    async function submit(e: React.FormEvent) {
+    async function submit(e: React.SubmitEvent) {
         e.preventDefault();
         if (!code) return;
         setBusy(true);
@@ -84,7 +87,7 @@ export function JoinRoomForm() {
             const data = await res.json();
             router.push(`/room/${data.code}`);
         } else {
-            setError('No room found with that invite code');
+            setError(tError('inviteNotFound'));
             setBusy(false);
         }
     }
@@ -92,13 +95,13 @@ export function JoinRoomForm() {
     return (
         <form onSubmit={submit} noValidate>
             <label htmlFor="invite-code" className="label">
-                Invite code
+                {t.roomForms.inviteCode}
             </label>
             <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                     id="invite-code"
                     className="input font-mono"
-                    placeholder="Paste an invite code"
+                    placeholder={t.roomForms.invitePlaceholder}
                     value={code}
                     onChange={(e) => {
                         setCode(sanitize(e.target.value));
@@ -109,7 +112,7 @@ export function JoinRoomForm() {
                     aria-invalid={!!error}
                 />
                 <button className="btn-secondary shrink-0" disabled={busy || !code}>
-                    {busy ? 'Joining…' : 'Join room'}
+                    {busy ? t.roomForms.joining : t.roomForms.join}
                 </button>
             </div>
             {error && <p className="field-error">{error}</p>}

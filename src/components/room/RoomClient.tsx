@@ -12,6 +12,7 @@ import { Playlist } from '@/components/room/Playlist';
 import { SyncedPlayer } from '@/components/room/SyncedPlayer';
 import { useRoom, type ConnectionStatus } from '@/components/room/useRoom';
 import { VolumePanel } from '@/components/room/VolumePanel';
+import { useI18n } from '@/i18n/client';
 import { forgetJoin, getJoinedName, getNickname, rememberJoin, setNickname } from '@/lib/client-identity';
 import { canControl as canControlRole, type AckResult } from '@/lib/room-types';
 import type { Video } from '@/lib/validation';
@@ -54,6 +55,7 @@ export function RoomClient({ code, user }: Props) {
     const [joinedName, setJoinedName] = useState<string | null>(null);
     const name = joinedName ?? rejoinName;
     const room = useRoom(code, name);
+    const { t, tError } = useI18n();
 
     // A failed join (e.g. the room was removed) shouldn't auto-retry on the next refresh.
     useEffect(() => {
@@ -69,16 +71,16 @@ export function RoomClient({ code, user }: Props) {
     if (room.fatal) {
         return (
             <div className="mx-auto max-w-md px-4 py-16 text-center">
-                <h1 className="text-2xl font-bold">Can&apos;t join this room</h1>
-                <p className="mt-2 text-lime/60">{room.fatal}</p>
+                <h1 className="text-2xl font-bold">{t.room.cantJoin}</h1>
+                <p className="mt-2 text-lime/60">{tError(room.fatal)}</p>
                 <Link href="/" className="btn-primary mt-6">
-                    Back home
+                    {t.common.backHome}
                 </Link>
             </div>
         );
     }
     if (!room.snapshot) {
-        return <p className="py-24 text-center text-lime/60">Joining {code}…</p>;
+        return <p className="py-24 text-center text-lime/60">{t.room.joining(code)}</p>;
     }
     return <RoomView code={code} room={room as RoomReady} />;
 }
@@ -92,8 +94,9 @@ function JoinGate({ code, user, onJoin }: { code: string; user: Props['user']; o
     const saved = useSyncExternalStore(noopSubscribe, getNickname, () => '');
     const [typed, setNick] = useState<string | null>(null);
     const nick = typed ?? saved;
+    const { t } = useI18n();
 
-    function submit(e: React.FormEvent) {
+    function submit(e: React.SubmitEvent) {
         e.preventDefault();
         if (user) return onJoin(user.username);
         const n = nick.trim().slice(0, 24);
@@ -105,17 +108,17 @@ function JoinGate({ code, user, onJoin }: { code: string; user: Props['user']; o
     return (
         <div className="mx-auto max-w-md px-4 py-12 sm:py-20">
             <form onSubmit={submit} className="card p-6 text-center sm:p-8">
-                <p className="text-xs font-semibold uppercase tracking-wider text-moss">You&apos;re invited to</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-moss">{t.room.invitedTo}</p>
                 <h1 className="mt-2 break-all font-mono text-3xl font-bold">{code}</h1>
                 {user ? (
                     <div className="mt-6 flex items-center justify-center gap-3">
                         <Avatar name={user.username} src={user.avatarUrl} size="md" />
-                        <span className="font-medium">Joining as {user.username}</span>
+                        <span className="font-medium">{t.room.joiningAs(user.username)}</span>
                     </div>
                 ) : (
                     <div className="mt-6 text-left">
                         <label htmlFor="nick" className="label">
-                            Your display name
+                            {t.room.displayName}
                         </label>
                         <input
                             id="nick"
@@ -123,31 +126,32 @@ function JoinGate({ code, user, onJoin }: { code: string; user: Props['user']; o
                             value={nick}
                             onChange={(e) => setNick(e.target.value)}
                             maxLength={24}
-                            placeholder="What should we call you?"
+                            placeholder={t.room.displayNamePlaceholder}
                             autoFocus
                             autoComplete="nickname"
                         />
                     </div>
                 )}
                 <button className="btn-primary mt-6 w-full" disabled={!user && !nick.trim()}>
-                    Join &amp; start listening
+                    {t.room.joinAndListen}
                 </button>
-                <p className="mt-3 text-xs text-lime/45">
-                    Audio starts when you join. Keep this tab open to stay in sync.
-                </p>
+                <p className="mt-3 text-xs text-lime/45">{t.room.joinHint}</p>
             </form>
         </div>
     );
 }
 
+const STATUS_STYLE: Record<ConnectionStatus, string> = {
+    connected: 'bg-moss',
+    connecting: 'bg-lime/50 animate-pulse',
+    reconnecting: 'bg-danger animate-pulse',
+    error: 'bg-danger',
+};
+
 function StatusDot({ status }: { status: ConnectionStatus }) {
-    const map = {
-        connected: ['bg-moss', 'Live'],
-        connecting: ['bg-lime/50 animate-pulse', 'Connecting'],
-        reconnecting: ['bg-danger animate-pulse', 'Reconnecting'],
-        error: ['bg-danger', 'Disconnected'],
-    } as const;
-    const [cls, label] = map[status];
+    const { t } = useI18n();
+    const cls = STATUS_STYLE[status];
+    const label = t.room.status[status];
     return (
         <span className="inline-flex items-center gap-1.5 text-xs text-lime/60">
             <span className={`size-2 rounded-full ${cls}`} />
@@ -158,6 +162,7 @@ function StatusDot({ status }: { status: ConnectionStatus }) {
 
 function RoomView({ code, room }: { code: string; room: RoomReady }) {
     const router = useRouter();
+    const { t, tError } = useI18n();
     const { snapshot, memberId, status, positionOf, act, report } = room;
     const me = snapshot.members.find((m) => m.memberId === memberId);
     const role = me?.role ?? 'listener';
@@ -199,10 +204,10 @@ function RoomView({ code, room }: { code: string; room: RoomReady }) {
     const run = useCallback(
         async (event: Parameters<typeof act>[0], payload?: unknown): Promise<AckResult> => {
             const res = await act(event, payload);
-            if (!res.ok) setToast(res.error);
+            if (!res.ok) setToast(tError(res.error));
             return res;
         },
-        [act],
+        [act, tError],
     );
 
     function changePersonal(v: number) {
@@ -217,15 +222,15 @@ function RoomView({ code, room }: { code: string; room: RoomReady }) {
 
     async function addVideo(video: Video) {
         const res = await run('playlist:add', { video });
-        if (res.ok) setToast(`Added “${video.title}”`);
+        if (res.ok) setToast(t.room.added(video.title));
         return null;
     }
 
     const inviteLink = () => `${window.location.origin}/room/${code}`;
     const TABS: { id: Tab; label: string }[] = [
-        { id: 'playlist', label: `Playlist (${snapshot.items.length})` },
-        { id: 'search', label: 'Add songs' },
-        { id: 'people', label: `People (${snapshot.members.length})` },
+        { id: 'playlist', label: t.room.tabs.playlist(snapshot.items.length) },
+        { id: 'search', label: t.room.tabs.search },
+        { id: 'people', label: t.room.tabs.people(snapshot.members.length) },
     ];
 
     return (
@@ -242,12 +247,12 @@ function RoomView({ code, room }: { code: string; room: RoomReady }) {
                 <div className="flex w-full gap-2 sm:ml-auto sm:w-auto">
                     <CopyButton
                         text={snapshot.code}
-                        label="Copy invite code"
+                        label={t.room.copyCode}
                         className="btn-primary flex-1 sm:flex-none"
                     />
-                    <CopyButton text={inviteLink} label="Copy link" className="btn-secondary flex-1 sm:flex-none" />
+                    <CopyButton text={inviteLink} label={t.room.copyLink} className="btn-secondary flex-1 sm:flex-none" />
                     <button type="button" onClick={leave} className="btn-ghost">
-                        Leave
+                        {t.room.leave}
                     </button>
                 </div>
             </div>
@@ -310,9 +315,7 @@ function RoomView({ code, room }: { code: string; room: RoomReady }) {
                         {tab === 'playlist' && (
                             <>
                                 {canControl && snapshot.items.length > 1 && (
-                                    <p className="mb-2 text-xs text-lime/45">
-                                        Drag the handle to reorder. Tap a song to play it.
-                                    </p>
+                                    <p className="mb-2 text-xs text-lime/45">{t.room.dragHint}</p>
                                 )}
                                 <Playlist
                                     items={snapshot.items}
@@ -322,11 +325,7 @@ function RoomView({ code, room }: { code: string; room: RoomReady }) {
                                     onReorder={(orderedIds) => run('playlist:reorder', { orderedIds })}
                                     onRemove={(itemId) => run('playlist:remove', { itemId })}
                                     onSelect={canControl ? (itemId) => run('player:select', { itemId }) : undefined}
-                                    emptyText={
-                                        canControl
-                                            ? 'The playlist is empty. Head to “Add songs” to queue something.'
-                                            : 'The playlist is empty. Waiting for the DJ…'
-                                    }
+                                    emptyText={canControl ? t.room.emptyControl : t.room.emptyListen}
                                 />
                             </>
                         )}
@@ -335,7 +334,7 @@ function RoomView({ code, room }: { code: string; room: RoomReady }) {
                                 onAdd={addVideo}
                                 addedIds={addedIds}
                                 disabled={!canControl}
-                                disabledReason="Only the admin or a DJ can add songs. Ask the admin to make you a DJ."
+                                disabledReason={t.room.searchDenied}
                             />
                         )}
                         {tab === 'people' && (

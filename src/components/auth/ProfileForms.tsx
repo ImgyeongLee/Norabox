@@ -4,7 +4,14 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { Field } from '@/components/auth/Field';
+import { useI18n } from '@/i18n/client';
 import { useJsonForm } from '@/lib/use-json-form';
+
+/** Translates a form's error codes for display. */
+function useTranslatedErrors(codes: Record<string, string>) {
+    const { tError } = useI18n();
+    return Object.fromEntries(Object.entries(codes).map(([k, v]) => [k, tError(v)]));
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
@@ -30,12 +37,13 @@ async function toSquareImage(file: File): Promise<Blob> {
         .drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 256, 256);
     bitmap.close();
     return new Promise((resolve, reject) =>
-        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not process image'))), 'image/webp', 0.88),
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('imageInvalid'))), 'image/webp', 0.88),
     );
 }
 
 export function AvatarForm({ username, avatarUrl }: { username: string; avatarUrl: string | null }) {
     const router = useRouter();
+    const { t, tError } = useI18n();
     const input = useRef<HTMLInputElement>(null);
     const [busy, setBusy] = useState(false);
     const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -44,17 +52,17 @@ export function AvatarForm({ username, avatarUrl }: { username: string; avatarUr
         setBusy(true);
         setMsg(null);
         try {
-            if (!file.type.startsWith('image/')) throw new Error('Choose an image file');
+            if (!file.type.startsWith('image/')) throw new Error('imageInvalid');
             const form = new FormData();
             const blob = await toSquareImage(file);
             form.append('avatar', new File([blob], 'avatar.webp', { type: blob.type }));
             const res = await fetch('/api/profile/avatar', { method: 'POST', body: form });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
-            setMsg({ ok: true, text: 'Profile image updated' });
+            setMsg({ ok: true, text: t.profile.imageUpdated });
             router.refresh();
         } catch (e) {
-            setMsg({ ok: false, text: e instanceof Error ? e.message : 'Upload failed' });
+            setMsg({ ok: false, text: tError(e instanceof Error ? e.message : 'uploadFailed') });
         } finally {
             setBusy(false);
             if (input.current) input.current.value = '';
@@ -65,26 +73,26 @@ export function AvatarForm({ username, avatarUrl }: { username: string; avatarUr
         setBusy(true);
         await fetch('/api/profile/avatar', { method: 'DELETE' });
         setBusy(false);
-        setMsg({ ok: true, text: 'Profile image removed' });
+        setMsg({ ok: true, text: t.profile.imageRemoved });
         router.refresh();
     }
 
     return (
-        <Section title="Profile image">
+        <Section title={t.profile.image}>
             <div className="flex flex-wrap items-center gap-5">
                 <Avatar name={username} src={avatarUrl} size="xl" />
                 <div className="space-y-2">
                     <div className="flex flex-wrap gap-2">
                         <button className="btn-primary" disabled={busy} onClick={() => input.current?.click()}>
-                            {busy ? 'Uploading…' : avatarUrl ? 'Change image' : 'Upload image'}
+                            {busy ? t.profile.uploading : avatarUrl ? t.profile.changeImage : t.profile.uploadImage}
                         </button>
                         {avatarUrl && (
                             <button className="btn-ghost" disabled={busy} onClick={remove}>
-                                Remove
+                                {t.profile.remove}
                             </button>
                         )}
                     </div>
-                    <p className="text-xs text-lime/50">JPEG, PNG or WebP. We crop it to a square.</p>
+                    <p className="text-xs text-lime/50">{t.profile.imageHint}</p>
                     {msg && <Notice ok={msg.ok}>{msg.text}</Notice>}
                 </div>
                 <input
@@ -101,11 +109,13 @@ export function AvatarForm({ username, avatarUrl }: { username: string; avatarUr
 
 export function UsernameForm({ username }: { username: string }) {
     const router = useRouter();
-    const { errors, busy, submit } = useJsonForm();
+    const { t } = useI18n();
+    const { errors: codes, busy, submit } = useJsonForm();
+    const errors = useTranslatedErrors(codes);
     const [value, setValue] = useState(username);
     const [saved, setSaved] = useState(false);
 
-    async function onSubmit(e: React.FormEvent) {
+    async function onSubmit(e: React.SubmitEvent) {
         e.preventDefault();
         setSaved(false);
         if (await submit('/api/profile', { username: value }, 'PATCH')) {
@@ -115,10 +125,10 @@ export function UsernameForm({ username }: { username: string }) {
     }
 
     return (
-        <Section title="Username">
+        <Section title={t.profile.username}>
             <form onSubmit={onSubmit} className="space-y-4" noValidate>
                 <Field
-                    label="Username"
+                    label={t.profile.username}
                     name="username"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
@@ -127,9 +137,9 @@ export function UsernameForm({ username }: { username: string }) {
                 />
                 <div className="flex items-center gap-3">
                     <button className="btn-primary" disabled={busy || value.trim() === username}>
-                        {busy ? 'Saving…' : 'Save username'}
+                        {busy ? t.common.saving : t.profile.saveUsername}
                     </button>
-                    {saved && <Notice ok>Username updated</Notice>}
+                    {saved && <Notice ok>{t.profile.usernameUpdated}</Notice>}
                 </div>
             </form>
         </Section>
@@ -137,10 +147,12 @@ export function UsernameForm({ username }: { username: string }) {
 }
 
 export function PasswordForm() {
-    const { errors, busy, submit } = useJsonForm();
+    const { t } = useI18n();
+    const { errors: codes, busy, submit } = useJsonForm();
+    const errors = useTranslatedErrors(codes);
     const [saved, setSaved] = useState(false);
 
-    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    async function onSubmit(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
         setSaved(false);
         const form = e.currentTarget;
@@ -152,24 +164,24 @@ export function PasswordForm() {
 
     const fieldKeys = ['currentPassword', 'newPassword', 'newPasswordConfirm'];
     return (
-        <Section title="Change password">
+        <Section title={t.profile.changePassword}>
             <form onSubmit={onSubmit} className="space-y-4" noValidate>
                 <Field
-                    label="Current password"
+                    label={t.profile.currentPassword}
                     name="currentPassword"
                     type="password"
                     autoComplete="current-password"
                     error={errors.currentPassword}
                 />
                 <Field
-                    label="New password"
+                    label={t.profile.newPassword}
                     name="newPassword"
                     type="password"
                     autoComplete="new-password"
                     error={errors.newPassword}
                 />
                 <Field
-                    label="Confirm new password"
+                    label={t.profile.confirmNewPassword}
                     name="newPasswordConfirm"
                     type="password"
                     autoComplete="new-password"
@@ -178,9 +190,9 @@ export function PasswordForm() {
                 {errors.form && !fieldKeys.some((k) => errors[k]) && <Notice ok={false}>{errors.form}</Notice>}
                 <div className="flex items-center gap-3">
                     <button className="btn-primary" disabled={busy}>
-                        {busy ? 'Saving…' : 'Change password'}
+                        {busy ? t.common.saving : t.profile.changePassword}
                     </button>
-                    {saved && <Notice ok>Password changed</Notice>}
+                    {saved && <Notice ok>{t.profile.passwordChanged}</Notice>}
                 </div>
             </form>
         </Section>

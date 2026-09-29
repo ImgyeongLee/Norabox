@@ -18,12 +18,13 @@ export function useJsonForm() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErrors({ ...(data.fields ?? {}), form: data.error ?? "Something went wrong" });
+        // Values are error codes; components translate them with useI18n().tError.
+        setErrors({ ...(data.fields ?? {}), form: data.error ?? "generic" });
         return null;
       }
       return data as T;
     } catch {
-      setErrors({ form: "Network error — please try again" });
+      setErrors({ form: "network" });
       return null;
     } finally {
       setBusy(false);

@@ -21,9 +21,7 @@ export async function POST(req: Request) {
     await purgeIfExpired(slug);
     const existing = await prisma.room.findUnique({ where: { slug }, select: { id: true } });
     if (existing) {
-        return jsonError('A room with this name already exists — pick another name or join it instead', 409, {
-            name: 'Room name is taken',
-        });
+        return jsonError('roomNameTaken', 409, { name: 'roomNameTaken' });
     }
     const me = await getCurrentUser();
     const room = await prisma.room.create({

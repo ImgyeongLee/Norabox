@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useI18n } from '@/i18n/client';
 
 export function CopyButton({
     text,
@@ -11,6 +12,7 @@ export function CopyButton({
     label: string;
     className?: string;
 }) {
+    const { t } = useI18n();
     const [copied, setCopied] = useState(false);
     async function copy() {
         const value = typeof text === 'function' ? text() : text;
@@ -30,7 +32,7 @@ export function CopyButton({
     }
     return (
         <button type="button" onClick={copy} className={className}>
-            {copied ? 'Copied!' : label}
+            {copied ? t.common.copied : label}
         </button>
     );
 }

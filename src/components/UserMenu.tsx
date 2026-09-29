@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '@/components/Avatar';
+import { useI18n } from '@/i18n/client';
 
 export function UserMenu({ username, avatarUrl }: { username: string; avatarUrl: string | null }) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
     const router = useRouter();
+    const { t } = useI18n();
 
     useEffect(() => {
         if (!open) return;
@@ -48,20 +50,20 @@ export function UserMenu({ username, avatarUrl }: { username: string; avatarUrl:
                         role="menuitem"
                         onClick={() => setOpen(false)}
                         className="block rounded-lg px-3 py-2 text-sm hover:bg-fern">
-                        Profile
+                        {t.nav.profile}
                     </Link>
                     <Link
                         href="/forum/new"
                         role="menuitem"
                         onClick={() => setOpen(false)}
                         className="block rounded-lg px-3 py-2 text-sm hover:bg-fern">
-                        Share a playlist
+                        {t.nav.sharePlaylist}
                     </Link>
                     <button
                         role="menuitem"
                         onClick={logout}
                         className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-fern">
-                        Log out
+                        {t.nav.logout}
                     </button>
                 </div>
             )}
