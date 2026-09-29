@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { AvatarForm, PasswordForm, UsernameForm } from '@/components/auth/ProfileForms';
+import { AvatarForm, DeleteAccountForm, PasswordForm, UsernameForm } from '@/components/auth/ProfileForms';
 import { getCurrentUser } from '@/lib/auth';
 import { getI18n } from '@/i18n/server';
 
@@ -21,6 +21,7 @@ export default async function ProfilePage() {
             <AvatarForm username={user.username} avatarUrl={user.avatarUrl} />
             <UsernameForm username={user.username} />
             <PasswordForm />
+            <DeleteAccountForm />
         </div>
     );
 }

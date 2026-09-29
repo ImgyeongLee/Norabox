@@ -5,6 +5,7 @@ import { PostCard, postCardSelect } from '@/components/forum/PostCard';
 import { getI18n } from '@/i18n/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { USER_ACTIVE } from '@/lib/users';
 
 export async function generateMetadata(): Promise<Metadata> {
     const { t } = await getI18n();
@@ -26,7 +27,7 @@ export default async function LikedPage(props: PageProps<'/liked'>) {
                               { title: text },
                               { scenario: { name: text } },
                               { scenario: { writer: text } },
-                              { author: { username: text } },
+                              { author: { username: text, status: USER_ACTIVE } },
                           ],
                       },
                   }

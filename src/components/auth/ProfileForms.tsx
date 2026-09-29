@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { Field } from '@/components/auth/Field';
+import { useConfirm } from '@/components/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { useJsonForm } from '@/lib/use-json-form';
 
@@ -196,5 +197,51 @@ export function PasswordForm() {
                 </div>
             </form>
         </Section>
+    );
+}
+
+export function DeleteAccountForm() {
+    const router = useRouter();
+    const confirm = useConfirm();
+    const { t } = useI18n();
+    const { errors: codes, busy, submit } = useJsonForm();
+    const errors = useTranslatedErrors(codes);
+    const [password, setPassword] = useState('');
+
+    async function onSubmit(e: React.SubmitEvent) {
+        e.preventDefault();
+        const ok = await confirm({
+            title: t.profile.deleteConfirmTitle,
+            body: t.profile.deleteConfirmBody,
+            confirmLabel: t.profile.deleteAccount,
+            danger: true,
+        });
+        if (!ok) return;
+        if (await submit('/api/profile', { password }, 'DELETE')) {
+            router.push('/');
+            router.refresh();
+        }
+    }
+
+    return (
+        <section className="card border-danger/40 p-5 sm:p-6">
+            <h2 className="text-lg font-semibold text-danger">{t.profile.deleteAccount}</h2>
+            <p className="mt-1 text-sm text-lime/65">{t.profile.deleteAccountBody}</p>
+            <form onSubmit={onSubmit} className="mt-4 space-y-4" noValidate>
+                <Field
+                    label={t.profile.currentPassword}
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    error={errors.password}
+                />
+                {errors.form && !errors.password && <Notice ok={false}>{errors.form}</Notice>}
+                <button className="btn-danger" disabled={busy || !password}>
+                    {busy ? t.profile.deleting : t.profile.deleteAccount}
+                </button>
+            </form>
+        </section>
     );
 }

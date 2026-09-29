@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { Header } from "@/components/Header";
 import { I18nProvider } from "@/i18n/client";
 import { getI18n } from "@/i18n/server";
@@ -20,13 +21,31 @@ export const viewport: Viewport = { themeColor: "#132a13" };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const { locale, t } = await getI18n();
+  // Where "Contact" in the footer sends email; set CONTACT_EMAIL in .env / Vercel. Hidden when unset.
+  const contactEmail = process.env.CONTACT_EMAIL?.trim();
   return (
     <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <I18nProvider locale={locale}>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-leaf/20 py-6 text-center text-xs text-lime/40">{t.nav.footer}</footer>
+          <ConfirmProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <footer className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-t border-leaf/20 px-4 py-6 text-center text-xs text-lime/40">
+              <span>{t.nav.footer}</span>
+              {contactEmail && (
+                <>
+                  <span aria-hidden>·</span>
+                  <a
+                    href={`mailto:${contactEmail}?subject=${encodeURIComponent(t.nav.contactSubject)}`}
+                    title={t.nav.contactTitle}
+                    className="text-lime/60 underline-offset-4 hover:text-lime hover:underline"
+                  >
+                    {t.nav.contact}
+                  </a>
+                </>
+              )}
+            </footer>
+          </ConfirmProvider>
         </I18nProvider>
       </body>
     </html>

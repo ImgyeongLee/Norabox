@@ -4,7 +4,8 @@ import type { Video } from "@/lib/validation";
 export type ImportablePlaylist = {
   id: string;
   title: string;
-  author: string;
+  /** null when the author deleted their account. */
+  author: string | null;
   scenario: { name: string; writer: string | null } | null;
   tracks: Video[];
 };

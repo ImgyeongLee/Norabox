@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma';
 import { avatarKey, getImage } from '@/lib/storage';
+import { USER_ACTIVE } from '@/lib/users';
 
 /** Streams a user's profile image from the private S3 bucket. */
 export async function GET(_req: Request, ctx: RouteContext<'/api/users/[id]/avatar'>) {
     const { id } = await ctx.params;
-    const user = await prisma.user.findUnique({ where: { id }, select: { avatarMime: true } });
+    const user = await prisma.user.findUnique({ where: { id, status: USER_ACTIVE }, select: { avatarMime: true } });
     if (!user?.avatarMime) return new Response('Not found', { status: 404 });
 
     const image = await getImage(avatarKey(id)).catch((e) => {

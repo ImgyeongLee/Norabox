@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { avatarUrlFor } from "@/lib/avatar";
 import { prisma } from "@/lib/prisma";
+import { USER_ACTIVE } from "@/lib/users";
 import { SESSION_COOKIE, SESSION_MAX_AGE, signSession, verifySession } from "@/lib/session";
 
 export type CurrentUser = {
@@ -15,8 +16,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const store = await cookies();
   const userId = await verifySession(store.get(SESSION_COOKIE)?.value);
   if (!userId) return null;
+  // Sessions of deleted accounts stop working immediately.
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: userId, status: USER_ACTIVE },
     select: { id: true, username: true, email: true, avatarMime: true, updatedAt: true },
   });
   if (!user) return null;

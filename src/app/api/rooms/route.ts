@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { jsonError, readJson, validationError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
 import { purgeIfExpired } from '@/lib/rooms';
+import { USER_DELETED } from '@/lib/users';
 import { roomCodeSchema } from '@/lib/validation';
 
 const createRoomSchema = z.object({
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
         ? await prisma.post.findUnique({
               where: { id: importPostId },
               select: {
-                  author: { select: { username: true } },
+                  author: { select: { username: true, status: true } },
                   tracks: {
                       orderBy: { position: 'asc' },
                       select: { videoId: true, title: true, channel: true, thumbnail: true, durationSec: true },
@@ -52,7 +53,8 @@ export async function POST(req: Request) {
                       create: imported.tracks.map((t, position) => ({
                           ...t,
                           position,
-                          addedBy: imported.author.username,
+                          // No credit for deleted accounts; the UI then shows just the channel.
+                          addedBy: imported.author.status === USER_DELETED ? '' : imported.author.username,
                       })),
                   }
                 : undefined,

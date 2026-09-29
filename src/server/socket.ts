@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { Server, type Socket } from "socket.io";
 import { prisma } from "@/lib/prisma";
 import { avatarUrlFor } from "@/lib/avatar";
+import { USER_ACTIVE } from "@/lib/users";
 import { inactiveCutoff, purgeIfExpired } from "@/lib/rooms";
 import { verifySocketToken } from "@/lib/session";
 import { z } from "zod";
@@ -329,7 +330,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         const userId = await verifySocketToken((socket.handshake.auth as { token?: unknown })?.token);
         const user = userId
           ? await prisma.user.findUnique({
-              where: { id: userId },
+              where: { id: userId, status: USER_ACTIVE },
               select: { id: true, username: true, avatarMime: true, updatedAt: true },
             })
           : null;

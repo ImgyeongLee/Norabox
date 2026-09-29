@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import type { ImportablePlaylist } from "@/lib/playlist-types";
+import { USER_DELETED } from "@/lib/users";
 
 const select = {
   id: true,
   title: true,
-  author: { select: { username: true } },
+  author: { select: { username: true, status: true } },
   scenario: { select: { name: true, writer: true } },
   tracks: {
     orderBy: { position: "asc" },
@@ -12,8 +13,11 @@ const select = {
   },
 } as const;
 
-type Row = { id: string; title: string; author: { username: string }; scenario: ImportablePlaylist["scenario"]; tracks: ImportablePlaylist["tracks"] };
-const toPlaylist = (p: Row): ImportablePlaylist => ({ ...p, author: p.author.username });
+type Row = { id: string; title: string; author: { username: string; status: string }; scenario: ImportablePlaylist["scenario"]; tracks: ImportablePlaylist["tracks"] };
+const toPlaylist = (p: Row): ImportablePlaylist => ({
+  ...p,
+  author: p.author.status === USER_DELETED ? null : p.author.username,
+});
 
 /** A user's liked posts, most recently liked first. */
 export async function likedPlaylists(userId: string, take = 100): Promise<ImportablePlaylist[]> {

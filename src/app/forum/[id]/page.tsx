@@ -7,17 +7,17 @@ import { DeletePostButton } from '@/components/forum/DeletePostButton';
 import { PostActions } from '@/components/forum/PostActions';
 import { YouTubeEmbed } from '@/components/forum/YouTubeEmbed';
 import { Markdown } from '@/components/Markdown';
-import { avatarUrlFor } from '@/lib/avatar';
 import { getCurrentUser } from '@/lib/auth';
 import { formatDate, formatDuration } from '@/lib/format';
 import { getI18n } from '@/i18n/server';
 import { prisma } from '@/lib/prisma';
+import { authorSelect, authorView } from '@/lib/users';
 
 const getPost = cache((id: string) =>
     prisma.post.findUnique({
         where: { id },
         include: {
-            author: { select: { id: true, username: true, avatarMime: true, updatedAt: true } },
+            author: { select: authorSelect },
             scenario: { select: { id: true, name: true, writer: true } },
             tracks: { orderBy: { position: 'asc' } },
             _count: { select: { likes: true } },
@@ -38,6 +38,7 @@ export default async function PostPage(props: PageProps<'/forum/[id]'>) {
     const [post, user, { t, locale }] = await Promise.all([getPost(id), getCurrentUser(), getI18n()]);
     if (!post) notFound();
     const isAuthor = user?.id === post.authorId;
+    const author = authorView(post.author);
     const liked = user
         ? !!(await prisma.postLike.findUnique({ where: { userId_postId: { userId: user.id, postId: post.id } } }))
         : false;
@@ -63,9 +64,11 @@ export default async function PostPage(props: PageProps<'/forum/[id]'>) {
                     </p>
                 )}
                 <div className="mt-5 flex flex-wrap items-center gap-3">
-                    <Avatar name={post.author.username} src={avatarUrlFor(post.author)} size="md" />
+                    <Avatar name={author.name ?? '?'} src={author.avatarUrl} size="md" />
                     <div className="text-sm">
-                        <p className="font-semibold">{post.author.username}</p>
+                        <p className={`font-semibold ${author.name ? '' : 'italic text-lime/60'}`}>
+                            {author.name ?? t.common.deletedUser}
+                        </p>
                         <p className="text-lime/55">
                             <time dateTime={post.createdAt.toISOString()}>{formatDate(post.createdAt, locale)}</time>
                             {edited && ` · ${t.post.edited}`} · {t.common.songs(post.tracks.length)}

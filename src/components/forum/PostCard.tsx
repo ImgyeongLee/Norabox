@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { Avatar } from '@/components/Avatar';
 import { HeartIcon } from '@/components/icons-extra';
 import { getI18n } from '@/i18n/server';
-import { avatarUrlFor } from '@/lib/avatar';
 import { formatDate } from '@/lib/format';
+import { authorSelect, authorView } from '@/lib/users';
 
 /** Prisma `select` for the fields a card shows. */
 export const postCardSelect = {
@@ -12,7 +12,7 @@ export const postCardSelect = {
     title: true,
     scenario: { select: { id: true, name: true, writer: true } },
     createdAt: true,
-    author: { select: { id: true, username: true, avatarMime: true, updatedAt: true } },
+    author: { select: authorSelect },
     tracks: { orderBy: { position: 'asc' }, take: 1, select: { videoId: true } },
     _count: { select: { tracks: true, likes: true } },
 } as const;
@@ -22,7 +22,7 @@ type CardPost = {
     title: string;
     scenario: { name: string; writer: string | null } | null;
     createdAt: Date;
-    author: { id: string; username: string; avatarMime: string | null; updatedAt: Date };
+    author: { id: string; username: string; avatarMime: string | null; updatedAt: Date; status: string };
     tracks: { videoId: string }[];
     _count: { tracks: number; likes: number };
 };
@@ -30,6 +30,7 @@ type CardPost = {
 /** Forum post card, used by the forum list and the liked playlists page. */
 export async function PostCard({ post: p }: { post: CardPost }) {
     const { t, locale } = await getI18n();
+    const author = authorView(p.author);
     return (
         <Link
             href={`/forum/${p.id}`}
@@ -56,8 +57,8 @@ export async function PostCard({ post: p }: { post: CardPost }) {
                     </p>
                 )}
                 <div className="mt-4 flex items-center gap-2 text-xs text-lime/55">
-                    <Avatar name={p.author.username} src={avatarUrlFor(p.author)} size="xs" />
-                    <span className="truncate">{p.author.username}</span>
+                    <Avatar name={author.name ?? '?'} src={author.avatarUrl} size="xs" />
+                    <span className={`truncate ${author.name ? '' : 'italic'}`}>{author.name ?? t.common.deletedUser}</span>
                     <span>·</span>
                     <time dateTime={p.createdAt.toISOString()}>{formatDate(p.createdAt, locale)}</time>
                     <span className="ml-auto inline-flex shrink-0 items-center gap-1" aria-label={t.forum.likes(p._count.likes)}>

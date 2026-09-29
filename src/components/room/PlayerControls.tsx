@@ -52,7 +52,11 @@ export function PlayerControls({ current, playback, loopMode, canControl, hasIte
                     {current?.title ?? t.player.noSong}
                 </h2>
                 <p className="truncate text-sm text-lime/55">
-                    {current ? t.player.addedBy(current.channel, current.addedBy) : t.player.emptyPlaylist}
+                    {current
+                        ? current.addedBy
+                            ? t.player.addedBy(current.channel, current.addedBy)
+                            : current.channel
+                        : t.player.emptyPlaylist}
                 </p>
             </div>
 
