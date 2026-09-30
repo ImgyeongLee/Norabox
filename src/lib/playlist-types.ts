@@ -1,6 +1,6 @@
 import type { Video } from "@/lib/validation";
 
-/** A forum post's playlist in the shape the room's Liked tab needs. */
+/** A playlist (forum post) in the shape the room's Library tab needs. */
 export type ImportablePlaylist = {
   id: string;
   title: string;

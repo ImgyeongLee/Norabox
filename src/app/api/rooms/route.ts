@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { jsonError, readJson, validationError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
+import { canViewPost } from '@/lib/post-access';
 import { purgeIfExpired } from '@/lib/rooms';
 import { USER_DELETED } from '@/lib/users';
 import { roomCodeSchema } from '@/lib/validation';
@@ -12,18 +13,24 @@ const createRoomSchema = z.object({
     clientId: z.string().regex(/^[A-Za-z0-9-]{8,64}$/, 'invalidClient'),
     /** Optional forum post whose songs become the new room's playlist (the post's Import button). */
     importPostId: z.string().regex(/^[a-z0-9]{10,40}$/, 'postNotFound').optional(),
+    /** Share token, when importing someone else's unlisted playlist through its share link. */
+    importShareToken: z.string().max(100).optional(),
 });
 
 export async function POST(req: Request) {
     const parsed = createRoomSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationError(parsed.error);
-    const { name, clientId, importPostId } = parsed.data;
+    const { name, clientId, importPostId, importShareToken } = parsed.data;
+    const me = await getCurrentUser();
     const slug = name.toLowerCase();
 
     const imported = importPostId
         ? await prisma.post.findUnique({
               where: { id: importPostId },
               select: {
+                  authorId: true,
+                  visibility: true,
+                  shareToken: true,
                   author: { select: { username: true, status: true } },
                   tracks: {
                       orderBy: { position: 'asc' },
@@ -32,7 +39,9 @@ export async function POST(req: Request) {
               },
           })
         : null;
-    if (importPostId && !imported) return jsonError('postNotFound', 404);
+    if (importPostId && (!imported || !canViewPost(imported, me?.id, importShareToken))) {
+        return jsonError('postNotFound', 404);
+    }
 
     // An expired room's name is free again.
     await purgeIfExpired(slug);
@@ -40,7 +49,6 @@ export async function POST(req: Request) {
     if (existing) {
         return jsonError('roomNameTaken', 409, { name: 'roomNameTaken' });
     }
-    const me = await getCurrentUser();
     const room = await prisma.room.create({
         data: {
             code: name,

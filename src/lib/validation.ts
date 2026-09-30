@@ -70,6 +70,7 @@ export const postSchema = z
   .object({
     title: z.string().trim().min(1, e("titleRequired")).max(120, e("titleLong")),
     scenario: z.string().trim().max(120, e("scenarioLong")).optional().default(""),
+    visibility: z.enum(["private", "unlisted", "public"], e("invalidInput")).optional().default("private"),
     writer: z.string().trim().max(80, e("writerLong")).optional().default(""),
     tracks: z
       .array(

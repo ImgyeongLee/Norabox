@@ -15,6 +15,8 @@ function sanitize(v: string) {
 /** A forum playlist being imported into the new room (from a post's Import button). */
 export type ImportingPlaylist = {
     id: string;
+    /** Present when importing someone else's link-only playlist through its share link. */
+    shareToken: string | null;
     title: string;
     songCount: number;
     thumbnail: string | null;
@@ -42,6 +44,7 @@ export function CreateRoomForm({ importing }: { importing?: ImportingPlaylist | 
                     name: parsed.data,
                     clientId: getClientId(),
                     ...(importing ? { importPostId: importing.id } : {}),
+                    ...(importing?.shareToken ? { importShareToken: importing.shareToken } : {}),
                 }),
             });
             const data = await res.json();

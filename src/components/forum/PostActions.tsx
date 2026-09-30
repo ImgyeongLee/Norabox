@@ -5,7 +5,18 @@ import { useState } from 'react';
 import { HeartIcon, ImportIcon, ShareIcon } from '@/components/icons-extra';
 import { useI18n } from '@/i18n/client';
 
-type Props = { postId: string; signedIn: boolean; liked: boolean; likeCount: number };
+type Props = {
+    postId: string;
+    signedIn: boolean;
+    liked: boolean;
+    likeCount: number;
+    /** Page this post is viewed on: /forum/<id>, or /s/<token> for a link-only playlist. */
+    viewPath: string;
+    /** What Share copies; null hides Share (private playlists). */
+    sharePath: string | null;
+    /** Share token when viewing a link-only playlist; lets Like and Import through. */
+    shareToken?: string | null;
+};
 
 const pill = 'btn-secondary gap-2 px-3.5 py-2';
 const active = 'border-moss bg-moss/20 text-lime';
@@ -14,7 +25,8 @@ const active = 'border-moss bg-moss/20 text-lime';
  * Like (signed-in only; builds the multi-playlist Liked collection), Share (copy link)
  * and Import (start a new room with this one playlist).
  */
-export function PostActions({ postId, signedIn, ...initial }: Props) {
+export function PostActions({ postId, signedIn, viewPath, sharePath, shareToken, ...initial }: Props) {
+    const tokenQuery = shareToken ? `s=${encodeURIComponent(shareToken)}` : '';
     const { t, tError } = useI18n();
     const [like, setLike] = useState({ liked: initial.liked, count: initial.likeCount });
     const [busy, setBusy] = useState(false);
@@ -32,7 +44,9 @@ export function PostActions({ postId, signedIn, ...initial }: Props) {
         setLike({ liked: next, count: like.count + (next ? 1 : -1) }); // optimistic
         setBusy(true);
         try {
-            const res = await fetch(`/api/posts/${postId}/like`, { method: next ? 'POST' : 'DELETE' });
+            const res = await fetch(`/api/posts/${postId}/like${tokenQuery ? `?${tokenQuery}` : ''}`, {
+                method: next ? 'POST' : 'DELETE',
+            });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
             setLike({ liked: data.liked, count: data.count });
@@ -45,7 +59,7 @@ export function PostActions({ postId, signedIn, ...initial }: Props) {
     }
 
     async function share() {
-        const url = `${window.location.origin}/forum/${postId}`;
+        const url = `${window.location.origin}${sharePath}`;
         try {
             await navigator.clipboard.writeText(url);
         } catch {
@@ -84,7 +98,7 @@ export function PostActions({ postId, signedIn, ...initial }: Props) {
                     </button>
                 ) : (
                     <Link
-                        href={`/login?next=${encodeURIComponent(`/forum/${postId}`)}`}
+                        href={`/login?next=${encodeURIComponent(viewPath)}`}
                         title={t.post.loginToLike}
                         aria-label={t.post.loginToLike}
                         className={pill}
@@ -92,11 +106,17 @@ export function PostActions({ postId, signedIn, ...initial }: Props) {
                         {heart}
                     </Link>
                 )}
-                <button type="button" onClick={share} className={pill}>
-                    <ShareIcon />
-                    <span>{t.post.share}</span>
-                </button>
-                <Link href={`/?import=${postId}#start-room`} title={t.post.importTitle} className={pill}>
+                {sharePath && (
+                    <button type="button" onClick={share} className={pill}>
+                        <ShareIcon />
+                        <span>{t.post.share}</span>
+                    </button>
+                )}
+                <Link
+                    href={`/?import=${postId}${tokenQuery ? `&${tokenQuery}` : ''}#start-room`}
+                    title={t.post.importTitle}
+                    className={pill}
+                >
                     <ImportIcon />
                     <span>{t.post.import}</span>
                 </Link>

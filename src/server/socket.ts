@@ -7,7 +7,7 @@ import { USER_ACTIVE } from "@/lib/users";
 import { inactiveCutoff, purgeIfExpired } from "@/lib/rooms";
 import { verifySocketToken } from "@/lib/session";
 import { z } from "zod";
-import { MAX_POST_TRACKS, MAX_ROOM_ITEMS } from "@/lib/limits";
+import { MAX_MEMO, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from "@/lib/limits";
 import { videoSchema } from "@/lib/validation";
 import type { ErrorCode } from "@/i18n/messages/en";
 import type {
@@ -75,7 +75,8 @@ class Room {
     return this.djs.has(m.identity) ? "dj" : "listener";
   }
 
-  snapshot(): RoomSnapshot {
+  /** Room state as one member should see it. Memos are the admin's private notes, so only the admin gets them. */
+  snapshot(forAdmin = false): RoomSnapshot {
     const members: MemberView[] = [...this.members.values()].map((m) => ({
       memberId: m.memberId,
       name: m.name,
@@ -89,7 +90,8 @@ class Room {
       code: this.code,
       masterVolume: this.masterVolume,
       loopMode: this.loopMode,
-      items: this.items,
+      // undefined fields aren't serialized, so memos never leave the server for non-admins.
+      items: forAdmin ? this.items : this.items.map((item) => ({ ...item, memo: undefined })),
       playback: this.playback,
       members,
     };
@@ -108,7 +110,14 @@ class Room {
 
   broadcast() {
     this.touch();
-    this.io.to(this.id).emit("room:state", this.snapshot());
+    // Per connection, because the admin's copy includes memos.
+    let adminCopy: RoomSnapshot | undefined;
+    let everyoneCopy: RoomSnapshot | undefined;
+    for (const m of this.members.values()) {
+      const isAdmin = this.roleOf(m) === "admin";
+      const state = isAdmin ? (adminCopy ??= this.snapshot(true)) : (everyoneCopy ??= this.snapshot(false));
+      for (const socketId of m.sockets) this.io.to(socketId).emit("room:state", state);
+    }
   }
 
   /** Records activity so the room isn't deleted as inactive (throttled). */
@@ -249,6 +258,7 @@ async function loadRoom(io: IO, slug: string): Promise<Room | null> {
           thumbnail: i.thumbnail,
           durationSec: i.durationSec,
           addedBy: i.addedBy,
+          memo: i.memo,
         })),
         new Set(row.djs.map((d) => d.identity)),
         row.currentItemId,
@@ -378,8 +388,8 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         await socket.join(room.id);
         room.touch();
 
-        ack({ ok: true, memberId: member.memberId, snapshot: room.snapshot() });
-        socket.to(room.id).emit("room:state", room.snapshot());
+        ack({ ok: true, memberId: member.memberId, snapshot: room.snapshot(room.roleOf(member) === "admin") });
+        room.broadcast();
       } catch (e) {
         console.error("[room] join failed", e);
         ack({ ok: false, error: "joinFailed" });
@@ -490,7 +500,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
     }
 
     socket.on("playlist:add", (p, ack) => addSongs([p?.video], ack));
-    // "Add all" from the Liked tab.
+    // "Add all" / "Add selected" from the Library tab.
     socket.on("playlist:addMany", (p, ack) => addSongs(Array.isArray(p?.videos) ? p.videos : [], ack));
 
     socket.on("playlist:remove", async (p, ack) => {
@@ -561,6 +571,30 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         room.broadcast();
       }),
     );
+
+    // Admin-only memo on a song ("play when the party enters the crypt"). Empty clears it.
+    socket.on("playlist:memo", async (p, ack) => {
+      const c = ctx();
+      if (!c) return fail(ack, "notInRoom");
+      if (c.role !== "admin") return fail(ack, "adminOnly");
+      const { room } = c;
+      const item = room.items.find((i) => i.id === p?.itemId);
+      if (!item) return fail(ack, "songNotFound");
+      if (typeof p.memo !== "string") return fail(ack, "invalidInput");
+      const memo = p.memo.trim();
+      if (memo.length > MAX_MEMO) return fail(ack, "memoLong");
+      item.memo = memo || null;
+      room.broadcast();
+      try {
+        await room.persist(() =>
+          prisma.playlistItem.updateMany({ where: { id: item.id, roomId: room.id }, data: { memo: item.memo } }),
+        );
+        ok(ack);
+      } catch (e) {
+        console.error("[room] memo save failed", e);
+        fail(ack, "generic");
+      }
+    });
 
     socket.on("member:setRole", async (p, ack) => {
       const c = ctx();

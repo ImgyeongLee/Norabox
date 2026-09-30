@@ -2,24 +2,31 @@ import Link from "next/link";
 import { CreateRoomForm, JoinRoomForm } from "@/components/home/RoomForms";
 import { getCurrentUser } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
+import { canViewPost } from "@/lib/post-access";
 import { prisma } from "@/lib/prisma";
 
 /** The forum post named by `?import=<postId>` (from a post's Import button), if it exists. */
-async function importingPlaylist(id: unknown) {
+async function importingPlaylist(id: unknown, shareToken: unknown, viewerId: string | undefined) {
   if (typeof id !== "string" || !/^[a-z0-9]{10,40}$/.test(id)) return null;
+  const token = typeof shareToken === "string" ? shareToken : null;
   const post = await prisma.post.findUnique({
     where: { id },
     select: {
       id: true,
+      authorId: true,
+      visibility: true,
+      shareToken: true,
       title: true,
       scenario: { select: { name: true } },
       tracks: { orderBy: { position: "asc" }, take: 1, select: { thumbnail: true } },
       _count: { select: { tracks: true } },
     },
   });
-  if (!post) return null;
+  // Private playlists only for their author; link-only ones need the share token.
+  if (!post || !canViewPost(post, viewerId, token)) return null;
   return {
     id: post.id,
+    shareToken: token,
     title: post.title,
     songCount: post._count.tracks,
     thumbnail: post.tracks[0]?.thumbnail ?? null,
@@ -28,8 +35,9 @@ async function importingPlaylist(id: unknown) {
 }
 
 export default async function Home(props: PageProps<"/">) {
-  const { import: importId } = await props.searchParams;
-  const [user, { t }, importing] = await Promise.all([getCurrentUser(), getI18n(), importingPlaylist(importId)]);
+  const { import: importId, s: shareToken } = await props.searchParams;
+  const [user, { t }] = await Promise.all([getCurrentUser(), getI18n()]);
+  const importing = await importingPlaylist(importId, shareToken, user?.id);
   const link = "font-semibold text-moss underline-offset-4 hover:underline";
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:py-16">

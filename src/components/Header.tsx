@@ -15,6 +15,12 @@ export async function Header() {
                     <Link href="/forum" className="btn-ghost px-3 py-2">
                         {t.nav.forum}
                     </Link>
+                    {user && (
+                        // On phones this lives in the user menu to save space.
+                        <Link href="/playlists" className="btn-ghost hidden px-3 py-2 sm:inline-flex">
+                            {t.nav.myPlaylists}
+                        </Link>
+                    )}
                 </nav>
                 <div className="ml-auto flex items-center gap-2">
                     <LanguageSwitcher />

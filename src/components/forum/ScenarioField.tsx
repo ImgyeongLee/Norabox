@@ -3,6 +3,8 @@
 import { useEffect, useId, useState } from 'react';
 import { useI18n } from '@/i18n/client';
 import { scenarioKey } from '@/lib/validation';
+import { LuCheck } from 'react-icons/lu';
+import { Icon } from '@/components/icons';
 
 type Suggestion = { id: string; name: string; writer: string | null; posts: number };
 
@@ -142,7 +144,10 @@ export function ScenarioField({ scenario, writer, onScenario, onWriter, errors }
                 {errors.scenario ? (
                     <p className="field-error">{tError(errors.scenario)}</p>
                 ) : (
-                    linked && <p className="mt-1.5 text-xs text-moss">{t.scenario.linked}</p>
+                    linked && <p className="mt-1.5 flex items-center gap-1 text-xs text-moss">
+                            <Icon as={LuCheck} className="size-3.5" />
+                            {t.scenario.linked}
+                        </p>
                 )}
             </div>
             <div>

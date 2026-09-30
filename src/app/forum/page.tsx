@@ -19,7 +19,9 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
     const q = typeof sp.q === 'string' ? sp.q.trim().slice(0, 100) : '';
     const scenarioId = typeof sp.scenario === 'string' ? sp.scenario : '';
     const text = { contains: q, mode: 'insensitive' as const };
+    // The forum lists public playlists only.
     const where: Prisma.PostWhereInput = {
+        visibility: 'public',
         ...(scenarioId ? { scenarioId } : {}),
         ...(q ? { OR: [{ title: text }, { scenario: { name: text } }, { scenario: { writer: text } }] } : {}),
     };
@@ -48,7 +50,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                     <h1 className="text-3xl font-bold">{t.forum.title}</h1>
                     <p className="mt-1 text-lime/60">{t.forum.lead}</p>
                 </div>
-                <Link href={user ? '/forum/new' : '/login?next=/forum/new'} className="btn-primary ml-auto">
+                <Link href={user ? '/playlists/new?visibility=public' : `/login?next=${encodeURIComponent('/playlists/new?visibility=public')}`} className="btn-primary ml-auto">
                     {t.forum.share}
                 </Link>
             </div>
@@ -91,7 +93,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                 <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     {posts.map((p) => (
                         <li key={p.id}>
-                            <PostCard post={p} />
+                            <PostCard post={p} viewerId={user?.id ?? null} />
                         </li>
                     ))}
                 </ul>

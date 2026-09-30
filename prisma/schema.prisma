@@ -65,6 +65,8 @@ model PlaylistItem {
   durationSec Int?
   position    Int
   addedBy     String
+  // Admin-only cue, e.g. "Play when the party enters the crypt". Never sent to other members.
+  memo        String?
   createdAt   DateTime @default(now())
 
   @@index([roomId, position])
@@ -102,6 +104,11 @@ model Post {
   authorId   String
   author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   title      String
+  // "private" (only the author) | "unlisted" (anyone with the share link) | "public" (on the forum).
+  visibility String   @default("private")
+  // Secret for the share link /s/<shareToken>; different from the post's own URL.
+  // Resetting it invalidates links shared earlier.
+  shareToken String   @unique
   // Optional: a post doesn't have to be about a particular scenario.
   scenarioId String?
   scenario   Scenario? @relation(fields: [scenarioId], references: [id])
@@ -113,6 +120,8 @@ model Post {
 
   @@index([createdAt])
   @@index([scenarioId])
+  @@index([visibility, createdAt])
+  @@index([authorId, updatedAt])
 }
 
 // A signed-in user's like on a post; their liked posts form the "Liked playlists" list.

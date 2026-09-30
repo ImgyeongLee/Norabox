@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { NextIcon, PauseIcon, PlayIcon, PrevIcon, RepeatIcon } from '@/components/icons';
+import { LuStickyNote } from 'react-icons/lu';
+import { Icon, NextIcon, PauseIcon, PlayIcon, PrevIcon, RepeatIcon } from '@/components/icons';
 import { useI18n } from '@/i18n/client';
 import { formatDuration } from '@/lib/format';
 import type { AckResult, LoopMode, Playback, PlaylistEntry } from '@/lib/room-types';
@@ -58,6 +59,12 @@ export function PlayerControls({ current, playback, loopMode, canControl, hasIte
                             : current.channel
                         : t.player.emptyPlaylist}
                 </p>
+                {current?.memo && (
+                    <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-moss/15 px-2.5 py-1.5 text-sm text-lime/90">
+                        <Icon as={LuStickyNote} className="mt-0.5 size-4 shrink-0 text-moss" />
+                        <span className="whitespace-pre-wrap break-words">{current.memo}</span>
+                    </p>
+                )}
             </div>
 
             <div>
@@ -90,12 +97,7 @@ export function PlayerControls({ current, playback, loopMode, canControl, hasIte
                     disabled={!canControl}
                     aria-label={t.player.loopChange(loopLabel)}
                     title={canControl ? loopLabel : disabledHint}>
-                    <RepeatIcon />
-                    {loopMode === 'one' && (
-                        <span className="absolute right-1 top-1 rounded-full bg-moss px-1 text-[9px] font-bold leading-tight text-pine">
-                            1
-                        </span>
-                    )}
+                    <RepeatIcon one={loopMode === 'one'} />
                 </button>
                 <button
                     className="icon-btn"

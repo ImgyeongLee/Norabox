@@ -53,11 +53,18 @@ export function UserMenu({ username, avatarUrl }: { username: string; avatarUrl:
                         {t.nav.profile}
                     </Link>
                     <Link
-                        href="/forum/new"
+                        href="/playlists"
                         role="menuitem"
                         onClick={() => setOpen(false)}
                         className="block rounded-lg px-3 py-2 text-sm hover:bg-fern">
-                        {t.nav.sharePlaylist}
+                        {t.nav.myPlaylists}
+                    </Link>
+                    <Link
+                        href="/playlists/new"
+                        role="menuitem"
+                        onClick={() => setOpen(false)}
+                        className="block rounded-lg px-3 py-2 text-sm hover:bg-fern">
+                        {t.nav.newPlaylist}
                     </Link>
                     <Link
                         href="/liked"

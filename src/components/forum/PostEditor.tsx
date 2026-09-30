@@ -2,18 +2,28 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { TrashIcon } from '@/components/icons';
+import { LuChevronDown, LuChevronUp, LuPlus } from 'react-icons/lu';
+import { Icon, TrashIcon } from '@/components/icons';
 import { MarkdownEditor } from '@/components/forum/MarkdownEditor';
 import { ScenarioField } from '@/components/forum/ScenarioField';
+import { VisibilityPicker } from '@/components/forum/VisibilityPicker';
 import { YouTubeEmbed } from '@/components/forum/YouTubeEmbed';
 import { formatDuration } from '@/lib/format';
 import { useI18n } from '@/i18n/client';
 import { useJsonForm } from '@/lib/use-json-form';
 import { MAX_POST_TRACKS, MAX_TRACK_DESCRIPTION, type Video } from '@/lib/validation';
 import { parseVideoId } from '@/lib/youtube-url';
+import type { Visibility } from '@/lib/visibility';
 
 type InitialTrack = Video & { description: string };
-type Initial = { id?: string; title: string; scenario: string; writer: string; tracks: InitialTrack[] };
+type Initial = {
+    id?: string;
+    title: string;
+    scenario: string;
+    writer: string;
+    visibility: Visibility;
+    tracks: InitialTrack[];
+};
 
 type Song = {
     key: string;
@@ -33,13 +43,14 @@ const newSong = (): Song => ({
     description: '',
 });
 
-export function PostEditor({ initial }: { initial?: Initial }) {
+export function PostEditor({ initial, defaultVisibility = 'private' }: { initial?: Initial; defaultVisibility?: Visibility }) {
     const router = useRouter();
     const { t, tError } = useI18n();
     const editing = !!initial?.id;
     const [title, setTitle] = useState(initial?.title ?? '');
     const [scenario, setScenario] = useState(initial?.scenario ?? '');
     const [writer, setWriter] = useState(initial?.writer ?? '');
+    const [visibility, setVisibility] = useState<Visibility>(initial?.visibility ?? defaultVisibility);
     const [songs, setSongs] = useState<Song[]>(() =>
         initial?.tracks.length
             ? initial.tracks.map(({ description, ...video }) => ({
@@ -117,6 +128,7 @@ export function PostEditor({ initial }: { initial?: Initial }) {
             title,
             scenario,
             writer,
+            visibility,
             tracks: filled.map((s) => ({ ...s.video!, description: s.description })),
         };
         const res = await submit<{ id: string }>(
@@ -160,6 +172,7 @@ export function PostEditor({ initial }: { initial?: Initial }) {
                     onWriter={setWriter}
                     errors={{ scenario: errors.scenario, writer: errors.writer }}
                 />
+                <VisibilityPicker value={visibility} onChange={setVisibility} />
             </section>
 
             <section className="space-y-4">
@@ -186,7 +199,7 @@ export function PostEditor({ initial }: { initial?: Initial }) {
                                         disabled={i === 0}
                                         aria-label={t.editor.moveUp(i + 1)}
                                     >
-                                        ↑
+                                        <Icon as={LuChevronUp} />
                                     </button>
                                     <button
                                         type="button"
@@ -195,7 +208,7 @@ export function PostEditor({ initial }: { initial?: Initial }) {
                                         disabled={i === songs.length - 1}
                                         aria-label={t.editor.moveDown(i + 1)}
                                     >
-                                        ↓
+                                        <Icon as={LuChevronDown} />
                                     </button>
                                     <button
                                         type="button"
@@ -270,6 +283,7 @@ export function PostEditor({ initial }: { initial?: Initial }) {
                     onClick={() => setSongs((ss) => [...ss, newSong()])}
                     disabled={songs.length >= MAX_POST_TRACKS}
                 >
+                    <Icon as={LuPlus} />
                     {t.editor.addSong}
                 </button>
             </section>

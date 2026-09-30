@@ -3,13 +3,18 @@ import Link from 'next/link';
 import { Avatar } from '@/components/Avatar';
 import { HeartIcon } from '@/components/icons-extra';
 import { getI18n } from '@/i18n/server';
+import { VisibilityBadge } from '@/components/forum/VisibilityBadge';
 import { formatDate } from '@/lib/format';
+import { postHref } from '@/lib/post-access';
 import { authorSelect, authorView } from '@/lib/users';
 
 /** Prisma `select` for the fields a card shows. */
 export const postCardSelect = {
     id: true,
     title: true,
+    authorId: true,
+    visibility: true,
+    shareToken: true,
     scenario: { select: { id: true, name: true, writer: true } },
     createdAt: true,
     author: { select: authorSelect },
@@ -20,6 +25,9 @@ export const postCardSelect = {
 type CardPost = {
     id: string;
     title: string;
+    authorId: string;
+    visibility: string;
+    shareToken: string;
     scenario: { name: string; writer: string | null } | null;
     createdAt: Date;
     author: { id: string; username: string; avatarMime: string | null; updatedAt: Date; status: string };
@@ -27,13 +35,24 @@ type CardPost = {
     _count: { tracks: number; likes: number };
 };
 
-/** Forum post card, used by the forum list and the liked playlists page. */
-export async function PostCard({ post: p }: { post: CardPost }) {
+/**
+ * Playlist card, used by the forum, liked playlists and My playlists. Links to the share
+ * link for someone else's link-only playlist (the post URL wouldn't open for them).
+ */
+export async function PostCard({
+    post: p,
+    viewerId,
+    showVisibility,
+}: {
+    post: CardPost;
+    viewerId: string | null;
+    showVisibility?: boolean;
+}) {
     const { t, locale } = await getI18n();
     const author = authorView(p.author);
     return (
         <Link
-            href={`/forum/${p.id}`}
+            href={postHref(p, viewerId)}
             className="card group block h-full overflow-hidden transition hover:border-moss/70 hover:bg-fern/50"
         >
             <div className="relative aspect-video bg-pine">
@@ -43,6 +62,11 @@ export async function PostCard({ post: p }: { post: CardPost }) {
                         alt=""
                         className="size-full object-cover opacity-85 transition group-hover:opacity-100"
                     />
+                )}
+                {showVisibility && (
+                    <span className="absolute left-2 top-2">
+                        <VisibilityBadge visibility={p.visibility} t={t} />
+                    </span>
                 )}
                 <span className="absolute bottom-2 right-2 rounded-full bg-pine/85 px-2.5 py-1 text-xs font-semibold">
                     {t.common.songs(p._count.tracks)}

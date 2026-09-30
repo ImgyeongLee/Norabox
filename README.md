@@ -56,6 +56,22 @@ The server advances the playlist on its own timer (using the track duration), fo
 
 Volume on each client = admin's room volume × the listener's own volume.
 
+## Playlists and visibility
+
+Signed-in users make playlists on **My playlists** (`/playlists`). Each has a visibility (`Post.visibility`):
+
+- **Private** (default): only the author.
+- **Link only**: anyone with the share link `/s/<shareToken>`. The post's own URL (`/forum/<id>`) doesn't
+  open it for others, and the author can reset the token to revoke old links.
+- **Public**: everyone, and listed on the forum.
+
+Access rules live in `src/lib/post-access.ts` and are used by pages, likes, room imports and scenario suggestions.
+
+## Song memos
+
+In a room, the admin can attach a memo to each song (e.g. "play when the party enters the crypt"). Memos are
+saved with the playlist item and sent **only to the admin's connections**, so players never see story cues.
+
 ## Languages
 
 English and Korean. The language comes from the visitor's saved choice (the EN / 한국어 switch in

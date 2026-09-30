@@ -20,9 +20,11 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useState } from 'react';
-import { GripIcon, TrashIcon } from '@/components/icons';
+import { LuPlus, LuStickyNote } from 'react-icons/lu';
+import { GripIcon, Icon, TrashIcon } from '@/components/icons';
 import { useI18n } from '@/i18n/client';
 import { formatDuration } from '@/lib/format';
+import { MAX_MEMO } from '@/lib/limits';
 
 export type SortableTrack = {
     id: string;
@@ -32,6 +34,7 @@ export type SortableTrack = {
     thumbnail: string;
     durationSec: number | null;
     addedBy?: string;
+    memo?: string | null;
 };
 
 type Props<T extends SortableTrack> = {
@@ -42,6 +45,8 @@ type Props<T extends SortableTrack> = {
     onReorder: (orderedIds: string[]) => void;
     onRemove?: (id: string) => void;
     onSelect?: (id: string) => void;
+    /** Set for the room admin: shows and edits per-song memos. Resolves true when saved. */
+    onMemo?: (id: string, memo: string) => Promise<boolean>;
     emptyText?: string;
 };
 
@@ -54,6 +59,7 @@ export function Playlist<T extends SortableTrack>({
     onReorder,
     onRemove,
     onSelect,
+    onMemo,
     emptyText,
 }: Props<T>) {
     const { t } = useI18n();
@@ -97,6 +103,7 @@ export function Playlist<T extends SortableTrack>({
                             playing={item.id === currentId && !!isPlaying}
                             onRemove={onRemove}
                             onSelect={onSelect}
+                            onMemo={onMemo}
                         />
                     ))}
                 </ol>
@@ -113,6 +120,7 @@ function Row({
     playing,
     onRemove,
     onSelect,
+    onMemo,
 }: {
     item: SortableTrack;
     index: number;
@@ -121,6 +129,7 @@ function Row({
     playing: boolean;
     onRemove?: (id: string) => void;
     onSelect?: (id: string) => void;
+    onMemo?: (id: string, memo: string) => Promise<boolean>;
 }) {
     const { t } = useI18n();
     const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
@@ -132,7 +141,7 @@ function Row({
         <li
             ref={setNodeRef}
             style={{ transform: CSS.Transform.toString(transform), transition }}
-            className={`group flex items-center gap-2 rounded-xl border p-2 transition ${
+            className={`group flex flex-wrap items-center gap-2 rounded-xl border p-2 transition ${
                 current ? 'border-moss/70 bg-leaf/40' : 'border-transparent bg-pine/40 hover:bg-fern/50'
             } ${isDragging ? 'relative z-10 shadow-2xl ring-2 ring-moss' : ''}`}>
             {editable ? (
@@ -192,6 +201,73 @@ function Row({
                     <TrashIcon className="size-4" />
                 </button>
             )}
+            {onMemo && <MemoLine memo={item.memo ?? null} onSave={(memo) => onMemo(item.id, memo)} />}
         </li>
+    );
+}
+
+/** Admin-only cue under a song: shows the memo, or a small "Add memo"; click to edit inline. */
+function MemoLine({ memo, onSave }: { memo: string | null; onSave: (memo: string) => Promise<boolean> }) {
+    const { t } = useI18n();
+    const [draft, setDraft] = useState<string | null>(null); // null = not editing
+    const [saving, setSaving] = useState(false);
+
+    async function save() {
+        if (draft === null) return;
+        setSaving(true);
+        const ok = await onSave(draft);
+        setSaving(false);
+        if (ok) setDraft(null);
+    }
+
+    if (draft === null) {
+        return memo ? (
+            <button
+                type="button"
+                onClick={() => setDraft(memo)}
+                title={t.memo.edit}
+                className="ml-10 flex w-full min-w-0 items-start gap-1.5 rounded-lg bg-moss/15 px-2 py-1 text-left text-xs text-lime/85 hover:bg-moss/25"
+            >
+                <Icon as={LuStickyNote} className="mt-px size-3.5 shrink-0 text-moss" />
+                <span className="whitespace-pre-wrap break-words">{memo}</span>
+            </button>
+        ) : (
+            <button
+                type="button"
+                onClick={() => setDraft('')}
+                className="ml-10 inline-flex items-center gap-1 text-[11px] text-lime/40 transition hover:text-lime/80"
+            >
+                <Icon as={LuPlus} className="size-3" />
+                {t.memo.add}
+            </button>
+        );
+    }
+
+    return (
+        <div className="ml-10 w-full min-w-0 space-y-1">
+            <div className="flex gap-1.5">
+                <input
+                    autoFocus
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            save();
+                        } else if (e.key === 'Escape') {
+                            setDraft(null);
+                        }
+                    }}
+                    maxLength={MAX_MEMO}
+                    placeholder={t.memo.placeholder}
+                    aria-label={t.memo.label}
+                    className="input py-1.5 text-xs"
+                />
+                <button type="button" onClick={save} disabled={saving} className="btn-primary shrink-0 px-2.5 py-1 text-xs">
+                    {saving ? '…' : t.memo.save}
+                </button>
+            </div>
+            <p className="text-[10px] text-lime/40">{t.memo.hint}</p>
+        </div>
     );
 }

@@ -5,7 +5,12 @@ import type { Video } from "@/lib/validation";
 export type Role = "admin" | "dj" | "listener";
 export type LoopMode = "none" | "one" | "all";
 
-export type PlaylistEntry = Video & { id: string; addedBy: string };
+export type PlaylistEntry = Video & {
+  id: string;
+  addedBy: string;
+  /** Admin-only cue ("play when…"). Only included in the admin's copy of the room state. */
+  memo?: string | null;
+};
 
 /**
  * Authoritative playback state. `position` is the track time (seconds) at
@@ -63,6 +68,7 @@ export interface ClientToServerEvents {
   "playlist:addMany": (p: { videos: Video[] }, ack?: Ack) => void;
   "playlist:remove": (p: { itemId: string }, ack?: Ack) => void;
   "playlist:reorder": (p: { orderedIds: string[] }, ack?: Ack) => void;
+  "playlist:memo": (p: { itemId: string; memo: string }, ack?: Ack) => void;
   "member:setRole": (p: { memberId: string; role: "dj" | "listener" }, ack?: Ack) => void;
 }
 

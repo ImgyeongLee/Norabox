@@ -5,6 +5,7 @@ import { PostCard, postCardSelect } from '@/components/forum/PostCard';
 import { getI18n } from '@/i18n/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { listableFor } from '@/lib/post-access';
 import { USER_ACTIVE } from '@/lib/users';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,18 +21,24 @@ export default async function LikedPage(props: PageProps<'/liked'>) {
     const likes = await prisma.postLike.findMany({
         where: {
             userId: user.id,
-            ...(q
-                ? {
-                      post: {
-                          OR: [
-                              { title: text },
-                              { scenario: { name: text } },
-                              { scenario: { writer: text } },
-                              { author: { username: text, status: USER_ACTIVE } },
-                          ],
-                      },
-                  }
-                : {}),
+            post: {
+                AND: [
+                    // Liked playlists the author later made private drop out.
+                    listableFor(user.id),
+                    ...(q
+                        ? [
+                              {
+                                  OR: [
+                                      { title: text },
+                                      { scenario: { name: text } },
+                                      { scenario: { writer: text } },
+                                      { author: { username: text, status: USER_ACTIVE } },
+                                  ],
+                              },
+                          ]
+                        : []),
+                ],
+            },
         },
         orderBy: { createdAt: 'desc' },
         take: 100,
@@ -64,7 +71,7 @@ export default async function LikedPage(props: PageProps<'/liked'>) {
                 <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     {likes.map(({ post }) => (
                         <li key={post.id}>
-                            <PostCard post={post} />
+                            <PostCard post={post} viewerId={user.id} />
                         </li>
                     ))}
                 </ul>

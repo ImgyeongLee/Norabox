@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { Avatar } from '@/components/Avatar';
 import { CopyButton } from '@/components/CopyButton';
 import { VideoSearch } from '@/components/VideoSearch';
-import { LikedPanel } from '@/components/room/LikedPanel';
+import { LibraryPanel } from '@/components/room/LibraryPanel';
 import { MembersPanel, RoleBadge } from '@/components/room/MembersPanel';
 import { PlayerControls } from '@/components/room/PlayerControls';
 import { Playlist } from '@/components/room/Playlist';
@@ -22,8 +22,8 @@ type Props = { code: string; user: { username: string; avatarUrl: string | null 
 
 const VOLUME_KEY = 'norabox:volume';
 const MUTED_KEY = 'norabox:muted';
-type Tab = 'playlist' | 'search' | 'liked' | 'people';
-const TAB_IDS: Tab[] = ['playlist', 'search', 'liked', 'people'];
+type Tab = 'playlist' | 'search' | 'library' | 'people';
+const TAB_IDS: Tab[] = ['playlist', 'search', 'library', 'people'];
 const tabKey = (code: string) => `norabox:tab:${code.toLowerCase()}`;
 
 function readStoredVolume() {
@@ -227,7 +227,7 @@ function RoomView({ code, room, signedIn }: { code: string; room: RoomReady; sig
         return null;
     }
 
-    /** Adds songs from the Liked tab: one event for a single song, one batch for "Add all". */
+    /** Adds songs from the Library tab: one event for a single song, one batch for several. */
     async function addVideos(videos: Video[]) {
         const res =
             videos.length === 1
@@ -241,7 +241,7 @@ function RoomView({ code, room, signedIn }: { code: string; room: RoomReady; sig
     const TABS: { id: Tab; label: string }[] = [
         { id: 'playlist', label: t.room.tabs.playlist(snapshot.items.length) },
         { id: 'search', label: t.room.tabs.search },
-        { id: 'liked', label: t.room.tabs.liked },
+        { id: 'library', label: t.room.tabs.library },
         { id: 'people', label: t.room.tabs.people(snapshot.members.length) },
     ];
 
@@ -337,6 +337,11 @@ function RoomView({ code, room, signedIn }: { code: string; room: RoomReady; sig
                                     onReorder={(orderedIds) => run('playlist:reorder', { orderedIds })}
                                     onRemove={(itemId) => run('playlist:remove', { itemId })}
                                     onSelect={canControl ? (itemId) => run('player:select', { itemId }) : undefined}
+                                    onMemo={
+                                        isAdmin
+                                            ? async (itemId, memo) => (await run('playlist:memo', { itemId, memo })).ok
+                                            : undefined
+                                    }
                                     emptyText={canControl ? t.room.emptyControl : t.room.emptyListen}
                                 />
                             </>
@@ -349,8 +354,8 @@ function RoomView({ code, room, signedIn }: { code: string; room: RoomReady; sig
                                 disabledReason={t.room.searchDenied}
                             />
                         )}
-                        {tab === 'liked' && (
-                            <LikedPanel
+                        {tab === 'library' && (
+                            <LibraryPanel
                                 canControl={canControl}
                                 signedIn={signedIn}
                                 addedIds={addedIds}

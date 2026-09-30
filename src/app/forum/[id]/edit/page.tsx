@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { PostEditor } from '@/components/forum/PostEditor';
 import { getCurrentUser } from '@/lib/auth';
 import { getI18n } from '@/i18n/server';
+import { VISIBILITIES, type Visibility } from '@/lib/post-access';
 import { prisma } from '@/lib/prisma';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,6 +31,7 @@ export default async function EditPostPage(props: PageProps<'/forum/[id]/edit'>)
                     title: post.title,
                     scenario: post.scenario?.name ?? '',
                     writer: post.scenario?.writer ?? '',
+                    visibility: VISIBILITIES.includes(post.visibility as Visibility) ? (post.visibility as Visibility) : 'private',
                     tracks: post.tracks.map(({ videoId, title, channel, thumbnail, durationSec, description }) => ({
                         videoId,
                         title,

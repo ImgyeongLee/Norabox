@@ -1,6 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import type { IconType } from 'react-icons';
+import { LuBold, LuItalic, LuLink, LuList, LuListOrdered, LuQuote } from 'react-icons/lu';
+import { Icon } from '@/components/icons';
 import { Markdown } from '@/components/Markdown';
 import { useI18n } from '@/i18n/client';
 
@@ -15,14 +18,14 @@ type Props = {
 
 type ToolId = 'bold' | 'italic' | 'link' | 'bullets' | 'numbers' | 'quote';
 
-// Labels and tooltips come from the dictionary (t.markdown.tools).
-const TOOLS: { id: ToolId; className?: string }[] = [
-    { id: 'bold', className: 'font-bold' },
-    { id: 'italic', className: 'italic' },
-    { id: 'link' },
-    { id: 'bullets' },
-    { id: 'numbers' },
-    { id: 'quote' },
+// Tooltips (and screen-reader labels) come from the dictionary (t.markdown.tools).
+const TOOLS: { id: ToolId; icon: IconType }[] = [
+    { id: 'bold', icon: LuBold },
+    { id: 'italic', icon: LuItalic },
+    { id: 'link', icon: LuLink },
+    { id: 'bullets', icon: LuList },
+    { id: 'numbers', icon: LuListOrdered },
+    { id: 'quote', icon: LuQuote },
 ];
 
 /** Markdown textarea with a formatting toolbar and a live preview tab. */
@@ -111,9 +114,9 @@ export function MarkdownEditor({ id, value, onChange, maxLength, placeholder, ..
                             aria-label={tools[tool.id].title}
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => apply(tool.id)}
-                            className={`rounded-md px-2 py-1 text-xs text-lime/75 transition hover:bg-fern hover:text-lime ${tool.className ?? ''}`}
+                            className="rounded-md p-1.5 text-lime/75 transition hover:bg-fern hover:text-lime"
                         >
-                            {tools[tool.id].label}
+                            <Icon as={tool.icon} className="size-4" />
                         </button>
                     ))}
                 <span className="ml-auto text-[11px] text-lime/40">{t.markdown.supported}</span>
