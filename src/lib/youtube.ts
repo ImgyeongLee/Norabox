@@ -8,7 +8,7 @@ const API = "https://www.googleapis.com/youtube/v3";
 /** `code` is an error code the UI translates; the message is for server logs. */
 export class YouTubeError extends Error {
   constructor(
-    readonly code: "youtubeNotConfigured" | "youtubeFailed",
+    readonly code: "youtubeNotConfigured" | "youtubeFailed" | "youtubeQuota",
     message: string = code,
   ) {
     super(message);
@@ -38,16 +38,24 @@ type Thumbs = Record<string, { url: string } | undefined>;
 const pickThumb = (t: Thumbs | undefined, id: string) =>
   t?.medium?.url ?? t?.high?.url ?? t?.default?.url ?? `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
 
+const QUOTA_REASONS = new Set(["quotaExceeded", "dailyLimitExceeded", "rateLimitExceeded", "userRateLimitExceeded"]);
+
 async function api<T>(path: string, params: Record<string, string>): Promise<T> {
   const key = process.env.YOUTUBE_API_KEY;
   if (!key) throw new YouTubeError("youtubeNotConfigured", "YOUTUBE_API_KEY is not set");
   const qs = new URLSearchParams({ ...params, key });
   const res = await fetch(`${API}/${path}?${qs}`, { cache: "no-store" });
   if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+    const body = (await res.json().catch(() => null)) as {
+      error?: { message?: string; errors?: { reason?: string }[] };
+    } | null;
     const detail = body?.error?.message ?? `YouTube API error (${res.status})`;
+    const reason = body?.error?.errors?.[0]?.reason ?? "";
+    // Daily quota (e.g. "Search Queries per day") or rate limits: tell users to paste a link instead.
+    const quota =
+      res.status === 429 || QUOTA_REASONS.has(reason) || /quota exceeded/i.test(detail);
     console.error("[youtube]", detail);
-    throw new YouTubeError("youtubeFailed", detail);
+    throw new YouTubeError(quota ? "youtubeQuota" : "youtubeFailed", detail);
   }
   return res.json() as Promise<T>;
 }
@@ -85,12 +93,22 @@ async function videosById(ids: string[]): Promise<Video[]> {
   });
 }
 
-/** Looks up a single video. Falls back to oEmbed (no API key needed, no duration). */
+/** Looks up a single video. Falls back to oEmbed (no API key needed, no duration) without a key or quota. */
 export async function getVideo(id: string): Promise<Video | null> {
   if (process.env.YOUTUBE_API_KEY) {
-    const [v] = await videosById([id]);
-    return v ?? null;
+    try {
+      const [v] = await videosById([id]);
+      return v ?? null;
+    } catch (e) {
+      // Out of API quota: oEmbed needs no quota, so pasted links keep working.
+      if (!(e instanceof YouTubeError && e.code === "youtubeQuota")) throw e;
+    }
   }
+  return videoFromOEmbed(id);
+}
+
+/** Title and channel from YouTube's public oEmbed endpoint (no API key or quota; no duration). */
+async function videoFromOEmbed(id: string): Promise<Video | null> {
   const res = await fetch(
     `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`,
     { cache: "no-store" },

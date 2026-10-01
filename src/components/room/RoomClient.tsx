@@ -18,7 +18,12 @@ import { forgetJoin, getJoinedName, getNickname, rememberJoin, setNickname } fro
 import { canControl as canControlRole, type AckResult } from '@/lib/room-types';
 import type { Video } from '@/lib/validation';
 
-type Props = { code: string; user: { username: string; avatarUrl: string | null } | null };
+type Props = {
+    code: string;
+    user: { username: string; avatarUrl: string | null } | null;
+    /** Whether YouTube search is configured on the server (otherwise link-only mode). */
+    searchAvailable: boolean;
+};
 
 const VOLUME_KEY = 'norabox:volume';
 const MUTED_KEY = 'norabox:muted';
@@ -49,7 +54,7 @@ function writeStored(storage: 'local' | 'session', key: string, value: string) {
     } catch {}
 }
 
-export function RoomClient({ code, user }: Props) {
+export function RoomClient({ code, user, searchAvailable }: Props) {
     // `name` stays null until the visitor presses Join (that click also unlocks audio).
     // After a refresh, the name this tab joined with is restored and we rejoin directly.
     const rejoinName = useSyncExternalStore(noopSubscribe, () => getJoinedName(code), () => null);
@@ -83,7 +88,7 @@ export function RoomClient({ code, user }: Props) {
     if (!room.snapshot) {
         return <p className="py-24 text-center text-lime/60">{t.room.joining(code)}</p>;
     }
-    return <RoomView code={code} room={room as RoomReady} signedIn={!!user} />;
+    return <RoomView code={code} room={room as RoomReady} signedIn={!!user} searchAvailable={searchAvailable} />;
 }
 
 const noopSubscribe = () => () => {};
@@ -161,7 +166,17 @@ function StatusDot({ status }: { status: ConnectionStatus }) {
     );
 }
 
-function RoomView({ code, room, signedIn }: { code: string; room: RoomReady; signedIn: boolean }) {
+function RoomView({
+    code,
+    room,
+    signedIn,
+    searchAvailable,
+}: {
+    code: string;
+    room: RoomReady;
+    signedIn: boolean;
+    searchAvailable: boolean;
+}) {
     const router = useRouter();
     const { t, tError } = useI18n();
     const { snapshot, memberId, status, positionOf, act, report } = room;
@@ -349,6 +364,7 @@ function RoomView({ code, room, signedIn }: { code: string; room: RoomReady; sig
                         {tab === 'search' && (
                             <VideoSearch
                                 onAdd={addVideo}
+                                searchAvailable={searchAvailable}
                                 addedIds={addedIds}
                                 disabled={!canControl}
                                 disabledReason={t.room.searchDenied}

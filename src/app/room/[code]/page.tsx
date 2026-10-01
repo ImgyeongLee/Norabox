@@ -20,5 +20,12 @@ export default async function RoomPage(props: PageProps<'/room/[code]'>) {
     if (room.code !== code) redirect(`/room/${room.code}`);
 
     const user = await getCurrentUser();
-    return <RoomClient code={room.code} user={user && { username: user.username, avatarUrl: user.avatarUrl }} />;
+    return (
+        <RoomClient
+            code={room.code}
+            user={user && { username: user.username, avatarUrl: user.avatarUrl }}
+            // Without a YouTube API key, rooms add songs by link only (no search).
+            searchAvailable={!!process.env.YOUTUBE_API_KEY?.trim()}
+        />
+    );
 }
