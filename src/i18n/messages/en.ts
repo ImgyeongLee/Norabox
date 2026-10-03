@@ -90,7 +90,7 @@ export const en = {
     joining: "Joining…",
     theme: "Room theme",
     themeHint: "Everyone in the room sees this theme.",
-    themes: { default: "Default", mono: "Black & white", starry: "Starry Sky", candy: "Pink Couple" },
+    themes: { default: "Default", mono: "Black & white", starry: "Starry Sky", candy: "Pink Couple", cosmos: "Cosmos" },
   },
   auth: {
     signupTitle: "Create your account",

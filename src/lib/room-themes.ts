@@ -2,7 +2,7 @@
 // the room sees it. A theme swaps the five palette colors every component uses
 // (see @theme in globals.css), plus the page background.
 
-export const ROOM_THEMES = ["default", "mono", "starry", "candy"] as const;
+export const ROOM_THEMES = ["default", "mono", "starry", "candy", "cosmos"] as const;
 export type RoomTheme = (typeof ROOM_THEMES)[number];
 
 export const isRoomTheme = (v: unknown): v is RoomTheme => ROOM_THEMES.includes(v as RoomTheme);
@@ -87,6 +87,31 @@ export const THEME_PALETTES: Record<RoomTheme, Palette> = {
       "radial-gradient(1100px 560px at 10% -10%, rgb(255 143 186 / 0.35), transparent 60%)",
       "radial-gradient(900px 500px at 110% 10%, rgb(255 225 105 / 0.3), transparent 60%)",
       "#fff0f6",
+    ].join(", "),
+  },
+  cosmos: {
+    // Black, light green, red and yellow, tuned to be easy on the eyes: a soft near-black
+    // (not #000), pale low-saturation green text (~16:1), a calm, lower-saturation red
+    // accent (~6:1; saturated reds glare on dark backgrounds), and yellow kept for
+    // subtle borders and a few small stars. Errors use orange, so they don't look like
+    // the red buttons and links.
+    pine: "#0e0e14",
+    fern: "#1a1a24",
+    leaf: "#7a6a34",
+    moss: "#d77575",
+    lime: "#d9f0d9",
+    danger: "#f5a05a",
+    pageBackground: [
+      // A few small stars (soft yellow and white), faint red and green nebulae, then deep space.
+      "radial-gradient(1.5px 1.5px at 14% 22%, rgb(243 215 122 / 0.55), transparent)",
+      "radial-gradient(1px 1px at 31% 68%, rgb(217 240 217 / 0.4), transparent)",
+      "radial-gradient(1px 1px at 52% 16%, rgb(243 215 122 / 0.45), transparent)",
+      "radial-gradient(1.5px 1.5px at 71% 44%, rgb(217 240 217 / 0.35), transparent)",
+      "radial-gradient(1px 1px at 86% 78%, rgb(243 215 122 / 0.4), transparent)",
+      "radial-gradient(1px 1px at 9% 88%, rgb(215 117 117 / 0.4), transparent)",
+      "radial-gradient(1000px 560px at 90% -10%, rgb(215 117 117 / 0.07), transparent 60%)",
+      "radial-gradient(900px 520px at -5% 105%, rgb(217 240 217 / 0.05), transparent 60%)",
+      "#0e0e14",
     ].join(", "),
   },
 };

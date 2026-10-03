@@ -89,7 +89,7 @@ export const ko: Messages = {
         joining: '참여하는 중…',
         theme: '방 테마',
         themeHint: '방에 들어온 모두에게 이 테마가 보여요.',
-        themes: { default: '기본', mono: '흑백', starry: '별이 빛나는 밤', candy: '핑크 커플' },
+        themes: { default: '기본', mono: '흑백', starry: '별이 빛나는 밤', candy: '핑크 커플', cosmos: '코스모스' },
     },
     auth: {
         signupTitle: '계정 만들기',
