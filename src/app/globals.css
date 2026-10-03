@@ -17,11 +17,16 @@
   color-scheme: dark;
 }
 
-body {
-  background:
+/* Page background; room themes override it (src/lib/room-themes.ts). */
+:root {
+  --page-bg:
     radial-gradient(1200px 600px at 10% -10%, rgb(79 119 45 / 0.35), transparent 60%),
     radial-gradient(900px 500px at 110% 10%, rgb(144 169 85 / 0.18), transparent 60%),
     var(--color-pine);
+}
+
+body {
+  background: var(--page-bg);
   background-attachment: fixed;
   color: var(--color-lime);
 }
@@ -78,7 +83,7 @@ input[type="range"].slider {
     to right,
     var(--color-moss) 0%,
     var(--color-moss) var(--fill, 0%),
-    rgb(236 243 158 / 0.18) var(--fill, 0%)
+    color-mix(in srgb, var(--color-lime) 18%, transparent) var(--fill, 0%)
   );
   cursor: pointer;
 }
@@ -143,19 +148,19 @@ input[type="range"].slider::-moz-range-thumb {
 .markdown blockquote {
   border-left: 3px solid var(--color-leaf);
   padding-left: 0.9em;
-  color: rgb(236 243 158 / 0.75);
+  color: color-mix(in srgb, var(--color-lime) 75%, transparent);
 }
 .markdown code {
   font-family: var(--font-mono);
   font-size: 0.9em;
-  background: rgb(19 42 19 / 0.8);
-  border: 1px solid rgb(79 119 45 / 0.5);
+  background: color-mix(in srgb, var(--color-pine) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-leaf) 50%, transparent);
   border-radius: 0.35em;
   padding: 0.1em 0.35em;
 }
 .markdown pre {
   overflow-x: auto;
-  background: rgb(19 42 19 / 0.8);
+  background: color-mix(in srgb, var(--color-pine) 80%, transparent);
   border-radius: 0.6em;
   padding: 0.8em 1em;
 }
@@ -165,14 +170,14 @@ input[type="range"].slider::-moz-range-thumb {
   background: none;
 }
 .markdown hr {
-  border-color: rgb(79 119 45 / 0.5);
+  border-color: color-mix(in srgb, var(--color-leaf) 50%, transparent);
 }
 .markdown table {
   border-collapse: collapse;
 }
 .markdown th,
 .markdown td {
-  border: 1px solid rgb(79 119 45 / 0.5);
+  border: 1px solid color-mix(in srgb, var(--color-leaf) 50%, transparent);
   padding: 0.3em 0.6em;
 }
 

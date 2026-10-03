@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { jsonError, readJson, validationError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
 import { canViewPost } from '@/lib/post-access';
+import { ROOM_THEMES } from '@/lib/room-themes';
 import { purgeIfExpired } from '@/lib/rooms';
 import { USER_DELETED } from '@/lib/users';
 import { roomCodeSchema } from '@/lib/validation';
@@ -13,6 +14,8 @@ const createRoomSchema = z.object({
     clientId: z.string().regex(/^[A-Za-z0-9-]{8,64}$/, 'invalidClient'),
     /** Optional forum post whose songs become the new room's playlist (the post's Import button). */
     importPostId: z.string().regex(/^[a-z0-9]{10,40}$/, 'postNotFound').optional(),
+    /** Color theme everyone in the room sees. */
+    theme: z.enum(ROOM_THEMES, 'invalidInput').optional().default('default'),
     /** Share token, when importing someone else's unlisted playlist through its share link. */
     importShareToken: z.string().max(100).optional(),
 });
@@ -20,7 +23,7 @@ const createRoomSchema = z.object({
 export async function POST(req: Request) {
     const parsed = createRoomSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationError(parsed.error);
-    const { name, clientId, importPostId, importShareToken } = parsed.data;
+    const { name, clientId, theme, importPostId, importShareToken } = parsed.data;
     const me = await getCurrentUser();
     const slug = name.toLowerCase();
 
@@ -55,6 +58,7 @@ export async function POST(req: Request) {
             slug,
             ownerClientId: clientId,
             ownerUserId: me?.id ?? null,
+            theme,
             // The first song becomes the current one when the room loads (paused until someone presses play).
             items: imported
                 ? {

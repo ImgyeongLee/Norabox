@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useI18n } from '@/i18n/client';
+import { ThemePicker } from '@/components/home/ThemePicker';
 import { getClientId } from '@/lib/client-identity';
+import type { RoomTheme } from '@/lib/room-themes';
 import { roomCodeSchema } from '@/lib/validation';
 
 function sanitize(v: string) {
@@ -27,6 +29,7 @@ export function CreateRoomForm({ importing }: { importing?: ImportingPlaylist | 
     const router = useRouter();
     const { t, tError } = useI18n();
     const [name, setName] = useState('');
+    const [theme, setTheme] = useState<RoomTheme>('default');
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
 
@@ -43,6 +46,7 @@ export function CreateRoomForm({ importing }: { importing?: ImportingPlaylist | 
                 body: JSON.stringify({
                     name: parsed.data,
                     clientId: getClientId(),
+                    theme,
                     ...(importing ? { importPostId: importing.id } : {}),
                     ...(importing?.shareToken ? { importShareToken: importing.shareToken } : {}),
                 }),
@@ -103,6 +107,7 @@ export function CreateRoomForm({ importing }: { importing?: ImportingPlaylist | 
             <p id="room-name-hint" className={error ? 'field-error' : 'mt-1.5 text-xs text-lime/50'}>
                 {error ?? (importing ? `${t.roomForms.roomNameHint} ${t.home.importHint}` : t.roomForms.roomNameHint)}
             </p>
+            <ThemePicker value={theme} onChange={setTheme} />
         </form>
     );
 }

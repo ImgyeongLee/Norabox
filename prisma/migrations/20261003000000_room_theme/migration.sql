@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Room" ADD COLUMN     "theme" TEXT NOT NULL DEFAULT 'default';

@@ -88,6 +88,9 @@ export const en = {
     invitePlaceholder: "Paste an invite code",
     join: "Join room",
     joining: "Joining…",
+    theme: "Room theme",
+    themeHint: "Everyone in the room sees this theme.",
+    themes: { default: "Default", mono: "Black & white", starry: "Starry Sky", candy: "Pink Couple" },
   },
   auth: {
     signupTitle: "Create your account",

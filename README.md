@@ -22,6 +22,17 @@ npm run dev                 # http://localhost:3000
 
 Without `YOUTUBE_API_KEY`, search is disabled but pasting a YouTube link still works (via oEmbed).
 
+## Checks and tests
+
+```bash
+npm run lint        # ESLint
+npm run typecheck   # generates Next.js route types, then tsc
+npm test            # Vitest unit tests in tests/ (npm run test:watch while developing)
+```
+
+The unit tests need no database, network or API keys. GitHub Actions (`.github/workflows/ci.yml`) runs all
+three on every push to any branch and on pull requests.
+
 ## Deploying (Vercel + a realtime host)
 
 Vercel's serverless functions can't hold WebSocket connections, so the app is deployed in two parts that

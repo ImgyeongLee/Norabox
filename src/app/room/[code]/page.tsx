@@ -1,31 +1,50 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { notFound, redirect } from 'next/navigation';
+import { cache } from 'react';
 import { RoomClient } from '@/components/room/RoomClient';
 import { getCurrentUser } from '@/lib/auth';
 import { getI18n } from '@/i18n/server';
 import { prisma } from '@/lib/prisma';
+import { isRoomTheme, THEME_PALETTES, themeCss, type RoomTheme } from '@/lib/room-themes';
 import { purgeIfExpired } from '@/lib/rooms';
+
+const getRoom = cache(async (code: string) => {
+    if (!/^[A-Za-z0-9]{1,32}$/.test(code)) return null;
+    await purgeIfExpired(code.toLowerCase());
+    return prisma.room.findUnique({ where: { slug: code.toLowerCase() }, select: { code: true, theme: true } });
+});
+
+const themeOf = (room: { theme: string } | null): RoomTheme => (room && isRoomTheme(room.theme) ? room.theme : 'default');
 
 export async function generateMetadata(props: PageProps<'/room/[code]'>): Promise<Metadata> {
     const [{ code }, { t }] = await Promise.all([props.params, getI18n()]);
     return { title: t.meta.room(code) };
 }
 
+/** Tints the mobile browser bar to match the room's theme. */
+export async function generateViewport(props: PageProps<'/room/[code]'>): Promise<Viewport> {
+    const room = await getRoom((await props.params).code);
+    return { themeColor: THEME_PALETTES[themeOf(room)].pine };
+}
+
 export default async function RoomPage(props: PageProps<'/room/[code]'>) {
     const { code } = await props.params;
-    if (!/^[A-Za-z0-9]{1,32}$/.test(code)) notFound();
-    await purgeIfExpired(code.toLowerCase());
-    const room = await prisma.room.findUnique({ where: { slug: code.toLowerCase() }, select: { code: true } });
+    const room = await getRoom(code);
     if (!room) notFound();
     if (room.code !== code) redirect(`/room/${room.code}`);
 
     const user = await getCurrentUser();
+    const theme = themeOf(room);
     return (
-        <RoomClient
-            code={room.code}
-            user={user && { username: user.username, avatarUrl: user.avatarUrl }}
-            // Without a YouTube API key, rooms add songs by link only (no search).
-            searchAvailable={!!process.env.YOUTUBE_API_KEY?.trim()}
-        />
+        <>
+            {/* The room's theme recolors the whole page for everyone in it; it goes away when they leave. */}
+            {theme !== 'default' && <style>{themeCss(theme)}</style>}
+            <RoomClient
+                code={room.code}
+                user={user && { username: user.username, avatarUrl: user.avatarUrl }}
+                // Without a YouTube API key, rooms add songs by link only (no search).
+                searchAvailable={!!process.env.YOUTUBE_API_KEY?.trim()}
+            />
+        </>
     );
 }
