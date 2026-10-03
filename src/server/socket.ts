@@ -30,7 +30,7 @@ type SocketData = { roomId?: string; identity?: string };
 const EMPTY_ROOM_TTL_MS = 60_000;
 /** A member who disconnects (e.g. refreshes the page) keeps their seat this long. */
 const RECONNECT_GRACE_MS = 10_000;
-/** How often occupied rooms are marked active and expired rooms are deleted. */
+/** How often occupied rooms are marked active and expired rooms are deleted (only while someone is listening). */
 const SWEEP_INTERVAL_MS = 10 * 60_000;
 /** Minimum gap between lastActiveAt writes for one room. */
 const TOUCH_THROTTLE_MS = 60_000;
@@ -274,13 +274,18 @@ async function loadRoom(io: IO, slug: string): Promise<Room | null> {
 /**
  * Marks occupied rooms as active, then deletes rooms that have been inactive past
  * the TTL. Rooms people are in are never deleted, however long they just listen.
+ *
+ * Does nothing (no query) while nobody is in a room, so an idle server never wakes
+ * the database and Neon can scale it to zero. Expiry still holds then, because every
+ * room lookup purges an expired room first (purgeIfExpired); old rooms nobody visits
+ * are cleaned up on the next sweep that runs while someone is listening.
+ * Exported for tests.
  */
-async function sweepRooms() {
+export async function sweepRooms() {
   try {
     const occupied = [...rooms.values()].filter((r) => r.members.size > 0).map((r) => r.id);
-    if (occupied.length > 0) {
-      await prisma.room.updateMany({ where: { id: { in: occupied } }, data: { lastActiveAt: new Date() } });
-    }
+    if (occupied.length === 0) return;
+    await prisma.room.updateMany({ where: { id: { in: occupied } }, data: { lastActiveAt: new Date() } });
     const { count } = await prisma.room.deleteMany({
       where: { lastActiveAt: { lt: inactiveCutoff() }, id: { notIn: occupied } },
     });
@@ -302,7 +307,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
     destroyUpgrade: false,
   });
 
-  void sweepRooms();
+  // Only queries while rooms are occupied; see sweepRooms.
   setInterval(sweepRooms, SWEEP_INTERVAL_MS).unref();
 
   io.on("connection", (socket: ClientSocket) => {
