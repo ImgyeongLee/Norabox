@@ -8,10 +8,13 @@ export type Announcement = {
   id: string;
   /** Stops showing after this moment (ISO time with zone). */
   showUntil: string;
+  /** Optional "more information" link, shown under the message. */
+  link?: string;
 };
 
 export const announcement: Announcement | null = {
   id: "db-move-2026-10-13",
   // End of the maintenance window: Oct 13, 4:00 AM Korea time.
   showUntil: "2026-10-13T04:00:00+09:00",
+  link: "https://posty.pe/3ckbou",
 };

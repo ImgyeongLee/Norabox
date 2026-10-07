@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
-import { LuMegaphone } from 'react-icons/lu';
+import { LuExternalLink, LuMegaphone } from 'react-icons/lu';
 import { Icon } from '@/components/icons';
 import { useI18n } from '@/i18n/client';
 import { announcement } from '@/lib/announcement';
@@ -73,6 +73,20 @@ export function AnnouncementModal() {
                 <p id={bodyId} className="mt-3 leading-relaxed text-lime/85">
                     {t.announcement.body}
                 </p>
+                {announcement?.link && (
+                    <p className="mt-3 text-sm text-lime/75">
+                        {t.announcement.moreInfo}{' '}
+                        <a
+                            href={announcement.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 break-all font-semibold text-moss underline underline-offset-4 hover:text-lime"
+                        >
+                            {announcement.link.replace(/^https?:\/\//, '')}
+                            <Icon as={LuExternalLink} className="size-3.5 shrink-0" />
+                        </a>
+                    </p>
+                )}
                 <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     <button type="button" className="btn-ghost" onClick={() => close(true)}>
                         {t.announcement.hide24h}

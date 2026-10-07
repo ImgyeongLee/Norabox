@@ -372,6 +372,7 @@ export const en = {
   announcement: {
     title: "Scheduled maintenance",
     body: "We are going to change our database server on October 13th. Due to this, the website will not be available from 3 AM to 4 AM (Korea time).",
+    moreInfo: "For more information, please see my post:",
     close: "Close",
     hide24h: "Don't show for 24 hours",
   },
