@@ -369,6 +369,12 @@ export const en = {
     save: "Save",
     hint: "Only you (the admin) can see memos.",
   },
+  announcement: {
+    title: "Scheduled maintenance",
+    body: "We are going to change our database server on October 13th. Due to this, the website will not be available from 3 AM to 4 AM (Korea time).",
+    close: "Close",
+    hide24h: "Don't show for 24 hours",
+  },
   embed: {
     play: (title: string) => `Play ${title}`,
   },
