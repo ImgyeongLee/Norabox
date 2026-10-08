@@ -1,5 +1,7 @@
 'use client';
 
+import { LuLock, LuLockOpen } from 'react-icons/lu';
+import { Icon } from '@/components/icons';
 import { Avatar } from '@/components/Avatar';
 import { useI18n } from '@/i18n/client';
 import type { AckResult, MemberView, Role } from '@/lib/room-types';
@@ -24,12 +26,31 @@ type Props = {
     meId: string | null;
     isAdmin: boolean;
     setRole: (memberId: string, role: 'dj' | 'listener') => Promise<AckResult>;
+    locked: boolean;
+    /** Admin only: closes the room to newcomers, or opens it again. */
+    setLocked: (locked: boolean) => Promise<AckResult>;
 };
 
-export function MembersPanel({ members, meId, isAdmin, setRole }: Props) {
+export function MembersPanel({ members, meId, isAdmin, setRole, locked, setLocked }: Props) {
     const { t } = useI18n();
     return (
         <div>
+            {isAdmin && (
+                <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-leaf/40 bg-pine/40 p-3">
+                    <Icon as={locked ? LuLock : LuLockOpen} className={`size-5 shrink-0 ${locked ? 'text-moss' : 'text-lime/50'}`} />
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold">{t.access.title}</p>
+                        <p className="text-xs text-lime/55">{locked ? t.access.closed : t.access.open}</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setLocked(!locked)}
+                        aria-pressed={locked}
+                        className={`${locked ? 'btn-secondary' : 'btn-primary'} shrink-0 px-3 py-1.5 text-xs`}>
+                        {locked ? t.access.reopen : t.access.close}
+                    </button>
+                </div>
+            )}
             <p className="mb-3 text-xs text-lime/50">
                 {t.members.hint} {isAdmin ? t.members.hintAdmin : ''}
             </p>

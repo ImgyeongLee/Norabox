@@ -65,9 +65,24 @@ class Room {
     public items: PlaylistEntry[],
     public djs: Set<string>,
     currentItemId: string | null,
+    public locked: boolean,
+    /** While locked: identities of the people who were in the room when it was closed. */
+    public allowed: Set<string>,
   ) {
-    const itemId = items.some((i) => i.id === currentItemId) ? currentItemId : (items[0]?.id ?? null);
+    const itemId = items.some((i) => i.id === currentItemId && !i.hidden)
+      ? currentItemId
+      : (items.find((i) => !i.hidden)?.id ?? null);
     this.playback = { itemId, isPlaying: false, position: 0, updatedAt: Date.now(), seq: 0 };
+  }
+
+  isOwner(clientId: string, userId: string | null) {
+    return clientId === this.ownerClientId || (!!this.ownerUserId && userId === this.ownerUserId);
+  }
+
+  /** Whether someone may join: always, unless the admin closed the room to newcomers. */
+  canEnter(identity: string, clientId: string, userId: string | null) {
+    if (!this.locked || this.isOwner(clientId, userId)) return true;
+    return this.members.has(identity) || this.allowed.has(identity) || this.djs.has(identity);
   }
 
   roleOf(m: Member): Role {
@@ -75,7 +90,10 @@ class Room {
     return this.djs.has(m.identity) ? "dj" : "listener";
   }
 
-  /** Room state as one member should see it. Memos are the admin's private notes, so only the admin gets them. */
+  /**
+   * Room state as one member should see it. Memos are the admin's private notes and hidden
+   * songs are the admin's surprises, so only the admin gets them.
+   */
   snapshot(forAdmin = false): RoomSnapshot {
     const members: MemberView[] = [...this.members.values()].map((m) => ({
       memberId: m.memberId,
@@ -90,8 +108,11 @@ class Room {
       code: this.code,
       masterVolume: this.masterVolume,
       loopMode: this.loopMode,
+      locked: this.locked,
       // undefined fields aren't serialized, so memos never leave the server for non-admins.
-      items: forAdmin ? this.items : this.items.map((item) => ({ ...item, memo: undefined })),
+      items: forAdmin
+        ? this.items
+        : this.items.filter((item) => !item.hidden).map((item) => ({ ...item, memo: undefined, hidden: undefined })),
       playback: this.playback,
       members,
     };
@@ -133,6 +154,25 @@ class Room {
     return this.items.find((i) => i.id === this.playback.itemId) ?? null;
   }
 
+  /**
+   * The nearest song after (dir 1) or before (dir -1) index `from` that isn't hidden,
+   * wrapping around the playlist if `wrap`. Hidden songs only play when the admin picks them.
+   */
+  neighbor(from: number, dir: 1 | -1, wrap = false) {
+    const n = this.items.length;
+    for (let k = 1; k <= n; k++) {
+      let i = from + dir * k;
+      if (wrap) i = ((i % n) + n) % n;
+      else if (i < 0 || i >= n) return null;
+      if (!this.items[i].hidden) return this.items[i];
+    }
+    return null;
+  }
+
+  firstVisible() {
+    return this.neighbor(-1, 1);
+  }
+
   positionNow() {
     const p = this.playback;
     const pos = p.isPlaying ? p.position + (Date.now() - p.updatedAt) / 1000 : p.position;
@@ -150,6 +190,14 @@ class Room {
       seq: this.playback.seq + 1,
     };
     this.scheduleEnd();
+    // A hidden song is revealed to everyone once it starts playing.
+    const item = this.current();
+    if (item?.hidden && this.playback.isPlaying) {
+      item.hidden = false;
+      this.persist(() =>
+        prisma.playlistItem.updateMany({ where: { id: item.id, roomId: this.id }, data: { hidden: false } }),
+      ).catch((e) => console.error("[room] failed to reveal song", e));
+    }
     if (itemChanged) {
       prisma.room
         .update({ where: { id: this.id }, data: { currentItemId: this.playback.itemId } })
@@ -179,18 +227,16 @@ class Room {
 
     if (this.loopMode === "one") return this.setPlayback({ position: 0, isPlaying: true });
     const idx = this.items.findIndex((i) => i.id === itemId);
-    const next = this.items[idx + 1];
+    const next = this.neighbor(idx, 1) ?? (this.loopMode === "all" ? this.firstVisible() : null);
     if (next) return this.setPlayback({ itemId: next.id, position: 0, isPlaying: true });
-    if (this.loopMode === "all" && this.items.length > 0) {
-      return this.setPlayback({ itemId: this.items[0].id, position: 0, isPlaying: true });
-    }
     this.setPlayback({ position: 0, isPlaying: false });
   }
 
   play() {
     if (!this.playback.itemId) {
-      if (this.items.length === 0) return;
-      return this.setPlayback({ itemId: this.items[0].id, position: 0, isPlaying: true });
+      const first = this.firstVisible();
+      if (!first) return;
+      return this.setPlayback({ itemId: first.id, position: 0, isPlaying: true });
     }
     if (this.playback.isPlaying) return;
     const dur = this.current()?.durationSec;
@@ -212,9 +258,8 @@ class Room {
     if (this.items.length === 0) return;
     if (dir === -1 && this.positionNow() > 3) return this.setPlayback({ position: 0 });
     const idx = this.items.findIndex((i) => i.id === this.playback.itemId);
-    const n = this.items.length;
-    const nextIdx = idx === -1 ? 0 : (idx + dir + n) % n;
-    this.setPlayback({ itemId: this.items[nextIdx].id, position: 0, isPlaying: true });
+    const target = idx === -1 ? this.firstVisible() : this.neighbor(idx, dir, true);
+    if (target) this.setPlayback({ itemId: target.id, position: 0, isPlaying: true });
   }
 
   scheduleUnload(onUnload: () => void) {
@@ -259,9 +304,12 @@ async function loadRoom(io: IO, slug: string): Promise<Room | null> {
           durationSec: i.durationSec,
           addedBy: i.addedBy,
           memo: i.memo,
+          hidden: i.hidden,
         })),
         new Set(row.djs.map((d) => d.identity)),
         row.currentItemId,
+        row.locked,
+        new Set(row.allowedIdentities),
       );
       rooms.set(room.id, room);
       return room;
@@ -319,7 +367,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
 
     /** Wraps a handler that requires the sender to be an Admin or DJ (or Admin only). */
     const guarded =
-      <P,>(adminOnly: boolean, fn: (room: Room, p: P) => ErrorCode | void) =>
+      <P,>(adminOnly: boolean, fn: (room: Room, p: P, role: Role) => ErrorCode | void) =>
       (...args: unknown[]) => {
         const last = args[args.length - 1];
         const ack = typeof last === "function" ? (last as Ack) : undefined;
@@ -330,7 +378,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
           return fail(ack, adminOnly ? "adminOnly" : "controlOnly");
         }
         try {
-          const err = fn(c.room, payload);
+          const err = fn(c.room, payload, c.role);
           if (err) return fail(ack, err);
           ok(ack);
         } catch (e) {
@@ -363,6 +411,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
           : null;
 
         const identity = user ? `u:${user.id}` : `c:${clientId}`;
+        if (!room.canEnter(identity, clientId, user?.id ?? null)) return ack({ ok: false, error: "roomLocked" });
         const name = user
           ? user.username
           : String(payload?.name ?? "").trim().slice(0, 24) || `Guest-${clientId.slice(0, 4)}`;
@@ -439,8 +488,9 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
     );
     socket.on(
       "player:select",
-      guarded(false, (room, p: { itemId: string }) => {
-        if (!room.items.some((i) => i.id === p?.itemId)) return "songNotFound";
+      guarded(false, (room, p: { itemId: string }, role) => {
+        // Only the admin can see, and so play, hidden songs.
+        if (!room.items.some((i) => i.id === p?.itemId && (role === "admin" || !i.hidden))) return "songNotFound";
         room.setPlayback({ itemId: p.itemId, position: 0, isPlaying: true });
       }),
     );
@@ -513,7 +563,9 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       if (!c) return fail(ack, "notInRoom");
       if (c.role === "listener") return fail(ack, "controlOnly");
       const { room } = c;
-      if (!room.items.some((i) => i.id === p?.itemId)) return fail(ack, "songNotFound");
+      if (!room.items.some((i) => i.id === p?.itemId && (c.role === "admin" || !i.hidden))) {
+        return fail(ack, "songNotFound");
+      }
       try {
         await room.persist(() => prisma.playlistItem.deleteMany({ where: { id: p.itemId, roomId: room.id } }));
       } catch (e) {
@@ -525,11 +577,11 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       if (idx === -1) return ok(ack);
       room.items.splice(idx, 1);
       if (room.playback.itemId === p.itemId) {
-        const next = room.items[idx] ?? (room.loopMode === "all" ? room.items[0] : undefined);
+        const next = room.neighbor(idx - 1, 1) ?? (room.loopMode === "all" ? room.firstVisible() : null);
         room.setPlayback(
           next
             ? { itemId: next.id, position: 0 }
-            : { itemId: room.items[room.items.length - 1]?.id ?? null, position: 0, isPlaying: false },
+            : { itemId: room.neighbor(room.items.length, -1)?.id ?? null, position: 0, isPlaying: false },
         );
       } else {
         room.broadcast();
@@ -543,11 +595,16 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       if (c.role === "listener") return fail(ack, "controlOnly");
       const { room } = c;
       const ids = Array.isArray(p?.orderedIds) ? p.orderedIds : [];
-      const byId = new Map(room.items.map((i) => [i.id, i]));
-      if (ids.length !== room.items.length || new Set(ids).size !== ids.length || !ids.every((id) => byId.has(id))) {
+      // DJs don't see hidden songs: they reorder the visible ones, and hidden songs keep their slots.
+      const isAdmin = c.role === "admin";
+      const movable = isAdmin ? room.items : room.items.filter((i) => !i.hidden);
+      const byId = new Map(movable.map((i) => [i.id, i]));
+      if (ids.length !== movable.length || new Set(ids).size !== ids.length || !ids.every((id) => byId.has(id))) {
         return fail(ack, "playlistChanged");
       }
-      room.items = ids.map((id) => byId.get(id)!);
+      const reordered = ids.map((id) => byId.get(id)!);
+      let k = 0;
+      room.items = isAdmin ? reordered : room.items.map((i) => (i.hidden ? i : reordered[k++]));
       room.broadcast();
       try {
         // Writes the order at the time this runs, so the last edit always wins in the DB too.
@@ -599,6 +656,77 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         console.error("[room] memo save failed", e);
         fail(ack, "generic");
       }
+    });
+
+    // Admin-only: hide a song from everyone else as a surprise. Playing it reveals it (see setPlayback).
+    socket.on("playlist:hide", async (p, ack) => {
+      const c = ctx();
+      if (!c) return fail(ack, "notInRoom");
+      if (c.role !== "admin") return fail(ack, "adminOnly");
+      const { room } = c;
+      const item = room.items.find((i) => i.id === p?.itemId);
+      if (!item) return fail(ack, "songNotFound");
+      if (typeof p.hidden !== "boolean") return fail(ack, "invalidInput");
+      // Everyone can already see (and hear) the selected song.
+      if (p.hidden && room.playback.itemId === item.id) return fail(ack, "hideCurrent");
+      item.hidden = p.hidden;
+      room.broadcast();
+      try {
+        await room.persist(() =>
+          prisma.playlistItem.updateMany({ where: { id: item.id, roomId: room.id }, data: { hidden: item.hidden } }),
+        );
+        ok(ack);
+      } catch (e) {
+        console.error("[room] hide failed", e);
+        fail(ack, "generic");
+      }
+    });
+
+    // Admin-only: hide every song but the selected one (it's already in front of everyone), or show them all.
+    socket.on("playlist:hideAll", async (p, ack) => {
+      const c = ctx();
+      if (!c) return fail(ack, "notInRoom");
+      if (c.role !== "admin") return fail(ack, "adminOnly");
+      if (typeof p?.hidden !== "boolean") return fail(ack, "invalidInput");
+      const { room } = c;
+      const keep = p.hidden ? room.playback.itemId : null;
+      for (const item of room.items) if (item.id !== keep) item.hidden = p.hidden;
+      room.broadcast();
+      try {
+        await room.persist(() =>
+          prisma.playlistItem.updateMany({
+            where: { roomId: room.id, ...(keep ? { id: { not: keep } } : {}) },
+            data: { hidden: p.hidden },
+          }),
+        );
+        ok(ack);
+      } catch (e) {
+        console.error("[room] hide all failed", e);
+        fail(ack, "generic");
+      }
+    });
+
+    // Admin-only: close the room to newcomers (everyone here now may come back), or open it again.
+    socket.on("room:lock", async (p, ack) => {
+      const c = ctx();
+      if (!c) return fail(ack, "notInRoom");
+      if (c.role !== "admin") return fail(ack, "adminOnly");
+      if (typeof p?.locked !== "boolean") return fail(ack, "invalidInput");
+      const { room } = c;
+      const allowed = p.locked ? new Set(room.members.keys()) : new Set<string>();
+      try {
+        await prisma.room.update({
+          where: { id: room.id },
+          data: { locked: p.locked, allowedIdentities: [...allowed] },
+        });
+      } catch (e) {
+        console.error("[room] lock failed", e);
+        return fail(ack, "generic");
+      }
+      room.locked = p.locked;
+      room.allowed = allowed;
+      room.broadcast();
+      ok(ack);
     });
 
     socket.on("member:setRole", async (p, ack) => {

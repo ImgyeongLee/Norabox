@@ -10,6 +10,8 @@ export type PlaylistEntry = Video & {
   addedBy: string;
   /** Admin-only cue ("play when…"). Only included in the admin's copy of the room state. */
   memo?: string | null;
+  /** Hidden by the admin as a surprise. Hidden songs are only in the admin's copy of the room state. */
+  hidden?: boolean;
 };
 
 /**
@@ -38,6 +40,8 @@ export type RoomSnapshot = {
   code: string;
   masterVolume: number;
   loopMode: LoopMode;
+  /** Closed by the admin: nobody new can join. */
+  locked: boolean;
   items: PlaylistEntry[];
   playback: Playback;
   members: MemberView[];
@@ -69,6 +73,10 @@ export interface ClientToServerEvents {
   "playlist:remove": (p: { itemId: string }, ack?: Ack) => void;
   "playlist:reorder": (p: { orderedIds: string[] }, ack?: Ack) => void;
   "playlist:memo": (p: { itemId: string; memo: string }, ack?: Ack) => void;
+  "playlist:hide": (p: { itemId: string; hidden: boolean }, ack?: Ack) => void;
+  /** Hides every song except the selected one, or shows them all. */
+  "playlist:hideAll": (p: { hidden: boolean }, ack?: Ack) => void;
+  "room:lock": (p: { locked: boolean }, ack?: Ack) => void;
   "member:setRole": (p: { memberId: string; role: "dj" | "listener" }, ack?: Ack) => void;
 }
 

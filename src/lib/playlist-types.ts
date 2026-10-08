@@ -7,5 +7,6 @@ export type ImportablePlaylist = {
   /** null when the author deleted their account. */
   author: string | null;
   scenario: { name: string; writer: string | null } | null;
-  tracks: Video[];
+  /** `id` is the song's id within this playlist (used to reorder your own playlists). */
+  tracks: (Video & { id: string })[];
 };

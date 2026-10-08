@@ -3,13 +3,16 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { LuEye, LuEyeOff, LuLock } from 'react-icons/lu';
 import { Avatar } from '@/components/Avatar';
 import { CopyButton } from '@/components/CopyButton';
+import { Icon } from '@/components/icons';
 import { VideoSearch } from '@/components/VideoSearch';
 import { LibraryPanel } from '@/components/room/LibraryPanel';
 import { MembersPanel, RoleBadge } from '@/components/room/MembersPanel';
 import { PlayerControls } from '@/components/room/PlayerControls';
 import { Playlist } from '@/components/room/Playlist';
+import { SaveToPlaylist } from '@/components/room/SaveToPlaylist';
 import { SyncedPlayer } from '@/components/room/SyncedPlayer';
 import { useRoom, type ConnectionStatus } from '@/components/room/useRoom';
 import { VolumePanel } from '@/components/room/VolumePanel';
@@ -147,6 +150,49 @@ function JoinGate({ code, user, onJoin }: { code: string; user: Props['user']; o
     );
 }
 
+/** Admin-only: "Hide all" / "Show all" above the playlist, with a note on how hidden songs behave. */
+function HideAllBar({
+    items,
+    currentId,
+    onHideAll,
+}: {
+    items: RoomReady['snapshot']['items'];
+    currentId: string | null;
+    onHideAll: (hidden: boolean) => void;
+}) {
+    const { t } = useI18n();
+    const anyHidden = items.some((i) => i.hidden);
+    // Everything but the selected song (which can't be hidden) is already hidden.
+    const allHidden = items.every((i) => i.hidden || i.id === currentId);
+    return (
+        <div className="mb-2 space-y-1.5">
+            <div className="flex flex-wrap justify-end gap-1.5">
+                {anyHidden && (
+                    <button
+                        type="button"
+                        onClick={() => onHideAll(false)}
+                        title={t.playlist.showAllHint}
+                        className="btn-ghost gap-1 px-2 py-1 text-xs">
+                        <Icon as={LuEye} className="size-3.5" />
+                        {t.playlist.showAll}
+                    </button>
+                )}
+                {!allHidden && (
+                    <button
+                        type="button"
+                        onClick={() => onHideAll(true)}
+                        title={t.playlist.hideAllHint}
+                        className="btn-ghost gap-1 px-2 py-1 text-xs">
+                        <Icon as={LuEyeOff} className="size-3.5" />
+                        {t.playlist.hideAll}
+                    </button>
+                )}
+            </div>
+            {anyHidden && <p className="text-xs text-lime/45">{t.room.hiddenHint}</p>}
+        </div>
+    );
+}
+
 const STATUS_STYLE: Record<ConnectionStatus, string> = {
     connected: 'bg-moss',
     connecting: 'bg-lime/50 animate-pulse',
@@ -268,6 +314,14 @@ function RoomView({
                     <div className="flex items-center gap-2">
                         <StatusDot status={status} />
                         <RoleBadge role={role} />
+                        {snapshot.locked && (
+                            <span
+                                title={t.room.closedBadgeHint}
+                                className="inline-flex items-center gap-1 rounded-full border border-leaf/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-lime/80">
+                                <Icon as={LuLock} className="size-3" />
+                                {t.room.closedBadge}
+                            </span>
+                        )}
                     </div>
                     <h1 className="mt-1 break-all font-mono text-2xl font-bold sm:text-3xl">{snapshot.code}</h1>
                 </div>
@@ -344,6 +398,13 @@ function RoomView({
                                 {canControl && snapshot.items.length > 1 && (
                                     <p className="mb-2 text-xs text-lime/45">{t.room.dragHint}</p>
                                 )}
+                                {isAdmin && snapshot.items.length > 0 && (
+                                    <HideAllBar
+                                        items={snapshot.items}
+                                        currentId={snapshot.playback.itemId}
+                                        onHideAll={(hidden) => run('playlist:hideAll', { hidden })}
+                                    />
+                                )}
                                 <Playlist
                                     items={snapshot.items}
                                     editable={canControl}
@@ -355,6 +416,19 @@ function RoomView({
                                     onMemo={
                                         isAdmin
                                             ? async (itemId, memo) => (await run('playlist:memo', { itemId, memo })).ok
+                                            : undefined
+                                    }
+                                    onToggleHidden={
+                                        isAdmin ? (itemId, hidden) => run('playlist:hide', { itemId, hidden }) : undefined
+                                    }
+                                    actions={
+                                        signedIn
+                                            ? ({ videoId, title, channel, thumbnail, durationSec }) => (
+                                                  <SaveToPlaylist
+                                                      video={{ videoId, title, channel, thumbnail, durationSec }}
+                                                      onMessage={setToast}
+                                                  />
+                                              )
                                             : undefined
                                     }
                                     emptyText={canControl ? t.room.emptyControl : t.room.emptyListen}
@@ -376,6 +450,7 @@ function RoomView({
                                 signedIn={signedIn}
                                 addedIds={addedIds}
                                 onAdd={addVideos}
+                                onMessage={setToast}
                             />
                         )}
                         {tab === 'people' && (
@@ -384,6 +459,8 @@ function RoomView({
                                 meId={memberId}
                                 isAdmin={isAdmin}
                                 setRole={(id, r) => run('member:setRole', { memberId: id, role: r })}
+                                locked={snapshot.locked}
+                                setLocked={(locked) => run('room:lock', { locked })}
                             />
                         )}
                     </div>

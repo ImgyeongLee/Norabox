@@ -27,7 +27,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const contactEmail = process.env.CONTACT_EMAIL?.trim();
   return (
     <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col">
+      {/* Extensions such as Grammarly add attributes to <body> before React loads; don't warn about those. */}
+      <body className="flex min-h-full flex-col" suppressHydrationWarning>
         <I18nProvider locale={locale}>
           <ConfirmProvider>
             <Header />

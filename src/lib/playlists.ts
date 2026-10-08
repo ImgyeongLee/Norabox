@@ -10,7 +10,7 @@ const select = {
   scenario: { select: { name: true, writer: true } },
   tracks: {
     orderBy: { position: "asc" },
-    select: { videoId: true, title: true, channel: true, thumbnail: true, durationSec: true },
+    select: { id: true, videoId: true, title: true, channel: true, thumbnail: true, durationSec: true },
   },
 } as const;
 

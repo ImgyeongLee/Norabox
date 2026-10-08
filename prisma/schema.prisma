@@ -29,26 +29,30 @@ model User {
 }
 
 model Room {
-  id            String   @id @default(cuid())
+  id                String   @id @default(cuid())
   // Room name exactly as typed; it doubles as the invite code.
-  code          String
+  code              String
   // Lowercased code, used for lookups so invite codes are case-insensitive.
-  slug          String   @unique
+  slug              String   @unique
   // Secret anonymous id of the browser that created the room.
-  ownerClientId String
-  ownerUserId   String?
-  owner         User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
-  masterVolume  Int      @default(100)
+  ownerClientId     String
+  ownerUserId       String?
+  owner             User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  masterVolume      Int      @default(100)
   // "none" | "one" | "all"
-  loopMode      String   @default("none")
+  loopMode          String   @default("none")
   // Color theme chosen by the owner at creation: "default" | "mono" | "starry".
-  theme         String   @default("default")
-  currentItemId String?
+  theme             String   @default("default")
+  // Closed by the admin: nobody new can join. Only the admin, DJs and the people who were
+  // in the room when it was closed (`allowedIdentities`, "u:<userId>" / "c:<clientId>") get in.
+  locked            Boolean  @default(false)
+  allowedIdentities String[] @default([])
+  currentItemId     String?
   // Refreshed while anyone is in the room or anything changes. Rooms idle for
   // 6 hours are deleted (see src/lib/rooms.ts).
-  lastActiveAt  DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  lastActiveAt      DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   items PlaylistItem[]
   djs   RoomDj[]
@@ -69,6 +73,8 @@ model PlaylistItem {
   addedBy     String
   // Admin-only cue, e.g. "Play when the party enters the crypt". Never sent to other members.
   memo        String?
+  // Hidden by the admin as a surprise: only the admin sees it until the admin plays it.
+  hidden      Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   @@index([roomId, position])
@@ -102,20 +108,20 @@ model Scenario {
 }
 
 model Post {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   authorId   String
-  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   title      String
   // "private" (only the author) | "unlisted" (anyone with the share link) | "public" (on the forum).
-  visibility String   @default("private")
+  visibility String    @default("private")
   // Secret for the share link /s/<shareToken>; different from the post's own URL.
   // Resetting it invalidates links shared earlier.
-  shareToken String   @unique
+  shareToken String    @unique
   // Optional: a post doesn't have to be about a particular scenario.
   scenarioId String?
   scenario   Scenario? @relation(fields: [scenarioId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   tracks PostTrack[]
   likes  PostLike[]

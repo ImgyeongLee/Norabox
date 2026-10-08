@@ -2,8 +2,9 @@
 
 /* eslint-disable @next/next/no-img-element -- YouTube thumbnails */
 import { useEffect, useState } from 'react';
-import { LuCheck, LuChevronDown, LuChevronUp, LuExternalLink, LuPlus } from 'react-icons/lu';
+import { LuArrowUpDown, LuCheck, LuChevronDown, LuChevronUp, LuExternalLink, LuPlus } from 'react-icons/lu';
 import { Icon } from '@/components/icons';
+import { Playlist } from '@/components/room/Playlist';
 import { useI18n } from '@/i18n/client';
 import { formatDuration } from '@/lib/format';
 import type { ImportablePlaylist } from '@/lib/playlist-types';
@@ -15,9 +16,15 @@ type Props = {
     /** Video ids already in the room's playlist, marked "In room". */
     addedIds: Set<string>;
     onAdd: (videos: Video[]) => Promise<boolean>;
+    /** Shows an error as the room's toast. */
+    onMessage: (text: string) => void;
 };
 
-type ItemProps = Omit<Props, 'signedIn'> & { playlist: ImportablePlaylist };
+type ItemProps = Omit<Props, 'signedIn' | 'onMessage'> & {
+    playlist: ImportablePlaylist;
+    /** Set for the user's own playlists: saves a new song order. */
+    onReorder?: (playlistId: string, orderedIds: string[]) => void;
+};
 type Library = { mine: ImportablePlaylist[]; liked: ImportablePlaylist[] };
 
 /** True if every word of the query appears in the playlist's title, scenario, writer or author. */
@@ -31,9 +38,10 @@ function matches(p: ImportablePlaylist, query: string) {
 /**
  * The room's Library tab (for signed-in users): their own playlists and the ones they
  * liked, searchable. Each can be added whole, or unrolled to pick individual songs.
+ * Their own playlists can also be reordered right here.
  */
-export function LibraryPanel({ canControl, signedIn, addedIds, onAdd }: Props) {
-    const { t } = useI18n();
+export function LibraryPanel({ canControl, signedIn, addedIds, onAdd, onMessage }: Props) {
+    const { t, tError } = useI18n();
     const [library, setLibrary] = useState<Library | null>(null);
     const [query, setQuery] = useState('');
 
@@ -48,6 +56,26 @@ export function LibraryPanel({ canControl, signedIn, addedIds, onAdd }: Props) {
             stale = true;
         };
     }, [signedIn]);
+
+    /** Reorders one of the user's playlists: shown at once, saved in the background. */
+    async function reorder(playlistId: string, orderedIds: string[]) {
+        const before = library;
+        const apply = (p: ImportablePlaylist) =>
+            p.id === playlistId ? { ...p, tracks: orderedIds.map((id) => p.tracks.find((tr) => tr.id === id)!) } : p;
+        // A user can like their own playlist, so it may be in both lists.
+        setLibrary((l) => l && { mine: l.mine.map(apply), liked: l.liked.map(apply) });
+        try {
+            const res = await fetch(`/api/posts/${playlistId}/tracks`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderedIds }),
+            });
+            if (!res.ok) throw new Error((await res.json()).error);
+        } catch (e) {
+            setLibrary(before);
+            onMessage(tError(e instanceof Error ? e.message : 'network'));
+        }
+    }
 
     if (!signedIn) return <p className="text-sm text-lime/60">{t.likedTab.loginRequired}</p>;
     if (library === null) return <p className="text-sm text-lime/50">{t.likedTab.loading}</p>;
@@ -77,7 +105,7 @@ export function LibraryPanel({ canControl, signedIn, addedIds, onAdd }: Props) {
                         {library.mine.length === 0 ? (
                             <p className="text-sm text-lime/55">{t.likedTab.mineEmpty}</p>
                         ) : (
-                            mine.map((p) => <PlaylistItem key={p.id} playlist={p} {...itemProps} />)
+                            mine.map((p) => <PlaylistItem key={p.id} playlist={p} {...itemProps} onReorder={reorder} />)
                         )}
                     </Section>
                     <Section title={t.likedTab.liked} count={liked.length} hideWhenEmpty={searching}>
@@ -122,9 +150,10 @@ function Section({
     );
 }
 
-function PlaylistItem({ playlist: p, canControl, addedIds, onAdd }: ItemProps) {
+function PlaylistItem({ playlist: p, canControl, addedIds, onAdd, onReorder }: ItemProps) {
     const { t } = useI18n();
-    const [open, setOpen] = useState(false);
+    const [view, setView] = useState<'closed' | 'choose' | 'reorder'>('closed');
+    const open = view === 'choose';
     const [selected, setSelected] = useState<Set<number>>(() => new Set());
     const [pending, setPending] = useState(false);
 
@@ -161,7 +190,7 @@ function PlaylistItem({ playlist: p, canControl, addedIds, onAdd }: ItemProps) {
                     <div className="mt-2 flex flex-wrap gap-1.5">
                         <button
                             type="button"
-                            onClick={() => setOpen((o) => !o)}
+                            onClick={() => setView(open ? 'closed' : 'choose')}
                             aria-expanded={open}
                             className="btn-ghost gap-1 px-2 py-1 text-xs"
                         >
@@ -177,9 +206,27 @@ function PlaylistItem({ playlist: p, canControl, addedIds, onAdd }: ItemProps) {
                             <Icon as={LuPlus} className="size-3.5" />
                             {t.likedTab.addAll}
                         </button>
+                        {onReorder && p.tracks.length > 1 && (
+                            <button
+                                type="button"
+                                onClick={() => setView(view === 'reorder' ? 'closed' : 'reorder')}
+                                aria-expanded={view === 'reorder'}
+                                className="btn-ghost gap-1 px-2 py-1 text-xs"
+                            >
+                                <Icon as={LuArrowUpDown} className="size-3.5" />
+                                {view === 'reorder' ? t.likedTab.doneReorder : t.likedTab.reorder}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {view === 'reorder' && onReorder && (
+                <div className="mt-3 border-t border-leaf/25 pt-2">
+                    <p className="mb-2 px-1 text-xs text-lime/45">{t.likedTab.reorderHint}</p>
+                    <Playlist items={p.tracks} editable onReorder={(ids) => onReorder(p.id, ids)} />
+                </div>
+            )}
 
             {open && (
                 <div className="mt-3 border-t border-leaf/25 pt-2">

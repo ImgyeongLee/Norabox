@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useState } from 'react';
-import { LuPlus, LuStickyNote } from 'react-icons/lu';
+import { LuEllipsis, LuEye, LuEyeOff, LuStickyNote } from 'react-icons/lu';
 import { GripIcon, Icon, TrashIcon } from '@/components/icons';
 import { useI18n } from '@/i18n/client';
 import { formatDuration } from '@/lib/format';
@@ -35,6 +35,7 @@ export type SortableTrack = {
     durationSec: number | null;
     addedBy?: string;
     memo?: string | null;
+    hidden?: boolean;
 };
 
 type Props<T extends SortableTrack> = {
@@ -47,6 +48,10 @@ type Props<T extends SortableTrack> = {
     onSelect?: (id: string) => void;
     /** Set for the room admin: shows and edits per-song memos. Resolves true when saved. */
     onMemo?: (id: string, memo: string) => Promise<boolean>;
+    /** Set for the room admin: hides a song from everyone else, or shows it again. */
+    onToggleHidden?: (id: string, hidden: boolean) => void;
+    /** Extra controls for a row, shown in its "⋯" menu. */
+    actions?: (item: T) => React.ReactNode;
     emptyText?: string;
 };
 
@@ -60,6 +65,8 @@ export function Playlist<T extends SortableTrack>({
     onRemove,
     onSelect,
     onMemo,
+    onToggleHidden,
+    actions,
     emptyText,
 }: Props<T>) {
     const { t } = useI18n();
@@ -104,6 +111,8 @@ export function Playlist<T extends SortableTrack>({
                             onRemove={onRemove}
                             onSelect={onSelect}
                             onMemo={onMemo}
+                            onToggleHidden={onToggleHidden}
+                            actions={actions?.(item)}
                         />
                     ))}
                 </ol>
@@ -121,6 +130,8 @@ function Row({
     onRemove,
     onSelect,
     onMemo,
+    onToggleHidden,
+    actions,
 }: {
     item: SortableTrack;
     index: number;
@@ -130,19 +141,30 @@ function Row({
     onRemove?: (id: string) => void;
     onSelect?: (id: string) => void;
     onMemo?: (id: string, memo: string) => Promise<boolean>;
+    onToggleHidden?: (id: string, hidden: boolean) => void;
+    actions?: React.ReactNode;
 }) {
     const { t } = useI18n();
     const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
         id: item.id,
         disabled: !editable,
     });
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [memoDraft, setMemoDraft] = useState<string | null>(null); // null = not editing the memo
+    const canRemove = editable && !!onRemove;
+    // A lone remove button fits next to the title; more than that goes into a "⋯" menu so the title stays readable.
+    const useMenu = !!actions || !!onToggleHidden || !!onMemo;
 
     return (
         <li
             ref={setNodeRef}
             style={{ transform: CSS.Transform.toString(transform), transition }}
             className={`group flex flex-wrap items-center gap-2 rounded-xl border p-2 transition ${
-                current ? 'border-moss/70 bg-leaf/40' : 'border-transparent bg-pine/40 hover:bg-fern/50'
+                current
+                    ? 'border-moss/70 bg-leaf/40'
+                    : item.hidden
+                      ? 'border-dashed border-lime/25 bg-pine/20 hover:bg-fern/30'
+                      : 'border-transparent bg-pine/40 hover:bg-fern/50'
             } ${isDragging ? 'relative z-10 shadow-2xl ring-2 ring-moss' : ''}`}>
             {editable ? (
                 <button
@@ -163,7 +185,11 @@ function Row({
                 className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
                 aria-label={onSelect ? t.playlist.play(item.title) : undefined}>
                 <span className="relative shrink-0">
-                    <img src={item.thumbnail} alt="" className="aspect-video w-20 rounded-md object-cover" />
+                    <img
+                        src={item.thumbnail}
+                        alt=""
+                        className={`aspect-video w-20 rounded-md object-cover ${item.hidden ? 'opacity-50' : ''}`}
+                    />
                     {playing && (
                         <span
                             className="absolute inset-0 flex items-end justify-center gap-0.5 rounded-md bg-pine/60 pb-1.5"
@@ -192,24 +218,104 @@ function Row({
             <span className="hidden shrink-0 font-mono text-xs text-lime/50 sm:block">
                 {formatDuration(item.durationSec)}
             </span>
-            {editable && onRemove && (
+            {item.hidden && (
+                <span title={t.playlist.hidden} className="flex shrink-0 items-center text-moss">
+                    <Icon as={LuEyeOff} className="size-4" />
+                    <span className="sr-only">{t.playlist.hidden}</span>
+                </span>
+            )}
+            {useMenu ? (
                 <button
                     type="button"
-                    onClick={() => onRemove(item.id)}
-                    className="icon-btn size-8 shrink-0 text-lime/40 hover:text-danger"
-                    aria-label={t.playlist.remove(item.title)}>
-                    <TrashIcon className="size-4" />
+                    onClick={() => setMenuOpen((o) => !o)}
+                    aria-expanded={menuOpen}
+                    aria-label={t.playlist.more(item.title)}
+                    title={t.playlist.more(item.title)}
+                    className={`icon-btn size-8 shrink-0 ${menuOpen ? 'text-lime' : 'text-lime/40 hover:text-lime'}`}>
+                    <Icon as={LuEllipsis} className="size-4" />
                 </button>
+            ) : (
+                canRemove && (
+                    <button
+                        type="button"
+                        onClick={() => onRemove!(item.id)}
+                        className="icon-btn size-8 shrink-0 text-lime/40 hover:text-danger"
+                        aria-label={t.playlist.remove(item.title)}>
+                        <TrashIcon className="size-4" />
+                    </button>
+                )
             )}
-            {onMemo && <MemoLine memo={item.memo ?? null} onSave={(memo) => onMemo(item.id, memo)} />}
+            {useMenu && menuOpen && (
+                <div className="ml-10 flex basis-full flex-wrap gap-1.5">
+                    {actions}
+                    {onMemo && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setMemoDraft(item.memo ?? '');
+                                setMenuOpen(false);
+                            }}
+                            className="btn-ghost gap-1 px-2 py-1 text-xs">
+                            <Icon as={LuStickyNote} className="size-3.5" />
+                            {item.memo ? t.memo.edit : t.memo.add}
+                        </button>
+                    )}
+                    {onToggleHidden && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onToggleHidden(item.id, !item.hidden);
+                                setMenuOpen(false);
+                            }}
+                            // The selected song is already in front of everyone; it can't become a surprise.
+                            disabled={current && !item.hidden}
+                            title={item.hidden ? t.playlist.unhide(item.title) : t.playlist.hide(item.title)}
+                            className="btn-ghost gap-1 px-2 py-1 text-xs disabled:opacity-40">
+                            <Icon as={item.hidden ? LuEye : LuEyeOff} className="size-3.5" />
+                            {item.hidden ? t.playlist.showLabel : t.playlist.hideLabel}
+                        </button>
+                    )}
+                    {canRemove && (
+                        <button
+                            type="button"
+                            onClick={() => onRemove!(item.id)}
+                            aria-label={t.playlist.remove(item.title)}
+                            className="btn-ghost gap-1 px-2 py-1 text-xs hover:text-danger">
+                            <TrashIcon className="size-3.5" />
+                            {t.playlist.removeLabel}
+                        </button>
+                    )}
+                </div>
+            )}
+            {onMemo && (
+                <MemoLine
+                    memo={item.memo ?? null}
+                    draft={memoDraft}
+                    setDraft={setMemoDraft}
+                    onSave={(memo) => onMemo(item.id, memo)}
+                />
+            )}
         </li>
     );
 }
 
-/** Admin-only cue under a song: shows the memo, or a small "Add memo"; click to edit inline. */
-function MemoLine({ memo, onSave }: { memo: string | null; onSave: (memo: string) => Promise<boolean> }) {
+/**
+ * Admin-only cue under a song: shows the memo (click to edit inline), or the editor once
+ * "Add memo" is picked from the song's "⋯" menu.
+ */
+function MemoLine({
+    memo,
+    draft,
+    setDraft,
+    onSave,
+}: {
+    memo: string | null;
+    /** null when not editing. */
+    draft: string | null;
+    setDraft: (draft: string | null) => void;
+    onSave: (memo: string) => Promise<boolean>;
+}) {
     const { t } = useI18n();
-    const [draft, setDraft] = useState<string | null>(null); // null = not editing
     const [saving, setSaving] = useState(false);
 
     async function save() {
@@ -231,16 +337,7 @@ function MemoLine({ memo, onSave }: { memo: string | null; onSave: (memo: string
                 <Icon as={LuStickyNote} className="mt-px size-3.5 shrink-0 text-moss" />
                 <span className="whitespace-pre-wrap break-words">{memo}</span>
             </button>
-        ) : (
-            <button
-                type="button"
-                onClick={() => setDraft('')}
-                className="ml-10 inline-flex items-center gap-1 text-[11px] text-lime/40 transition hover:text-lime/80"
-            >
-                <Icon as={LuPlus} className="size-3" />
-                {t.memo.add}
-            </button>
-        );
+        ) : null;
     }
 
     return (

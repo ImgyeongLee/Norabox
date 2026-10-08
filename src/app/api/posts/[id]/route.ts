@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
-import { jsonError, readJson, validationError } from '@/lib/http';
+import { readJson, validationError } from '@/lib/http';
+import { ownPost } from '@/lib/own-post';
 import { prisma } from '@/lib/prisma';
 import { deleteOrphanScenarios, findOrCreateScenario } from '@/lib/scenarios';
 import { postSchema } from '@/lib/validation';
-
-async function ownPost(id: string) {
-    const me = await getCurrentUser();
-    if (!me) return { error: jsonError('loginRequired', 401) };
-    const post = await prisma.post.findUnique({ where: { id }, select: { authorId: true } });
-    if (!post) return { error: jsonError('postNotFound', 404) };
-    if (post.authorId !== me.id) return { error: jsonError('notYourPost', 403) };
-    return { error: null };
-}
 
 export async function PATCH(req: Request, ctx: RouteContext<'/api/posts/[id]'>) {
     const { id } = await ctx.params;
