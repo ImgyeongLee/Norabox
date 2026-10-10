@@ -155,8 +155,8 @@ model PostTrack {
   channel     String
   thumbnail   String
   durationSec Int?
-  // The author's private cue ("play when the party enters the crypt"); only the author sees it,
-  // and it becomes the song's memo when they add the playlist to a room. Up to MAX_MEMO
+  // A cue like "play when the party enters the crypt"; anyone who can see the post can read it,
+  // and it becomes the song's (admin-only) memo when the playlist is added to a room. Up to MAX_MEMO
   // characters for new edits; older posts may have longer ones. The column keeps its old name.
   memo        String?  @map("description")
   position    Int

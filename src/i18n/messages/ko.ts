@@ -77,7 +77,7 @@ export const ko: Messages = {
             },
             {
                 title: '포럼에 공유하기',
-                body: '가입하면 TRPG 시나리오에 어울리는 플레이리스트를 올릴 수 있어요. 곡마다 언제 틀지 나만 보는 메모도 남길 수 있어요.',
+                body: '가입하면 TRPG 시나리오에 어울리는 플레이리스트를 올릴 수 있어요. 곡마다 언제 틀지 메모도 남길 수 있어요.',
             },
         ],
     },
@@ -297,7 +297,6 @@ export const ko: Messages = {
         import: '가져오기',
         importTitle: '이 플레이리스트로 방 만들기',
         videoBy: (channel) => channel,
-        memoPrivate: '나만 볼 수 있는 메모예요',
     },
     editor: {
         newTitle: '새 플레이리스트',
@@ -313,7 +312,7 @@ export const ko: Messages = {
         loadingVideo: '영상 불러오는 중…',
         memo: '메모',
         memoPlaceholder: '언제 틀지 적어 두세요. 예: “일행이 지하 묘지에 들어갈 때”',
-        memoHint: '메모는 나만 볼 수 있어요. 이 플레이리스트를 방에 추가하면 메모도 함께 들어가고, 방에서는 관리자만 볼 수 있어요.',
+        memoHint: '이 플레이리스트를 볼 수 있는 사람은 메모도 볼 수 있어요. 방에 추가하면 메모도 함께 들어가고, 방에서는 관리자만 볼 수 있어요.',
         addSong: '곡 추가',
         publish: '게시하기',
         saveChanges: '변경 사항 저장',

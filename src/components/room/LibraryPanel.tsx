@@ -15,7 +15,7 @@ type Props = {
     signedIn: boolean;
     /** Video ids already in the room's playlist, marked "In room". */
     addedIds: Set<string>;
-    /** Adds songs to the room; songs from the user's own playlists carry their memos. */
+    /** Adds songs to the room, with their playlist memos (which only the room's admin sees). */
     onAdd: (videos: RoomSong[]) => Promise<boolean>;
     /** Shows an error as the room's toast. */
     onMessage: (text: string) => void;

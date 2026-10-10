@@ -9,7 +9,7 @@ export type ImportablePlaylist = {
   scenario: { name: string; writer: string | null } | null;
   /**
    * `id` is the song's id within this playlist (used to reorder your own playlists).
-   * `memo` is only sent to the playlist's author; it comes along when they add songs to a room.
+   * `memo` (anyone who can see the playlist can read it) comes along when its songs are added to a room.
    */
   tracks: (Video & { id: string; memo?: string | null })[];
 };

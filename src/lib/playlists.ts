@@ -6,7 +6,6 @@ import { USER_DELETED } from "@/lib/users";
 const select = {
   id: true,
   title: true,
-  authorId: true,
   author: { select: { username: true, status: true } },
   scenario: { select: { name: true, writer: true } },
   tracks: {
@@ -18,17 +17,13 @@ const select = {
 type Row = {
   id: string;
   title: string;
-  authorId: string;
   author: { username: string; status: string };
   scenario: ImportablePlaylist["scenario"];
   tracks: ImportablePlaylist["tracks"];
 };
-/** Memos are private to the playlist's author, so everyone else gets the songs without them. */
-const toPlaylist = ({ authorId, ...p }: Row, viewerId: string): ImportablePlaylist => ({
+const toPlaylist = (p: Row): ImportablePlaylist => ({
   ...p,
   author: p.author.status === USER_DELETED ? null : p.author.username,
-  // undefined fields aren't serialized, so the memos never leave the server.
-  tracks: authorId === viewerId ? p.tracks : p.tracks.map((track) => ({ ...track, memo: undefined })),
 });
 
 /** A user's liked posts, most recently liked first. */
@@ -40,7 +35,7 @@ export async function likedPlaylists(userId: string, take = 100): Promise<Import
     take,
     select: { post: { select } },
   });
-  return likes.map((l) => toPlaylist(l.post, userId));
+  return likes.map((l) => toPlaylist(l.post));
 }
 
 /** A user's own playlists (every visibility), most recently edited first. */
@@ -51,5 +46,5 @@ export async function ownPlaylists(userId: string, take = 100): Promise<Importab
     take,
     select,
   });
-  return posts.map((p) => toPlaylist(p, userId));
+  return posts.map(toPlaylist);
 }

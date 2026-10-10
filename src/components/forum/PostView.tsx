@@ -150,14 +150,10 @@ export async function PostView({
                             </div>
                         </div>
                         <YouTubeEmbed videoId={track.videoId} title={track.title} />
-                        {/* Memos are the author's private cues; nobody else is sent them. */}
-                        {isAuthor && track.memo && (
+                        {track.memo && (
                             <div className="flex items-start gap-2 rounded-lg bg-moss/15 px-3 py-2 text-sm text-lime/85">
                                 <Icon as={LuStickyNote} className="mt-0.5 size-4 shrink-0 text-moss" />
-                                <div className="min-w-0">
-                                    <p className="whitespace-pre-wrap break-words">{track.memo}</p>
-                                    <p className="mt-1 text-xs text-lime/45">{t.post.memoPrivate}</p>
-                                </div>
+                                <p className="min-w-0 whitespace-pre-wrap break-words">{track.memo}</p>
                             </div>
                         )}
                     </li>

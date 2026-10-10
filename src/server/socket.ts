@@ -524,7 +524,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
     // ---- Playlist (Admin / DJ) ----
     /**
      * Appends songs to the playlist (one DB write, one broadcast); starts playback if nothing is selected.
-     * Songs from the sender's own playlists bring their memos, which only the admin sees.
+     * Songs from a playlist bring its memos, which only the admin sees.
      */
     async function addSongs(videos: unknown[], ack: Ack | undefined) {
       const c = ctx();

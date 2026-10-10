@@ -81,7 +81,7 @@ export const en = {
             },
             {
                 title: 'Share on the forum',
-                body: 'Sign up to post playlists for your TRPG scenarios, with private memos on when to play each song.',
+                body: 'Sign up to post playlists for your TRPG scenarios, with a memo on when to play each song.',
             },
         ],
     },
@@ -308,7 +308,6 @@ export const en = {
         import: 'Import',
         importTitle: 'Start a room with this playlist',
         videoBy: (channel: string) => `by ${channel}`,
-        memoPrivate: 'Only you can see this memo',
     },
     editor: {
         newTitle: 'New playlist',
@@ -324,7 +323,7 @@ export const en = {
         loadingVideo: 'Loading video…',
         memo: 'Memo',
         memoPlaceholder: 'When to play it, e.g. “When the party enters the crypt”',
-        memoHint: "Only you can see memos. They come along when you add this playlist to a room, where only the room's admin sees them.",
+        memoHint: "Anyone who can see this playlist can read its memos. When it's added to a room, they come along, and there only the room's admin sees them.",
         addSong: 'Add song',
         publish: 'Publish post',
         saveChanges: 'Save changes',

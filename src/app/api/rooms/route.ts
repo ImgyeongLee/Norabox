@@ -65,8 +65,8 @@ export async function POST(req: Request) {
                 ? {
                       create: imported.tracks.map(({ memo, ...t }, position) => ({
                           ...t,
-                          // Memos are the author's own: they come along only when the author imports.
-                          memo: me?.id === imported.authorId ? memo?.slice(0, MAX_MEMO) || null : null,
+                          // Older playlist memos can be longer than a room memo allows.
+                          memo: memo?.slice(0, MAX_MEMO) || null,
                           position,
                           // No credit for deleted accounts; the UI then shows just the channel.
                           addedBy: imported.author.status === USER_DELETED ? '' : imported.author.username,
