@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cache } from 'react';
-import { LuArrowLeft } from 'react-icons/lu';
+import { LuArrowLeft, LuStickyNote } from 'react-icons/lu';
 import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/icons';
 import { DeletePostButton } from '@/components/forum/DeletePostButton';
@@ -9,7 +9,6 @@ import { PostActions } from '@/components/forum/PostActions';
 import { SharePanel } from '@/components/forum/SharePanel';
 import { VisibilityBadge } from '@/components/forum/VisibilityBadge';
 import { YouTubeEmbed } from '@/components/forum/YouTubeEmbed';
-import { Markdown } from '@/components/Markdown';
 import type { CurrentUser } from '@/lib/auth';
 import { formatDate, formatDuration } from '@/lib/format';
 import { getI18n } from '@/i18n/server';
@@ -151,7 +150,16 @@ export async function PostView({
                             </div>
                         </div>
                         <YouTubeEmbed videoId={track.videoId} title={track.title} />
-                        {track.description && <Markdown className="text-lime/85">{track.description}</Markdown>}
+                        {/* Memos are the author's private cues; nobody else is sent them. */}
+                        {isAuthor && track.memo && (
+                            <div className="flex items-start gap-2 rounded-lg bg-moss/15 px-3 py-2 text-sm text-lime/85">
+                                <Icon as={LuStickyNote} className="mt-0.5 size-4 shrink-0 text-moss" />
+                                <div className="min-w-0">
+                                    <p className="whitespace-pre-wrap break-words">{track.memo}</p>
+                                    <p className="mt-1 text-xs text-lime/45">{t.post.memoPrivate}</p>
+                                </div>
+                            </div>
+                        )}
                     </li>
                 ))}
             </ol>

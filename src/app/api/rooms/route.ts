@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { jsonError, readJson, validationError } from '@/lib/http';
+import { MAX_MEMO } from '@/lib/limits';
 import { prisma } from '@/lib/prisma';
 import { canViewPost } from '@/lib/post-access';
 import { ROOM_THEMES } from '@/lib/room-themes';
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
                   author: { select: { username: true, status: true } },
                   tracks: {
                       orderBy: { position: 'asc' },
-                      select: { videoId: true, title: true, channel: true, thumbnail: true, durationSec: true },
+                      select: { videoId: true, title: true, channel: true, thumbnail: true, durationSec: true, memo: true },
                   },
               },
           })
@@ -62,8 +63,10 @@ export async function POST(req: Request) {
             // The first song becomes the current one when the room loads (paused until someone presses play).
             items: imported
                 ? {
-                      create: imported.tracks.map((t, position) => ({
+                      create: imported.tracks.map(({ memo, ...t }, position) => ({
                           ...t,
+                          // Memos are the author's own: they come along only when the author imports.
+                          memo: me?.id === imported.authorId ? memo?.slice(0, MAX_MEMO) || null : null,
                           position,
                           // No credit for deleted accounts; the UI then shows just the channel.
                           addedBy: imported.author.status === USER_DELETED ? '' : imported.author.username,

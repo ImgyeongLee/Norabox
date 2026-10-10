@@ -22,7 +22,7 @@ export async function POST(req: Request) {
             shareToken: newShareToken(),
             scenarioId,
             tracks: {
-                create: tracks.map((t, position) => ({ ...t, description: t.description || null, position })),
+                create: tracks.map((t, position) => ({ ...t, memo: t.memo || null, position })),
             },
         },
         select: { id: true },

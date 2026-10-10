@@ -8,7 +8,7 @@ import { inactiveCutoff, purgeIfExpired } from "@/lib/rooms";
 import { verifySocketToken } from "@/lib/session";
 import { z } from "zod";
 import { MAX_MEMO, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from "@/lib/limits";
-import { videoSchema } from "@/lib/validation";
+import { roomSongSchema } from "@/lib/validation";
 import type { ErrorCode } from "@/i18n/messages/en";
 import type {
   Ack,
@@ -522,12 +522,15 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
     });
 
     // ---- Playlist (Admin / DJ) ----
-    /** Appends songs to the playlist (one DB write, one broadcast); starts playback if nothing is selected. */
+    /**
+     * Appends songs to the playlist (one DB write, one broadcast); starts playback if nothing is selected.
+     * Songs from the sender's own playlists bring their memos, which only the admin sees.
+     */
     async function addSongs(videos: unknown[], ack: Ack | undefined) {
       const c = ctx();
       if (!c) return fail(ack, "notInRoom");
       if (c.role === "listener") return fail(ack, "controlOnly");
-      const parsed = z.array(videoSchema).min(1).max(MAX_POST_TRACKS).safeParse(videos);
+      const parsed = z.array(roomSongSchema).min(1).max(MAX_POST_TRACKS).safeParse(videos);
       if (!parsed.success) return fail(ack, "invalidSong");
       const { room, member } = c;
       if (room.items.length + parsed.data.length > MAX_ROOM_ITEMS) return fail(ack, "playlistFull");

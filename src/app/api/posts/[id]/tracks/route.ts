@@ -4,18 +4,20 @@ import { jsonError, readJson, validationError } from '@/lib/http';
 import { MAX_POST_TRACKS } from '@/lib/limits';
 import { ownPost } from '@/lib/own-post';
 import { prisma } from '@/lib/prisma';
-import { videoSchema } from '@/lib/validation';
+import { memoSchema, videoSchema } from '@/lib/validation';
 
 // Small edits to one of the user's playlists from inside a room, without opening the editor.
 
 const touch = (id: string) => prisma.post.update({ where: { id }, data: { updatedAt: new Date() } });
 
-/** Appends a song (e.g. one just heard in a room) to the end of the playlist. */
+const newTrackSchema = videoSchema.extend({ memo: memoSchema.nullish() });
+
+/** Appends a song (e.g. one just heard in a room, with the room memo the admin wrote) to the end of the playlist. */
 export async function POST(req: Request, ctx: RouteContext<'/api/posts/[id]/tracks'>) {
     const { id } = await ctx.params;
     const { error } = await ownPost(id);
     if (error) return error;
-    const parsed = videoSchema.safeParse(await readJson(req));
+    const parsed = newTrackSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationError(parsed.error);
 
     const { _count, _max } = await prisma.postTrack.aggregate({
@@ -26,8 +28,8 @@ export async function POST(req: Request, ctx: RouteContext<'/api/posts/[id]/trac
     if (_count >= MAX_POST_TRACKS) return jsonError('songsMax');
     const [track] = await prisma.$transaction([
         prisma.postTrack.create({
-            data: { ...parsed.data, postId: id, position: (_max.position ?? -1) + 1 },
-            select: { id: true, videoId: true, title: true, channel: true, thumbnail: true, durationSec: true },
+            data: { ...parsed.data, memo: parsed.data.memo || null, postId: id, position: (_max.position ?? -1) + 1 },
+            select: { id: true, videoId: true, title: true, channel: true, thumbnail: true, durationSec: true, memo: true },
         }),
         touch(id),
     ]);

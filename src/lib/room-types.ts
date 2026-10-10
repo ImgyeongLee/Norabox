@@ -1,4 +1,4 @@
-import type { Video } from "@/lib/validation";
+import type { RoomSong, Video } from "@/lib/validation";
 
 // Types shared by the Socket.IO server and the room client.
 
@@ -68,8 +68,8 @@ export interface ClientToServerEvents {
   "player:duration": (p: { itemId: string; duration: number }) => void;
   "room:loop": (p: { mode: LoopMode }, ack?: Ack) => void;
   "room:masterVolume": (p: { volume: number }, ack?: Ack) => void;
-  "playlist:add": (p: { video: Video }, ack?: Ack) => void;
-  "playlist:addMany": (p: { videos: Video[] }, ack?: Ack) => void;
+  "playlist:add": (p: { video: RoomSong }, ack?: Ack) => void;
+  "playlist:addMany": (p: { videos: RoomSong[] }, ack?: Ack) => void;
   "playlist:remove": (p: { itemId: string }, ack?: Ack) => void;
   "playlist:reorder": (p: { orderedIds: string[] }, ack?: Ack) => void;
   "playlist:memo": (p: { itemId: string; memo: string }, ack?: Ack) => void;

@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { ErrorCode } from "@/i18n/messages/en";
-import { MAX_POST_TRACKS, MAX_TRACK_DESCRIPTION } from "@/lib/limits";
+import { MAX_ANNOUNCEMENT_BODY, MAX_MEMO, MAX_POST_TRACKS } from "@/lib/limits";
 
-export { MAX_POST_TRACKS, MAX_TRACK_DESCRIPTION };
+export { MAX_POST_TRACKS };
 
 // Validation messages are error codes (see src/i18n/messages); the UI translates them.
 const e = (code: ErrorCode) => code;
@@ -66,6 +66,20 @@ export const videoSchema = z.object({
 
 export type Video = z.infer<typeof videoSchema>;
 
+/** A song being added to a room, with the memo it had in the playlist it came from (if any). */
+export const roomSongSchema = videoSchema.extend({
+  // Older playlist memos can be longer than a room memo; cut them rather than refusing the song.
+  memo: z
+    .string()
+    .nullish()
+    .transform((m) => m?.trim().slice(0, MAX_MEMO) || null),
+});
+
+export type RoomSong = z.input<typeof roomSongSchema>;
+
+/** A playlist memo as typed by its author (empty clears it). */
+export const memoSchema = z.string().trim().max(MAX_MEMO, e("memoLong"));
+
 export const postSchema = z
   .object({
     title: z.string().trim().min(1, e("titleRequired")).max(120, e("titleLong")),
@@ -75,12 +89,7 @@ export const postSchema = z
     tracks: z
       .array(
         videoSchema.extend({
-          description: z
-            .string()
-            .trim()
-            .max(MAX_TRACK_DESCRIPTION, e("descriptionLong"))
-            .optional()
-            .default(""),
+          memo: memoSchema.optional().default(""),
         }),
       )
       .min(1, e("songsRequired"))
@@ -92,6 +101,11 @@ export const postSchema = z
   });
 
 export type PostInput = z.infer<typeof postSchema>;
+
+export const announcementSchema = z.object({
+  title: z.string().trim().min(1, e("titleRequired")).max(120, e("titleLong")),
+  body: z.string().trim().min(1, e("bodyRequired")).max(MAX_ANNOUNCEMENT_BODY, e("bodyLong")),
+});
 
 /** Normalises a scenario name or writer for matching ("  The Lost Mine " → "the lost mine"). */
 export const scenarioKey = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();

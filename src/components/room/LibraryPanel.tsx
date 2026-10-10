@@ -8,14 +8,15 @@ import { Playlist } from '@/components/room/Playlist';
 import { useI18n } from '@/i18n/client';
 import { formatDuration } from '@/lib/format';
 import type { ImportablePlaylist } from '@/lib/playlist-types';
-import { scenarioKey, type Video } from '@/lib/validation';
+import { scenarioKey, type RoomSong } from '@/lib/validation';
 
 type Props = {
     canControl: boolean;
     signedIn: boolean;
     /** Video ids already in the room's playlist, marked "In room". */
     addedIds: Set<string>;
-    onAdd: (videos: Video[]) => Promise<boolean>;
+    /** Adds songs to the room; songs from the user's own playlists carry their memos. */
+    onAdd: (videos: RoomSong[]) => Promise<boolean>;
     /** Shows an error as the room's toast. */
     onMessage: (text: string) => void;
 };
@@ -168,7 +169,7 @@ function PlaylistItem({ playlist: p, canControl, addedIds, onAdd, onReorder }: I
         });
     }
 
-    async function add(videos: Video[]) {
+    async function add(videos: RoomSong[]) {
         setPending(true);
         const ok = await onAdd(videos);
         setPending(false);

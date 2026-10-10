@@ -6,10 +6,11 @@ import { Icon } from '@/components/icons';
 import { useI18n } from '@/i18n/client';
 import { MAX_POST_TRACKS } from '@/lib/limits';
 import type { ImportablePlaylist } from '@/lib/playlist-types';
-import type { Video } from '@/lib/validation';
+import type { RoomSong } from '@/lib/validation';
 
 type Props = {
-    video: Video;
+    /** The room song; its memo (only the admin's copy has one) comes along into the playlist. */
+    video: RoomSong;
     /** Shows the result (or an error) as the room's toast. */
     onMessage: (text: string) => void;
 };

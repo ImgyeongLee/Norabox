@@ -155,9 +155,23 @@ model PostTrack {
   channel     String
   thumbnail   String
   durationSec Int?
-  // Why this song was chosen, in Markdown.
-  description String?
+  // The author's private cue ("play when the party enters the crypt"); only the author sees it,
+  // and it becomes the song's memo when they add the playlist to a room. Up to MAX_MEMO
+  // characters for new edits; older posts may have longer ones. The column keeps its old name.
+  memo        String?  @map("description")
   position    Int
 
   @@index([postId, position])
+}
+
+// A post on the announcements page. Only site admins (SITE_ADMIN_EMAILS) can write them.
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  // Markdown.
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
 }

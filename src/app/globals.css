@@ -107,7 +107,7 @@ input[type="range"].slider::-moz-range-thumb {
   border: 2px solid var(--color-pine);
 }
 
-/* Rendered Markdown (song descriptions) */
+/* Rendered Markdown (announcements) */
 .markdown {
   line-height: 1.65;
   overflow-wrap: anywhere;

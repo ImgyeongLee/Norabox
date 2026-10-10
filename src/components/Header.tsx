@@ -12,6 +12,10 @@ export async function Header() {
             <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-3">
                 <Logo />
                 <nav className="flex items-center gap-1 sm:ml-6">
+                    {/* On phones, Announcements is linked from the footer to save space. */}
+                    <Link href="/announcements" className="btn-ghost hidden px-3 py-2 sm:inline-flex">
+                        {t.nav.announcements}
+                    </Link>
                     <Link href="/forum" className="btn-ghost px-3 py-2">
                         {t.nav.forum}
                     </Link>

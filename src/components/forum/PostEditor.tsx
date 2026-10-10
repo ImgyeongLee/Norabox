@@ -4,18 +4,18 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { LuChevronDown, LuChevronUp, LuPlus } from 'react-icons/lu';
 import { Icon, TrashIcon } from '@/components/icons';
-import { MarkdownEditor } from '@/components/forum/MarkdownEditor';
 import { ScenarioField } from '@/components/forum/ScenarioField';
 import { VisibilityPicker } from '@/components/forum/VisibilityPicker';
 import { YouTubeEmbed } from '@/components/forum/YouTubeEmbed';
 import { formatDuration } from '@/lib/format';
 import { useI18n } from '@/i18n/client';
 import { useJsonForm } from '@/lib/use-json-form';
-import { MAX_POST_TRACKS, MAX_TRACK_DESCRIPTION, type Video } from '@/lib/validation';
+import { MAX_MEMO } from '@/lib/limits';
+import { MAX_POST_TRACKS, type Video } from '@/lib/validation';
 import { parseVideoId } from '@/lib/youtube-url';
 import type { Visibility } from '@/lib/visibility';
 
-type InitialTrack = Video & { description: string };
+type InitialTrack = Video & { memo: string };
 type Initial = {
     id?: string;
     title: string;
@@ -31,7 +31,7 @@ type Song = {
     video: Video | null;
     loading: boolean;
     error: string | null;
-    description: string;
+    memo: string;
 };
 
 const newSong = (): Song => ({
@@ -40,7 +40,7 @@ const newSong = (): Song => ({
     video: null,
     loading: false,
     error: null,
-    description: '',
+    memo: '',
 });
 
 export function PostEditor({ initial, defaultVisibility = 'private' }: { initial?: Initial; defaultVisibility?: Visibility }) {
@@ -53,16 +53,16 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
     const [visibility, setVisibility] = useState<Visibility>(initial?.visibility ?? defaultVisibility);
     const [songs, setSongs] = useState<Song[]>(() =>
         initial?.tracks.length
-            ? initial.tracks.map(({ description, ...video }) => ({
+            ? initial.tracks.map(({ memo, ...video }) => ({
                   ...newSong(),
                   link: `https://www.youtube.com/watch?v=${video.videoId}`,
                   video,
-                  description,
+                  memo,
               }))
             : [newSong()],
     );
     const { errors, setErrors, busy, submit } = useJsonForm();
-    // Song keys in the order they were sent, to map server errors like "tracks.2.description" back to cards.
+    // Song keys in the order they were sent, to map server errors like "tracks.2.memo" back to cards.
     const [sentKeys, setSentKeys] = useState<string[]>([]);
 
     const update = (key: string, patch: Partial<Song>) =>
@@ -111,7 +111,7 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
     async function onSubmit(e: React.SubmitEvent) {
         e.preventDefault();
         // Skip untouched cards; every other card needs a loaded video.
-        const filled = songs.filter((s) => s.link.trim() || s.description.trim());
+        const filled = songs.filter((s) => s.link.trim() || s.memo.trim());
         const cardErrors: Record<string, string> = {};
         for (const s of filled) {
             if (s.loading) cardErrors[`song.${s.key}`] = 'songLoading';
@@ -129,7 +129,7 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
             scenario,
             writer,
             visibility,
-            tracks: filled.map((s) => ({ ...s.video!, description: s.description })),
+            tracks: filled.map((s) => ({ ...s.video!, memo: s.memo })),
         };
         const res = await submit<{ id: string }>(
             editing ? `/api/posts/${initial!.id}` : '/api/posts',
@@ -144,7 +144,7 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
 
     const songError = (s: Song) => {
         const i = sentKeys.indexOf(s.key);
-        return errors[`song.${s.key}`] ?? (i >= 0 ? errors[`tracks.${i}.description`] : undefined);
+        return errors[`song.${s.key}`] ?? (i >= 0 ? errors[`tracks.${i}.memo`] : undefined);
     };
 
     return (
@@ -257,16 +257,26 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
                             )}
 
                             <div>
-                                <label htmlFor={`desc-${song.key}`} className="label">
-                                    {t.editor.description} <span className="font-normal text-lime/45">{t.common.optional}</span>
+                                <label htmlFor={`memo-${song.key}`} className="label">
+                                    {t.editor.memo} <span className="font-normal text-lime/45">{t.common.optional}</span>
                                 </label>
-                                <MarkdownEditor
-                                    id={`desc-${song.key}`}
-                                    value={song.description}
-                                    onChange={(description) => update(song.key, { description })}
-                                    maxLength={MAX_TRACK_DESCRIPTION}
-                                    placeholder={t.editor.descriptionPlaceholder}
+                                <textarea
+                                    id={`memo-${song.key}`}
+                                    className="input min-h-16 resize-y"
+                                    rows={2}
+                                    value={song.memo}
+                                    onChange={(e) => update(song.key, { memo: e.target.value })}
+                                    maxLength={MAX_MEMO}
+                                    placeholder={t.editor.memoPlaceholder}
                                 />
+                                <p className="mt-1 flex gap-2 text-xs text-lime/45">
+                                    <span className="flex-1">{t.editor.memoHint}</span>
+                                    {/* Older posts can have longer memos; the count shows how much to cut. */}
+                                    <span
+                                        className={`shrink-0 font-mono ${song.memo.trim().length > MAX_MEMO ? 'text-danger' : ''}`}>
+                                        {song.memo.trim().length}/{MAX_MEMO}
+                                    </span>
+                                </p>
                             </div>
 
                             {(err || (song.error && !song.loading)) && (

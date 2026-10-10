@@ -19,7 +19,7 @@ import { VolumePanel } from '@/components/room/VolumePanel';
 import { useI18n } from '@/i18n/client';
 import { forgetJoin, getJoinedName, getNickname, rememberJoin, setNickname } from '@/lib/client-identity';
 import { canControl as canControlRole, type AckResult } from '@/lib/room-types';
-import type { Video } from '@/lib/validation';
+import type { RoomSong, Video } from '@/lib/validation';
 
 type Props = {
     code: string;
@@ -289,7 +289,7 @@ function RoomView({
     }
 
     /** Adds songs from the Library tab: one event for a single song, one batch for several. */
-    async function addVideos(videos: Video[]) {
+    async function addVideos(videos: RoomSong[]) {
         const res =
             videos.length === 1
                 ? await run('playlist:add', { video: videos[0] })
@@ -423,9 +423,9 @@ function RoomView({
                                     }
                                     actions={
                                         signedIn
-                                            ? ({ videoId, title, channel, thumbnail, durationSec }) => (
+                                            ? ({ videoId, title, channel, thumbnail, durationSec, memo }) => (
                                                   <SaveToPlaylist
-                                                      video={{ videoId, title, channel, thumbnail, durationSec }}
+                                                      video={{ videoId, title, channel, thumbnail, durationSec, memo }}
                                                       onMessage={setToast}
                                                   />
                                               )

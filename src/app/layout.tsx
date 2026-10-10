@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import { AnnouncementModal } from "@/components/AnnouncementModal";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
@@ -36,6 +37,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <AnnouncementModal />
             <footer className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-t border-leaf/20 px-4 py-6 text-center text-xs text-lime/40">
               <span>{t.nav.footer}</span>
+              <span aria-hidden>·</span>
+              <Link href="/announcements" className="text-lime/60 underline-offset-4 hover:text-lime hover:underline">
+                {t.nav.announcements}
+              </Link>
               {contactEmail && (
                 <>
                   <span aria-hidden>·</span>

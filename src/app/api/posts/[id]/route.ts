@@ -23,7 +23,7 @@ export async function PATCH(req: Request, ctx: RouteContext<'/api/posts/[id]'>) 
                 visibility,
                 scenarioId,
                 tracks: {
-                    create: tracks.map((t, position) => ({ ...t, description: t.description || null, position })),
+                    create: tracks.map((t, position) => ({ ...t, memo: t.memo || null, position })),
                 },
             },
         }),
