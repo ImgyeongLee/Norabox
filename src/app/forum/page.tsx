@@ -29,7 +29,9 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
     const [{ t }, user, scenario, posts, total] = await Promise.all([
         getI18n(),
         getCurrentUser(),
-        scenarioId ? prisma.scenario.findUnique({ where: { id: scenarioId }, select: { name: true, writer: true } }) : null,
+        scenarioId
+            ? prisma.scenario.findUnique({ where: { id: scenarioId }, select: { name: true, writer: true } })
+            : null,
         prisma.post.findMany({
             where,
             orderBy: { createdAt: 'desc' },
@@ -50,7 +52,13 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                     <h1 className="text-3xl font-bold">{t.forum.title}</h1>
                     <p className="mt-1 text-lime/60">{t.forum.lead}</p>
                 </div>
-                <Link href={user ? '/playlists/new?visibility=public' : `/login?next=${encodeURIComponent('/playlists/new?visibility=public')}`} className="btn-primary ml-auto">
+                <Link
+                    href={
+                        user
+                            ? '/playlists/new?visibility=public'
+                            : `/login?next=${encodeURIComponent('/playlists/new?visibility=public')}`
+                    }
+                    className="btn-primary ml-auto">
                     {t.forum.share}
                 </Link>
             </div>
@@ -64,7 +72,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                     aria-label={t.forum.searchLabel}
                 />
                 {scenarioId && <input type="hidden" name="scenario" value={scenarioId} />}
-                <button className="btn-secondary">{t.forum.search}</button>
+                <button className="btn-secondary shrink-0 text-sm">{t.forum.search}</button>
             </form>
 
             {scenario && (
@@ -74,7 +82,9 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                         {scenario.name}
                         {scenario.writer && <span className="text-lime/60"> · {scenario.writer}</span>}
                     </span>
-                    <Link href={q ? `/forum?${new URLSearchParams({ q })}` : '/forum'} className="text-moss hover:underline">
+                    <Link
+                        href={q ? `/forum?${new URLSearchParams({ q })}` : '/forum'}
+                        className="text-moss hover:underline">
                         {t.forum.showAll}
                     </Link>
                 </div>
@@ -82,9 +92,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
 
             {posts.length === 0 ? (
                 <div className="card mt-8 p-10 text-center">
-                    <p className="text-lg font-semibold">
-                        {q || scenarioId ? t.forum.noMatch : t.forum.noPosts}
-                    </p>
+                    <p className="text-lg font-semibold">{q || scenarioId ? t.forum.noMatch : t.forum.noPosts}</p>
                     <p className="mt-1 text-sm text-lime/60">
                         {q || scenarioId ? t.forum.tryAnother : t.forum.beFirst}
                     </p>
@@ -108,9 +116,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                     ) : (
                         <span className="btn-secondary opacity-40">{t.forum.prev}</span>
                     )}
-                    <span className="text-sm text-lime/60">
-                        {t.forum.page(page, pages)}
-                    </span>
+                    <span className="text-sm text-lime/60">{t.forum.page(page, pages)}</span>
                     {page < pages ? (
                         <Link href={pageHref(page + 1)} className="btn-secondary">
                             {t.forum.next}

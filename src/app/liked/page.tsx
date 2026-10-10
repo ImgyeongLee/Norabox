@@ -58,7 +58,7 @@ export default async function LikedPage(props: PageProps<'/liked'>) {
                     placeholder={t.liked.searchPlaceholder}
                     aria-label={t.liked.searchLabel}
                 />
-                <button className="btn-secondary">{t.liked.search}</button>
+                <button className="btn-secondary shrink-0">{t.liked.search}</button>
             </form>
             {likes.length === 0 ? (
                 <div className="card mt-8 p-10 text-center">

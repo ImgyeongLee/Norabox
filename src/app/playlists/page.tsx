@@ -50,7 +50,7 @@ export default async function MyPlaylistsPage(props: PageProps<'/playlists'>) {
                     placeholder={t.myPlaylists.searchPlaceholder}
                     aria-label={t.myPlaylists.searchLabel}
                 />
-                <button className="btn-secondary">{t.myPlaylists.search}</button>
+                <button className="btn-secondary shrink-0">{t.myPlaylists.search}</button>
             </form>
             {posts.length === 0 ? (
                 <div className="card mt-8 p-10 text-center">
