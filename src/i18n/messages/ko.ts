@@ -431,13 +431,6 @@ export const ko: Messages = {
         save: '저장',
         hint: '메모는 관리자인 나만 볼 수 있어요.',
     },
-    announcement: {
-        title: '서버 점검 안내',
-        body: '현재 데이터베이스 서버를 변경할 예정이에요. 이로 인해 새벽 3시부터 4시까지(한국 시간) 웹사이트를 이용할 수 없어요.',
-        moreInfo: '자세한 내용은 게시글을 확인해 주세요:',
-        close: '닫기',
-        hide24h: '24시간 동안 보지 않기',
-    },
     embed: {
         play: (title) => `${title} 재생`,
     },

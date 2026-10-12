@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
-import { AnnouncementModal } from "@/components/AnnouncementModal";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { Header } from "@/components/Header";
 import { I18nProvider } from "@/i18n/client";
@@ -34,7 +33,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <ConfirmProvider>
             <Header />
             <main className="flex-1">{children}</main>
-            <AnnouncementModal />
             <footer className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-t border-leaf/20 px-4 py-6 text-center text-xs text-lime/40">
               <span>{t.nav.footer}</span>
               <span aria-hidden>·</span>

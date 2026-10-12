@@ -442,13 +442,6 @@ export const en = {
         save: 'Save',
         hint: 'Only you (the admin) can see memos.',
     },
-    announcement: {
-        title: 'Maintenance',
-        body: 'We are changing our database server now. Due to this, the website will have restrictions from 3 AM to 4 AM (Korea time).',
-        moreInfo: 'For more information, please see my post:',
-        close: 'Close',
-        hide24h: "Don't show for 24 hours",
-    },
     embed: {
         play: (title: string) => `Play ${title}`,
     },
