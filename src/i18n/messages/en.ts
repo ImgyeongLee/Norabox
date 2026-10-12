@@ -323,7 +323,8 @@ export const en = {
         loadingVideo: 'Loading video…',
         memo: 'Memo',
         memoPlaceholder: 'When to play it, e.g. “When the party enters the crypt”',
-        memoHint: "Anyone who can see this playlist can read its memos. When it's added to a room, they come along, and there only the room's admin sees them.",
+        memoHint:
+            "Anyone who can see this playlist can read its memos. When it's added to a room, they come along, and there only the room's admin sees them.",
         addSong: 'Add song',
         publish: 'Publish post',
         saveChanges: 'Save changes',
@@ -442,8 +443,8 @@ export const en = {
         hint: 'Only you (the admin) can see memos.',
     },
     announcement: {
-        title: 'Scheduled maintenance',
-        body: 'We are going to change our database server on October 13th. Due to this, the website will not be available from 3 AM to 4 AM (Korea time).',
+        title: 'Maintenance',
+        body: 'We are changing our database server now. Due to this, the website will have restrictions from 3 AM to 4 AM (Korea time).',
         moreInfo: 'For more information, please see my post:',
         close: 'Close',
         hide24h: "Don't show for 24 hours",
