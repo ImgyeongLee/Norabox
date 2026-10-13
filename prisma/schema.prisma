@@ -10,18 +10,22 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  email        String   @unique
+  id           String    @id @default(cuid())
+  username     String    @unique
+  email        String    @unique
   passwordHash String
   // "active" | "deleted". Deleting an account only flips this: the row and the
   // user's posts stay, and the author is shown as "Deleted user".
-  status       String   @default("active")
+  status       String    @default("active")
   // Set when the user has a profile image; the image itself lives in S3 at
   // images/avatars/<id> (see src/lib/storage.ts).
   avatarMime   String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  // Wrong passwords in a row; a correct one resets it. At MAX_LOGIN_ATTEMPTS the account
+  // is locked (lockedAt set) until the site admin unlocks it (see README).
+  failedLogins Int       @default(0)
+  lockedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   posts Post[]
   rooms Room[]
@@ -158,7 +162,7 @@ model PostTrack {
   // A cue like "play when the party enters the crypt"; anyone who can see the post can read it,
   // and it becomes the song's (admin-only) memo when the playlist is added to a room. Up to MAX_MEMO
   // characters for new edits; older posts may have longer ones. The column keeps its old name.
-  memo        String?  @map("description")
+  memo        String? @map("description")
   position    Int
 
   @@index([postId, position])

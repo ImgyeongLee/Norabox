@@ -1,4 +1,4 @@
-import { MAX_ANNOUNCEMENT_BODY, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
+import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
 
 // English UI text. This object's shape is the source of truth: the Korean
 // dictionary is typed against it, so a missing translation fails the typecheck.
@@ -119,6 +119,9 @@ export const en = {
         wait: 'Please wait…',
         haveAccount: 'Already have an account? ',
         newHere: 'New to Norabox? ',
+        lockedContact: 'To unlock it, email',
+        lockedNoContact: 'Contact the site admin to unlock it.',
+        lockedSubject: '[Norabox] Account unlock request',
     },
     profile: {
         title: 'Profile',
@@ -457,6 +460,7 @@ export const en = {
         postNotFound: 'Post not found',
         deletePostFailed: 'Could not delete the post',
         badCredentials: 'Incorrect email or password',
+        accountLocked: `This account is locked after ${MAX_LOGIN_ATTEMPTS} wrong passwords in a row.`,
         currentPasswordWrong: 'Current password is incorrect',
         usernameTaken: 'That username is taken',
         emailTaken: 'An account with this email already exists',

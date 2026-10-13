@@ -1,4 +1,4 @@
-import { MAX_ANNOUNCEMENT_BODY, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
+import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
 import type { Messages } from '@/i18n/messages/en';
 
 // Korean UI text. Typed against the English dictionary, so every key must exist.
@@ -109,6 +109,9 @@ export const ko: Messages = {
         wait: '잠시만요…',
         haveAccount: '이미 계정이 있나요? ',
         newHere: 'Norabox가 처음인가요? ',
+        lockedContact: '잠금을 풀려면 이 주소로 연락해 주세요:',
+        lockedNoContact: '잠금을 풀려면 사이트 관리자에게 문의해 주세요.',
+        lockedSubject: '[Norabox] 계정 잠금 해제 요청',
     },
     profile: {
         title: '프로필',
@@ -445,6 +448,7 @@ export const ko: Messages = {
         postNotFound: '게시글을 찾을 수 없어요',
         deletePostFailed: '게시글을 삭제하지 못했어요',
         badCredentials: '이메일 또는 비밀번호가 올바르지 않아요',
+        accountLocked: `비밀번호를 ${MAX_LOGIN_ATTEMPTS}번 연속으로 틀려서 계정이 잠겼어요.`,
         currentPasswordWrong: '현재 비밀번호가 올바르지 않아요',
         usernameTaken: '이미 사용 중인 사용자 이름이에요',
         emailTaken: '이미 가입된 이메일이에요',

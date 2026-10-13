@@ -15,7 +15,8 @@ export default async function Page() {
     return (
         <div className="mx-auto max-w-md px-4 py-10 sm:py-16">
             <Suspense>
-                <AuthForm mode="login" />
+                {/* Shown with "account locked" so people know whom to ask to unlock it. */}
+                <AuthForm mode="login" contactEmail={process.env.CONTACT_EMAIL?.trim() || null} />
             </Suspense>
         </div>
     );

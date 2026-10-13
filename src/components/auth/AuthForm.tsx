@@ -6,7 +6,7 @@ import { Field } from '@/components/auth/Field';
 import { useI18n } from '@/i18n/client';
 import { useJsonForm } from '@/lib/use-json-form';
 
-export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
+export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signup'; contactEmail?: string | null }) {
     const router = useRouter();
     const params = useSearchParams();
     const next = params.get('next');
@@ -66,9 +66,26 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
                     />
                 )}
                 {errors.form && !Object.keys(errors).some((k) => k !== 'form') && (
-                    <p className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
-                        {errors.form}
-                    </p>
+                    <div role="alert" className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+                        <p>{errors.form}</p>
+                        {codes.form === 'accountLocked' && (
+                            <p className="mt-1">
+                                {contactEmail ? (
+                                    <>
+                                        {t.auth.lockedContact}{' '}
+                                        <a
+                                            href={`mailto:${contactEmail}?subject=${encodeURIComponent(t.auth.lockedSubject)}`}
+                                            className="font-semibold underline underline-offset-2"
+                                        >
+                                            {contactEmail}
+                                        </a>
+                                    </>
+                                ) : (
+                                    t.auth.lockedNoContact
+                                )}
+                            </p>
+                        )}
+                    </div>
                 )}
                 <button className="btn-primary w-full" disabled={busy}>
                     {busy ? t.auth.wait : isSignup ? t.auth.submitSignup : t.auth.submitLogin}
