@@ -19,6 +19,8 @@ export const en = {
         announcements: 'Announcements',
         newAnnouncement: 'New announcement',
         editAnnouncement: 'Edit announcement',
+        terms: 'Terms of Service',
+        privacy: 'Privacy Policy',
         room: (code: string) => `Room ${code}`,
         postDescription: (scenario: string) => `A playlist for ${scenario}`,
         scenarioBy: (name: string, writer: string) => `${name} by ${writer}`,
@@ -44,6 +46,8 @@ export const en = {
         liked: 'Liked playlists',
         logout: 'Log out',
         announcements: 'Announcements',
+        terms: 'Terms',
+        privacy: 'Privacy',
         language: 'Language',
         footer: 'Norabox · music from YouTube',
         contact: 'Contact',
@@ -440,6 +444,9 @@ export const en = {
         deleting: 'Deleting…',
         deleteTitle: 'Delete this announcement?',
         deleteBody: "This can't be undone.",
+    },
+    legal: {
+        available: 'This page is available in English and Korean.',
     },
     memo: {
         label: 'Memo',

@@ -53,6 +53,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/announcements" className="muted underline-offset-4 hover:text-lime hover:underline">
                 {t.nav.announcements}
               </Link>
+              <span aria-hidden>·</span>
+              <Link href="/terms" className="muted underline-offset-4 hover:text-lime hover:underline">
+                {t.nav.terms}
+              </Link>
+              <span aria-hidden>·</span>
+              <Link href="/privacy" className="muted underline-offset-4 hover:text-lime hover:underline">
+                {t.nav.privacy}
+              </Link>
               {contactEmail && (
                 <>
                   <span aria-hidden>·</span>

@@ -19,6 +19,8 @@ export const ko: Messages = {
         announcements: '공지사항',
         newAnnouncement: '새 공지',
         editAnnouncement: '공지 수정',
+        terms: '이용약관',
+        privacy: '개인정보 처리방침',
         room: (code) => `${code} 방`,
         postDescription: (scenario) => `${scenario}을(를) 위한 플레이리스트`,
         scenarioBy: (name, writer) => `${name} (${writer})`,
@@ -44,6 +46,8 @@ export const ko: Messages = {
         liked: '좋아요한 플레이리스트',
         logout: '로그아웃',
         announcements: '공지사항',
+        terms: '이용약관',
+        privacy: '개인정보 처리방침',
         language: '언어',
         footer: 'Norabox · YouTube 음악',
         contact: '문의하기',
@@ -429,6 +433,9 @@ export const ko: Messages = {
         deleting: '삭제 중…',
         deleteTitle: '이 공지를 삭제할까요?',
         deleteBody: '삭제하면 되돌릴 수 없어요.',
+    },
+    legal: {
+        available: '이 페이지는 영어와 한국어로 제공돼요.',
     },
     memo: {
         label: '메모',

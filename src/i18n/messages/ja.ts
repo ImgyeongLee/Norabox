@@ -19,6 +19,8 @@ export const ja: Messages = {
         announcements: 'お知らせ',
         newAnnouncement: '新しいお知らせ',
         editAnnouncement: 'お知らせを編集',
+        terms: '利用規約',
+        privacy: 'プライバシーポリシー',
         room: (code) => `ルーム ${code}`,
         postDescription: (scenario) => `${scenario}のためのプレイリスト`,
         scenarioBy: (name, writer) => `${name}（${writer}）`,
@@ -44,6 +46,8 @@ export const ja: Messages = {
         liked: 'いいねしたプレイリスト',
         logout: 'ログアウト',
         announcements: 'お知らせ',
+        terms: '利用規約',
+        privacy: 'プライバシーポリシー',
         language: '言語',
         footer: 'Norabox · 音楽はYouTubeから',
         contact: 'お問い合わせ',
@@ -430,6 +434,9 @@ export const ja: Messages = {
         deleting: '削除中…',
         deleteTitle: 'このお知らせを削除しますか？',
         deleteBody: 'この操作は取り消せません。',
+    },
+    legal: {
+        available: 'このページは英語と韓国語でご覧いただけます。',
     },
     memo: {
         label: 'メモ',

@@ -196,6 +196,21 @@ input[type="range"].slider::-moz-range-thumb {
   padding: 0.3em 0.6em;
 }
 
+/* Legal pages (terms, privacy policy): a bigger title, room between articles, and tables that
+   scroll sideways instead of overflowing on phones. */
+.legal h1 {
+  font-size: 1.75em;
+}
+.legal h2 {
+  margin-top: 1.75em;
+}
+.legal table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  font-size: 0.9em;
+}
+
 /* Animated room theme backgrounds (src/components/room/ThemeBackdrop.tsx). Only opacity and
    transform animate, so the GPU composites them without repainting the page. People can turn
    them off per browser (MOTION_COOKIE); the room page then doesn't render the backdrop at all. */
