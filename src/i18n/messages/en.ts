@@ -118,6 +118,9 @@ export const en = {
         email: 'Email address',
         password: 'Password',
         passwordConfirm: 'Confirm password',
+        ageConfirm: 'I am 14 or older',
+        // Sentence split around two links: before [terms] middle [privacy] after
+        consent: { before: 'By signing up, you agree to the ', terms: 'Terms of Service', middle: ' and ', privacy: 'Privacy Policy', after: '.' },
         submitSignup: 'Sign up',
         submitLogin: 'Log in',
         wait: 'Please wait…',
@@ -501,6 +504,7 @@ export const en = {
         passwordLong: 'Password is too long',
         emailInvalid: 'Enter a valid email address',
         passwordsMismatch: 'Passwords do not match',
+        ageRequired: 'You must be 14 or older to sign up',
         emailRequired: 'Enter your email',
         passwordRequired: 'Enter your password',
         currentPasswordRequired: 'Enter your current password',

@@ -2,7 +2,7 @@
 // Keep it in line with what the code actually stores: update it when that changes.
 
 export const privacy = {
-    ko: `# 개인정보 처리방침
+    ko: `# 개인정보처리방침
 
 Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 이용자의 개인정보를 소중히 여기며, 서비스 운영에 꼭 필요한 정보만 처리합니다.
 

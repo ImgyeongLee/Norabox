@@ -65,6 +65,38 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
                         error={errors.passwordConfirm}
                     />
                 )}
+                {isSignup && (
+                    <div>
+                        <label className="flex cursor-pointer items-start gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                name="ageConfirmed"
+                                required
+                                aria-invalid={!!errors.ageConfirmed}
+                                aria-describedby={errors.ageConfirmed ? 'age-err' : undefined}
+                                className="mt-0.5 size-4 shrink-0 accent-[var(--color-moss)]"
+                            />
+                            <span>{t.auth.ageConfirm}</span>
+                        </label>
+                        {errors.ageConfirmed && (
+                            <p id="age-err" className="field-error">
+                                {errors.ageConfirmed}
+                            </p>
+                        )}
+                        {/* New tabs, so reading them doesn't lose what was typed here. */}
+                        <p className="mt-2 text-xs text-lime/55">
+                            {t.auth.consent.before}
+                            <Link href="/terms" target="_blank" rel="noopener" className="font-semibold text-moss hover:underline">
+                                {t.auth.consent.terms}
+                            </Link>
+                            {t.auth.consent.middle}
+                            <Link href="/privacy" target="_blank" rel="noopener" className="font-semibold text-moss hover:underline">
+                                {t.auth.consent.privacy}
+                            </Link>
+                            {t.auth.consent.after}
+                        </p>
+                    </div>
+                )}
                 {errors.form && !Object.keys(errors).some((k) => k !== 'form') && (
                     <div role="alert" className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
                         <p>{errors.form}</p>

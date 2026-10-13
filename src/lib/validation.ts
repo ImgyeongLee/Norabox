@@ -34,6 +34,8 @@ export const signupSchema = z
     email: z.string().trim().toLowerCase().pipe(z.email(e("emailInvalid"))),
     password: passwordSchema,
     passwordConfirm: z.string(),
+    // The "I am 14 or older" checkbox (a checked box is sent as "on"); under-14s can't sign up.
+    ageConfirmed: z.literal("on", e("ageRequired")),
   })
   .refine((d) => d.password === d.passwordConfirm, {
     message: e("passwordsMismatch"),
