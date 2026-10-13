@@ -238,6 +238,10 @@ export const ko: Messages = {
         close: '방 닫기',
         reopen: '방 열기',
     },
+    motion: {
+        label: '배경 애니메이션',
+        hint: '나에게만 적용돼요. 방이 느린 것 같거나 정신 사납다면 꺼 보세요.',
+    },
     members: {
         roles: { admin: '관리자', dj: 'DJ', listener: '청취자' },
         hint: '관리자와 DJ가 재생과 플레이리스트를 관리해요.',

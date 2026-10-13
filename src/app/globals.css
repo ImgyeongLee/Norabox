@@ -181,6 +181,171 @@ input[type="range"].slider::-moz-range-thumb {
   padding: 0.3em 0.6em;
 }
 
+/* Animated room theme backgrounds (src/components/room/ThemeBackdrop.tsx). Only opacity and
+   transform animate, so the GPU composites them without repainting the page. People can turn
+   them off per browser (MOTION_COOKIE); the room page then doesn't render the backdrop at all. */
+.theme-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.theme-backdrop > * {
+  position: absolute;
+  inset: 0;
+  will-change: opacity, transform;
+}
+/* Behind a moving background, blurring cards and the header would be recomputed every frame
+   (the costliest part). Instead, cards get the color they had with blur (35% card color over
+   the page color), nearly solid, so they look the same without it. */
+body:has(.theme-backdrop) .card {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background-color: color-mix(in srgb, color-mix(in srgb, var(--color-fern) 35%, var(--color-pine)) 88%, transparent);
+}
+body:has(.theme-backdrop) header.sticky {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background-color: color-mix(in srgb, var(--color-pine) 94%, transparent);
+}
+
+/* Star layers fade in and out out of step, so stars seem to twinkle one by one. */
+.backdrop-twinkle {
+  animation: backdrop-twinkle 6s ease-in-out infinite alternate;
+}
+@keyframes backdrop-twinkle {
+  from { opacity: 0.2; }
+  to { opacity: 1; }
+}
+
+/* Starry Sky: twinkling stars and a shooting star every 14 seconds. */
+.starry-stars-a {
+  background:
+    radial-gradient(2px 2px at 8% 14%, rgb(236 230 214 / 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 21% 41%, rgb(236 230 214 / 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 37% 8%, rgb(236 230 214 / 0.75), transparent),
+    radial-gradient(2.5px 2.5px at 52% 27%, rgb(224 191 90 / 0.85), transparent),
+    radial-gradient(1.5px 1.5px at 64% 63%, rgb(236 230 214 / 0.8), transparent),
+    radial-gradient(2px 2px at 79% 19%, rgb(236 230 214 / 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 93% 47%, rgb(236 230 214 / 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 14% 77%, rgb(236 230 214 / 0.75), transparent),
+    radial-gradient(2px 2px at 46% 88%, rgb(236 230 214 / 0.8), transparent);
+}
+.starry-stars-b {
+  background:
+    radial-gradient(1.5px 1.5px at 5% 33%, rgb(236 230 214 / 0.8), transparent),
+    radial-gradient(2px 2px at 18% 62%, rgb(224 191 90 / 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 29% 22%, rgb(236 230 214 / 0.85), transparent),
+    radial-gradient(1.5px 1.5px at 43% 54%, rgb(236 230 214 / 0.7), transparent),
+    radial-gradient(2px 2px at 58% 11%, rgb(236 230 214 / 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 71% 39%, rgb(236 230 214 / 0.75), transparent),
+    radial-gradient(2.5px 2.5px at 86% 71%, rgb(236 230 214 / 0.85), transparent),
+    radial-gradient(1.5px 1.5px at 96% 16%, rgb(236 230 214 / 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 33% 93%, rgb(236 230 214 / 0.7), transparent);
+  animation-duration: 7.5s;
+  animation-delay: -2.5s;
+}
+.starry-stars-c {
+  background:
+    radial-gradient(1.5px 1.5px at 11% 51%, rgb(236 230 214 / 0.75), transparent),
+    radial-gradient(1.5px 1.5px at 25% 85%, rgb(236 230 214 / 0.7), transparent),
+    radial-gradient(2px 2px at 39% 36%, rgb(236 230 214 / 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 55% 74%, rgb(224 191 90 / 0.75), transparent),
+    radial-gradient(1.5px 1.5px at 67% 24%, rgb(236 230 214 / 0.8), transparent),
+    radial-gradient(2px 2px at 74% 92%, rgb(236 230 214 / 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 89% 34%, rgb(236 230 214 / 0.75), transparent),
+    radial-gradient(1.5px 1.5px at 98% 82%, rgb(236 230 214 / 0.7), transparent),
+    radial-gradient(2.5px 2.5px at 61% 48%, rgb(236 230 214 / 0.85), transparent);
+  animation-duration: 9s;
+  animation-delay: -5s;
+}
+.starry-shooting {
+  inset: auto;
+  top: 10%;
+  left: 70%;
+  width: 140px;
+  height: 1.5px;
+  border-radius: 9999px;
+  /* Bright head at the leading end, fading tail behind it. */
+  background: linear-gradient(90deg, transparent, rgb(236 230 214 / 0.9));
+  opacity: 0;
+  animation: starry-shoot 14s linear 4s infinite;
+}
+@keyframes starry-shoot {
+  0%, 92% { opacity: 0; transform: translate3d(0, 0, 0) rotate(157deg); }
+  93% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(-280px, 120px, 0) rotate(157deg); }
+}
+
+/* Cosmos: red and green nebulae drift slowly while yellow and green stars twinkle. The nebula
+   layer is larger than the screen so its edges never show while it moves. */
+.cosmos-nebula {
+  inset: -20%;
+  background:
+    radial-gradient(40% 30% at 30% 35%, rgb(215 117 117 / 0.24), transparent 70%),
+    radial-gradient(45% 35% at 70% 65%, rgb(217 240 217 / 0.15), transparent 70%),
+    radial-gradient(25% 20% at 60% 25%, rgb(243 215 122 / 0.1), transparent 70%);
+  animation: cosmos-drift 40s ease-in-out infinite alternate;
+}
+@keyframes cosmos-drift {
+  from { transform: translate3d(-4%, 3%, 0) rotate(-4deg); }
+  to { transform: translate3d(4%, -3%, 0) rotate(4deg); }
+}
+.cosmos-stars-a {
+  background:
+    radial-gradient(2px 2px at 6% 20%, rgb(243 215 122 / 0.85), transparent),
+    radial-gradient(1.5px 1.5px at 19% 57%, rgb(217 240 217 / 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 33% 12%, rgb(243 215 122 / 0.75), transparent),
+    radial-gradient(2px 2px at 48% 38%, rgb(217 240 217 / 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 62% 81%, rgb(243 215 122 / 0.7), transparent),
+    radial-gradient(2.5px 2.5px at 77% 28%, rgb(243 215 122 / 0.85), transparent),
+    radial-gradient(1.5px 1.5px at 91% 63%, rgb(217 240 217 / 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 27% 91%, rgb(215 117 117 / 0.6), transparent),
+    radial-gradient(2px 2px at 84% 9%, rgb(217 240 217 / 0.75), transparent);
+  animation-duration: 7s;
+}
+.cosmos-stars-b {
+  background:
+    radial-gradient(1.5px 1.5px at 11% 42%, rgb(217 240 217 / 0.75), transparent),
+    radial-gradient(2px 2px at 24% 74%, rgb(243 215 122 / 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 39% 26%, rgb(217 240 217 / 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 55% 58%, rgb(243 215 122 / 0.75), transparent),
+    radial-gradient(2px 2px at 68% 15%, rgb(217 240 217 / 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 73% 47%, rgb(215 117 117 / 0.6), transparent),
+    radial-gradient(2.5px 2.5px at 95% 86%, rgb(243 215 122 / 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 4% 95%, rgb(217 240 217 / 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 58% 94%, rgb(243 215 122 / 0.7), transparent);
+  animation-duration: 9.5s;
+  animation-delay: -4s;
+}
+
+/* Pink Couple: two layers of hearts float up at different speeds. Each layer is one tile taller
+   than the screen and moves up exactly one tile per loop, so the loop is seamless. */
+.candy-hearts-a {
+  bottom: -420px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420' viewBox='0 0 420 420'%3E%3Cpath fill='%23ff8fba' fill-opacity='0.8' transform='translate(60 70) scale(1.0)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3Cpath fill='%23ffcd28' fill-opacity='0.85' transform='translate(290 250) scale(0.7)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") 0 0 / 420px 420px;
+  animation: candy-float-a 56s linear infinite;
+}
+.candy-hearts-b {
+  bottom: -360px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360'%3E%3Cpath fill='%23ff6fa5' fill-opacity='0.55' transform='translate(190 120) scale(0.5)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") 120px 0 / 360px 360px;
+  animation: candy-float-b 30s linear infinite;
+}
+@keyframes candy-float-a {
+  to { transform: translate3d(0, -420px, 0); }
+}
+@keyframes candy-float-b {
+  to { transform: translate3d(0, -360px, 0); }
+}
+
+/* People who turned on "reduce motion" get a still picture: stars at mid brightness, nothing moving. */
+@media (prefers-reduced-motion: reduce) {
+  .theme-backdrop > * { animation: none; }
+  .backdrop-twinkle { opacity: 0.6; }
+  .starry-shooting { display: none; }
+}
+
 /* Korean: fall back to good Hangul system fonts, and don't break words mid-syllable-block. */
 :root {
   --font-hangul: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Nanum Gothic";

@@ -249,6 +249,10 @@ export const en = {
         close: 'Close room',
         reopen: 'Open room',
     },
+    motion: {
+        label: 'Background animation',
+        hint: 'Only affects you. Turn it off if the room feels slow.',
+    },
     members: {
         roles: { admin: 'Admin', dj: 'DJ', listener: 'Listener' },
         hint: 'Admins and DJs control playback and the playlist.',

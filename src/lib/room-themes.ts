@@ -7,6 +7,13 @@ export type RoomTheme = (typeof ROOM_THEMES)[number];
 
 export const isRoomTheme = (v: unknown): v is RoomTheme => ROOM_THEMES.includes(v as RoomTheme);
 
+/** Themes with a moving background (src/components/room/ThemeBackdrop.tsx). */
+const ANIMATED_THEMES: readonly RoomTheme[] = ["starry", "candy", "cosmos"];
+export const hasAnimatedBackdrop = (theme: RoomTheme) => ANIMATED_THEMES.includes(theme);
+
+/** Set to "off" when someone turns room background animations off; read by the room page. */
+export const MOTION_COOKIE = "norabox_motion";
+
 type Palette = {
   /** Page background (darkest). */
   pine: string;

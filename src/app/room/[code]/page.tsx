@@ -1,11 +1,20 @@
 import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
 import { RoomClient } from '@/components/room/RoomClient';
+import { ThemeBackdrop } from '@/components/room/ThemeBackdrop';
 import { getCurrentUser } from '@/lib/auth';
 import { getI18n } from '@/i18n/server';
 import { prisma } from '@/lib/prisma';
-import { isRoomTheme, THEME_PALETTES, themeCss, type RoomTheme } from '@/lib/room-themes';
+import {
+    hasAnimatedBackdrop,
+    isRoomTheme,
+    MOTION_COOKIE,
+    THEME_PALETTES,
+    themeCss,
+    type RoomTheme,
+} from '@/lib/room-themes';
 import { purgeIfExpired } from '@/lib/rooms';
 
 const getRoom = cache(async (code: string) => {
@@ -33,17 +42,21 @@ export default async function RoomPage(props: PageProps<'/room/[code]'>) {
     if (!room) notFound();
     if (room.code !== code) redirect(`/room/${room.code}`);
 
-    const user = await getCurrentUser();
+    const [user, cookieStore] = await Promise.all([getCurrentUser(), cookies()]);
     const theme = themeOf(room);
+    // Themes with a moving background; each visitor can turn it off (MotionToggle).
+    const motion = hasAnimatedBackdrop(theme) ? (cookieStore.get(MOTION_COOKIE)?.value === 'off' ? 'off' : 'on') : null;
     return (
         <>
             {/* The room's theme recolors the whole page for everyone in it; it goes away when they leave. */}
             {theme !== 'default' && <style>{themeCss(theme)}</style>}
+            {motion === 'on' && <ThemeBackdrop theme={theme} />}
             <RoomClient
                 code={room.code}
                 user={user && { username: user.username, avatarUrl: user.avatarUrl }}
                 // Without a YouTube API key, rooms add songs by link only (no search).
                 searchAvailable={!!process.env.YOUTUBE_API_KEY?.trim()}
+                motion={motion}
             />
         </>
     );

@@ -15,6 +15,7 @@ import { Playlist } from '@/components/room/Playlist';
 import { SaveToPlaylist } from '@/components/room/SaveToPlaylist';
 import { SyncedPlayer } from '@/components/room/SyncedPlayer';
 import { useRoom, type ConnectionStatus } from '@/components/room/useRoom';
+import { MotionToggle } from '@/components/room/MotionToggle';
 import { VolumePanel } from '@/components/room/VolumePanel';
 import { useI18n } from '@/i18n/client';
 import { forgetJoin, getJoinedName, getNickname, rememberJoin, setNickname } from '@/lib/client-identity';
@@ -26,6 +27,8 @@ type Props = {
     user: { username: string; avatarUrl: string | null } | null;
     /** Whether YouTube search is configured on the server (otherwise link-only mode). */
     searchAvailable: boolean;
+    /** The theme's moving background for this visitor; null when the theme has none. */
+    motion: 'on' | 'off' | null;
 };
 
 const VOLUME_KEY = 'norabox:volume';
@@ -57,7 +60,7 @@ function writeStored(storage: 'local' | 'session', key: string, value: string) {
     } catch {}
 }
 
-export function RoomClient({ code, user, searchAvailable }: Props) {
+export function RoomClient({ code, user, searchAvailable, motion }: Props) {
     // `name` stays null until the visitor presses Join (that click also unlocks audio).
     // After a refresh, the name this tab joined with is restored and we rejoin directly.
     const rejoinName = useSyncExternalStore(noopSubscribe, () => getJoinedName(code), () => null);
@@ -91,7 +94,15 @@ export function RoomClient({ code, user, searchAvailable }: Props) {
     if (!room.snapshot) {
         return <p className="py-24 text-center muted">{t.room.joining(code)}</p>;
     }
-    return <RoomView code={code} room={room as RoomReady} signedIn={!!user} searchAvailable={searchAvailable} />;
+    return (
+        <RoomView
+            code={code}
+            room={room as RoomReady}
+            signedIn={!!user}
+            searchAvailable={searchAvailable}
+            motion={motion}
+        />
+    );
 }
 
 const noopSubscribe = () => () => {};
@@ -217,11 +228,13 @@ function RoomView({
     room,
     signedIn,
     searchAvailable,
+    motion,
 }: {
     code: string;
     room: RoomReady;
     signedIn: boolean;
     searchAvailable: boolean;
+    motion: Props['motion'];
 }) {
     const router = useRouter();
     const { t, tError } = useI18n();
@@ -373,6 +386,7 @@ function RoomView({
                             isAdmin={isAdmin}
                             onMaster={(v) => run('room:masterVolume', { volume: v })}
                         />
+                        {motion && <MotionToggle on={motion === 'on'} />}
                     </div>
                 </div>
 
