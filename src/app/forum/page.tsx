@@ -50,7 +50,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
             <div className="flex flex-wrap items-end gap-4">
                 <div>
                     <h1 className="text-3xl font-bold">{t.forum.title}</h1>
-                    <p className="mt-1 text-lime/60">{t.forum.lead}</p>
+                    <p className="mt-1 muted">{t.forum.lead}</p>
                 </div>
                 <Link
                     href={
@@ -77,10 +77,10 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
 
             {scenario && (
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-                    <span className="text-lime/60">{t.forum.scenarioFilter}</span>
+                    <span className="muted">{t.forum.scenarioFilter}</span>
                     <span className="rounded-full border border-moss/50 bg-fern/50 px-3 py-1 font-medium">
                         {scenario.name}
-                        {scenario.writer && <span className="text-lime/60"> · {scenario.writer}</span>}
+                        {scenario.writer && <span className="muted"> · {scenario.writer}</span>}
                     </span>
                     <Link
                         href={q ? `/forum?${new URLSearchParams({ q })}` : '/forum'}
@@ -93,7 +93,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
             {posts.length === 0 ? (
                 <div className="card mt-8 p-10 text-center">
                     <p className="text-lg font-semibold">{q || scenarioId ? t.forum.noMatch : t.forum.noPosts}</p>
-                    <p className="mt-1 text-sm text-lime/60">
+                    <p className="mt-1 text-sm muted">
                         {q || scenarioId ? t.forum.tryAnother : t.forum.beFirst}
                     </p>
                 </div>
@@ -116,7 +116,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                     ) : (
                         <span className="btn-secondary opacity-40">{t.forum.prev}</span>
                     )}
-                    <span className="text-sm text-lime/60">{t.forum.page(page, pages)}</span>
+                    <span className="text-sm muted">{t.forum.page(page, pages)}</span>
                     {page < pages ? (
                         <Link href={pageHref(page + 1)} className="btn-secondary">
                             {t.forum.next}

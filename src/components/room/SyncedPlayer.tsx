@@ -176,13 +176,13 @@ export function SyncedPlayer(props: Props) {
             {!props.videoId && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-pine/90 p-6 text-center">
                     <p className="text-lg font-semibold">{t.player.nothingPlaying}</p>
-                    <p className="text-sm text-lime/60">{t.player.nothingPlayingHint}</p>
+                    <p className="text-sm muted">{t.player.nothingPlayingHint}</p>
                 </div>
             )}
             {errorFor && errorFor === props.itemId && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-pine/90 p-6 text-center">
                     <p className="font-semibold">{t.player.cantPlay}</p>
-                    <p className="text-sm text-lime/60">{t.player.cantPlayHint}</p>
+                    <p className="text-sm muted">{t.player.cantPlayHint}</p>
                 </div>
             )}
             {blocked && props.videoId && !errorFor && (
@@ -190,7 +190,7 @@ export function SyncedPlayer(props: Props) {
                     onClick={resume}
                     className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-pine/80 text-center">
                     <span className="btn-primary">{t.player.tapToListen}</span>
-                    <span className="text-xs text-lime/60">{t.player.autoplayPaused}</span>
+                    <span className="text-xs muted">{t.player.autoplayPaused}</span>
                 </button>
             )}
         </div>

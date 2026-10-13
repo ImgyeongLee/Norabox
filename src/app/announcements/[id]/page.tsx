@@ -27,7 +27,7 @@ export default async function AnnouncementPage(props: PageProps<'/announcements/
 
     return (
         <article className="mx-auto max-w-3xl px-4 py-10">
-            <Link href="/announcements" className="inline-flex items-center gap-1 text-sm text-lime/60 hover:text-lime">
+            <Link href="/announcements" className="inline-flex items-center gap-1 text-sm muted hover:text-lime">
                 <Icon as={LuArrowLeft} className="size-4" />
                 {t.announcements.back}
             </Link>

@@ -199,10 +199,10 @@ export function VideoSearch({ onAdd, addedIds, disabled, disabledReason, searchA
                 </div>
             )}
 
-            {disabled && disabledReason && <p className="mt-2 text-sm text-lime/60">{disabledReason}</p>}
+            {disabled && disabledReason && <p className="mt-2 text-sm muted">{disabledReason}</p>}
             {error && <p className="field-error">{tError(error)}</p>}
             {mode === 'search' && results && results.length === 0 && (
-                <p className="mt-4 text-sm text-lime/60">{t.search.noResults}</p>
+                <p className="mt-4 text-sm muted">{t.search.noResults}</p>
             )}
             {results && results.length > 0 && (
                 <ul className="mt-3 divide-y divide-leaf/25">

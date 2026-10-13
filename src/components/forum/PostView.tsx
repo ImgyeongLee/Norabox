@@ -76,7 +76,7 @@ export async function PostView({
         <article className="mx-auto max-w-3xl px-4 py-10">
             <Link
                 href={isAuthor ? '/playlists' : '/forum'}
-                className="inline-flex items-center gap-1 text-sm text-lime/60 hover:text-lime"
+                className="inline-flex items-center gap-1 text-sm muted hover:text-lime"
             >
                 <Icon as={LuArrowLeft} className="size-4" />
                 {isAuthor ? t.myPlaylists.title : t.post.back}
@@ -97,13 +97,13 @@ export async function PostView({
                         >
                             {post.scenario.name}
                         </Link>
-                        {post.scenario.writer && <span className="text-lime/60"> · {post.scenario.writer}</span>}
+                        {post.scenario.writer && <span className="muted"> · {post.scenario.writer}</span>}
                     </p>
                 )}
                 <div className="mt-5 flex flex-wrap items-center gap-3">
                     <Avatar name={author.name ?? '?'} src={author.avatarUrl} size="md" />
                     <div className="text-sm">
-                        <p className={`font-semibold ${author.name ? '' : 'italic text-lime/60'}`}>
+                        <p className={`font-semibold ${author.name ? '' : 'italic muted'}`}>
                             {author.name ?? t.common.deletedUser}
                         </p>
                         <p className="text-lime/55">

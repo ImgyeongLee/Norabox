@@ -78,7 +78,7 @@ export function LibraryPanel({ canControl, signedIn, addedIds, onAdd, onMessage 
         }
     }
 
-    if (!signedIn) return <p className="text-sm text-lime/60">{t.likedTab.loginRequired}</p>;
+    if (!signedIn) return <p className="text-sm muted">{t.likedTab.loginRequired}</p>;
     if (library === null) return <p className="text-sm text-lime/50">{t.likedTab.loading}</p>;
 
     const filter = (list: ImportablePlaylist[]) => (query.trim() ? list.filter((p) => matches(p, query)) : list);
@@ -89,7 +89,7 @@ export function LibraryPanel({ canControl, signedIn, addedIds, onAdd, onMessage 
 
     return (
         <div className="space-y-5">
-            {!canControl && <p className="text-sm text-lime/60">{t.room.searchDenied}</p>}
+            {!canControl && <p className="text-sm muted">{t.room.searchDenied}</p>}
             <input
                 type="search"
                 className="input"

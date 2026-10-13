@@ -53,7 +53,7 @@ export default async function Home(props: PageProps<"/">) {
           </h1>
           <p className="mt-5 max-w-lg text-lg text-lime/70">{t.home.lead}</p>
           {!user && (
-            <p className="mt-6 text-sm text-lime/60">
+            <p className="mt-6 text-sm muted">
               {t.home.cta.before}
               <Link href="/signup" className={link}>
                 {t.home.cta.signup}
@@ -86,7 +86,7 @@ export default async function Home(props: PageProps<"/">) {
         {t.home.features.map((f) => (
           <div key={f.title} className="card p-5">
             <h3 className="font-semibold text-lime">{f.title}</h3>
-            <p className="mt-2 text-sm text-lime/60">{f.body}</p>
+            <p className="mt-2 text-sm muted">{f.body}</p>
           </div>
         ))}
       </section>

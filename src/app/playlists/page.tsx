@@ -16,7 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
 /** The signed-in user's own playlists, of every visibility, newest edits first. */
 export default async function MyPlaylistsPage(props: PageProps<'/playlists'>) {
     const [user, { t }, sp] = await Promise.all([getCurrentUser(), getI18n(), props.searchParams]);
+
     if (!user) redirect('/login?next=/playlists');
+
     const q = typeof sp.q === 'string' ? sp.q.trim().slice(0, 100) : '';
     const text = { contains: q, mode: 'insensitive' as const };
     const posts = await prisma.post.findMany({
@@ -34,7 +36,7 @@ export default async function MyPlaylistsPage(props: PageProps<'/playlists'>) {
             <div className="flex flex-wrap items-end gap-4">
                 <div>
                     <h1 className="text-3xl font-bold">{t.myPlaylists.title}</h1>
-                    <p className="mt-1 max-w-2xl text-lime/60">{t.myPlaylists.lead}</p>
+                    <p className="mt-1 max-w-2xl muted">{t.myPlaylists.lead}</p>
                 </div>
                 <Link href="/playlists/new" className="btn-primary ml-auto">
                     <Icon as={LuPlus} />
@@ -58,7 +60,7 @@ export default async function MyPlaylistsPage(props: PageProps<'/playlists'>) {
                     {!q && (
                         <Link href="/playlists/new" className="btn-primary mt-4">
                             <Icon as={LuPlus} />
-                    {t.myPlaylists.new}
+                            {t.myPlaylists.new}
                         </Link>
                     )}
                 </div>

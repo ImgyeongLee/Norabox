@@ -31,8 +31,7 @@ export function ThemePicker({ value, onChange }: { value: RoomTheme; onChange: (
                             style={{
                                 // The theme's own colors, whatever theme the page is in.
                                 background: `conic-gradient(${p.pine} 0 25%, ${p.fern} 0 50%, ${p.leaf} 0 75%, ${p.moss} 0)`,
-                            }}
-                        >
+                            }}>
                             <input
                                 type="radio"
                                 name="room-theme"

@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <footer className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-t border-leaf/20 px-4 py-6 text-center text-xs text-lime/40">
               <span>{t.nav.footer}</span>
               <span aria-hidden>·</span>
-              <Link href="/announcements" className="text-lime/60 underline-offset-4 hover:text-lime hover:underline">
+              <Link href="/announcements" className="muted underline-offset-4 hover:text-lime hover:underline">
                 {t.nav.announcements}
               </Link>
               {contactEmail && (
@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                   <a
                     href={`mailto:${contactEmail}?subject=${encodeURIComponent(t.nav.contactSubject)}`}
                     title={t.nav.contactTitle}
-                    className="text-lime/60 underline-offset-4 hover:text-lime hover:underline"
+                    className="muted underline-offset-4 hover:text-lime hover:underline"
                   >
                     {t.nav.contact}
                   </a>

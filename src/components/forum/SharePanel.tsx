@@ -39,7 +39,7 @@ export function SharePanel({ postId, visibility, shareToken }: { postId: string;
         <section className="card mt-5 space-y-3 p-4">
             <div>
                 <h2 className="text-sm font-semibold">{t.sharePanel.title}</h2>
-                <p className="mt-0.5 text-xs text-lime/60">{t.sharePanel.hint}</p>
+                <p className="mt-0.5 text-xs muted">{t.sharePanel.hint}</p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
                 <input

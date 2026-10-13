@@ -33,7 +33,7 @@ export default async function AnnouncementsPage() {
                         <Icon as={LuMegaphone} className="size-7 text-moss" />
                         {t.announcements.title}
                     </h1>
-                    <p className="mt-1 text-lime/60">{t.announcements.lead}</p>
+                    <p className="mt-1 muted">{t.announcements.lead}</p>
                 </div>
                 {isSiteAdmin(user) && (
                     <Link href="/announcements/new" className="btn-primary ml-auto">

@@ -248,7 +248,7 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
                                     <YouTubeEmbed videoId={song.video.videoId} title={song.video.title} />
                                     <div className="min-w-0">
                                         <p className="font-semibold leading-snug">{song.video.title}</p>
-                                        <p className="mt-1 text-sm text-lime/60">
+                                        <p className="mt-1 text-sm muted">
                                             {t.post.videoBy(song.video.channel)}
                                             {song.video.durationSec ? ` · ${formatDuration(song.video.durationSec)}` : ''}
                                         </p>

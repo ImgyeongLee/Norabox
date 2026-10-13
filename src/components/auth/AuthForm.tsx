@@ -32,7 +32,7 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
     return (
         <div className="card p-6 sm:p-8">
             <h1 className="text-2xl font-bold">{isSignup ? t.auth.signupTitle : t.auth.loginTitle}</h1>
-            <p className="mt-1 text-sm text-lime/60">
+            <p className="mt-1 text-sm muted">
                 {isSignup ? t.auth.signupLead : t.auth.loginLead}
             </p>
             <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
@@ -91,7 +91,7 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
                     {busy ? t.auth.wait : isSignup ? t.auth.submitSignup : t.auth.submitLogin}
                 </button>
             </form>
-            <p className="mt-6 text-center text-sm text-lime/60">
+            <p className="mt-6 text-center text-sm muted">
                 {isSignup ? t.auth.haveAccount : t.auth.newHere}
                 <Link href={otherHref} className="font-semibold text-moss hover:underline">
                     {isSignup ? t.auth.submitLogin : t.auth.submitSignup}

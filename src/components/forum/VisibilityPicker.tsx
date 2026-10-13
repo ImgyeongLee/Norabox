@@ -39,7 +39,7 @@ export function VisibilityPicker({ value, onChange }: { value: Visibility; onCha
                             <Icon as={ICON[v]} className="size-4 text-moss" />
                             {t.visibility[v]}
                         </span>
-                        <span className="text-xs text-lime/60">{hint[v]}</span>
+                        <span className="text-xs muted">{hint[v]}</span>
                     </label>
                 ))}
             </div>

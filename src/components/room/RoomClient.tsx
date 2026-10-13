@@ -81,7 +81,7 @@ export function RoomClient({ code, user, searchAvailable }: Props) {
         return (
             <div className="mx-auto max-w-md px-4 py-16 text-center">
                 <h1 className="text-2xl font-bold">{t.room.cantJoin}</h1>
-                <p className="mt-2 text-lime/60">{tError(room.fatal)}</p>
+                <p className="mt-2 muted">{tError(room.fatal)}</p>
                 <Link href="/" className="btn-primary mt-6">
                     {t.common.backHome}
                 </Link>
@@ -89,7 +89,7 @@ export function RoomClient({ code, user, searchAvailable }: Props) {
         );
     }
     if (!room.snapshot) {
-        return <p className="py-24 text-center text-lime/60">{t.room.joining(code)}</p>;
+        return <p className="py-24 text-center muted">{t.room.joining(code)}</p>;
     }
     return <RoomView code={code} room={room as RoomReady} signedIn={!!user} searchAvailable={searchAvailable} />;
 }
@@ -205,7 +205,7 @@ function StatusDot({ status }: { status: ConnectionStatus }) {
     const cls = STATUS_STYLE[status];
     const label = t.room.status[status];
     return (
-        <span className="inline-flex items-center gap-1.5 text-xs text-lime/60">
+        <span className="inline-flex items-center gap-1.5 text-xs muted">
             <span className={`size-2 rounded-full ${cls}`} />
             {label}
         </span>

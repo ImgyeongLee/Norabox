@@ -16,7 +16,7 @@ export default async function ProfilePage() {
         <div className="mx-auto max-w-2xl space-y-6 px-4 py-10">
             <div>
                 <h1 className="text-3xl font-bold">{t.profile.title}</h1>
-                <p className="mt-1 text-sm text-lime/60">{user.email}</p>
+                <p className="mt-1 text-sm muted">{user.email}</p>
             </div>
             <AvatarForm username={user.username} avatarUrl={user.avatarUrl} />
             <UsernameForm username={user.username} />

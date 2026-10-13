@@ -79,7 +79,7 @@ export function PostActions({ postId, signedIn, viewPath, sharePath, shareToken,
         <>
             <HeartIcon filled={like.liked} className={`size-5 ${like.liked ? 'text-danger' : ''}`} />
             <span>{t.post.like}</span>
-            <span className="font-mono text-xs text-lime/60">{like.count}</span>
+            <span className="font-mono text-xs muted">{like.count}</span>
         </>
     );
 
