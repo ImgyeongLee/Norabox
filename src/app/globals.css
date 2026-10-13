@@ -9,7 +9,7 @@
   --color-lime: #ecf39e;
   --color-danger: #f28b82;
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Pretendard Variable", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
@@ -29,6 +29,21 @@ body {
   background: var(--page-bg);
   background-attachment: fixed;
   color: var(--color-lime);
+}
+
+/* Tailwind v4 gives buttons the plain arrow cursor; everything clickable and enabled gets the
+   hand instead (links already do). Disabled controls keep their own cursor, and utilities such as
+   cursor-grab on drag handles still win, since they're in a later layer. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  select:not(:disabled),
+  summary,
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 ::selection {
@@ -346,13 +361,27 @@ body:has(.theme-backdrop) header.sticky {
   .starry-shooting { display: none; }
 }
 
-/* Korean: fall back to good Hangul system fonts, and don't break words mid-syllable-block. */
+/* Fonts: Inter (Latin), Pretendard (Korean) and Noto Sans JP (Japanese), each followed by
+   similar system fonts. The page's language decides which comes first; characters a font
+   lacks fall through to the next. Pretendard and Noto Sans JP are only defined on pages in
+   their language (src/app/layout.tsx), so elsewhere those characters use the system fonts.
+   All use font-display: optional (no swap after text shows). */
 :root {
-  --font-hangul: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Nanum Gothic";
+  --font-ko: "Pretendard Variable", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR";
+  --font-ja: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo";
+  --font-system: ui-sans-serif, system-ui, sans-serif;
 }
 body {
-  font-family: var(--font-geist-sans), var(--font-hangul), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-inter), var(--font-ko), var(--font-ja), var(--font-system);
 }
+/* Pretendard's Latin letters are drawn to match its Hangul. */
+html:lang(ko) body {
+  font-family: var(--font-ko), var(--font-ja), var(--font-system);
+}
+html:lang(ja) body {
+  font-family: var(--font-inter), var(--font-ja), var(--font-ko), var(--font-system);
+}
+/* Korean: don't break words mid-syllable-block. */
 :lang(ko) {
   word-break: keep-all;
   overflow-wrap: anywhere;

@@ -1,7 +1,7 @@
 import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
 
-// English UI text. This object's shape is the source of truth: the Korean
-// dictionary is typed against it, so a missing translation fails the typecheck.
+// English UI text. This object's shape is the source of truth: the Korean and Japanese
+// dictionaries are typed against it, so a missing translation fails the typecheck.
 
 export const en = {
     meta: {

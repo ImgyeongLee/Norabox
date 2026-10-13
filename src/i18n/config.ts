@@ -1,4 +1,4 @@
-export const LOCALES = ["en", "ko"] as const;
+export const LOCALES = ["en", "ko", "ja"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -22,4 +22,5 @@ export function pickLocale(cookie: string | undefined, acceptLanguage: string | 
   return prefs.map((p) => p.lang).find(isLocale) ?? DEFAULT_LOCALE;
 }
 
-export const dateLocale = (locale: Locale) => (locale === "ko" ? "ko-KR" : "en-US");
+const DATE_LOCALES: Record<Locale, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP" };
+export const dateLocale = (locale: Locale) => DATE_LOCALES[locale];

@@ -1,14 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { Header } from "@/components/Header";
+import type { Locale } from "@/i18n/config";
 import { I18nProvider } from "@/i18n/client";
 import { getI18n } from "@/i18n/server";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+// All fonts use font-display: optional, so text is never redrawn in another font after it shows
+// (no "popping"). Inter (Latin) is small and preloaded on every page. The Korean and Japanese
+// fonts are big, so each page loads only its own language's (CJK_FONTS); characters from other
+// languages use system fonts. The font order per language is in globals.css.
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "optional" });
+
+/** Self-hosted, split by character range (public/fonts): only the pieces a page uses download. */
+const CJK_FONTS: Partial<Record<Locale, string>> = {
+  ko: "/fonts/v1/pretendard.css",
+  ja: "/fonts/v1/noto-sans-jp.css",
+};
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,9 +37,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Where "Contact" in the footer sends email; set CONTACT_EMAIL in .env / Vercel. Hidden when unset.
   const contactEmail = process.env.CONTACT_EMAIL?.trim();
   return (
-    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang={locale} className={`${inter.variable} ${geistMono.variable} h-full antialiased`}>
       {/* Extensions such as Grammarly add attributes to <body> before React loads; don't warn about those. */}
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
+        {/* React puts this in <head> and holds the first paint until it loads, so the font is
+            known before any text shows. */}
+        {CJK_FONTS[locale] && <link rel="stylesheet" href={CJK_FONTS[locale]} precedence="default" />}
         <I18nProvider locale={locale}>
           <ConfirmProvider>
             <Header />

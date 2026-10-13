@@ -85,12 +85,19 @@ saved with the playlist item and sent **only to the admin's connections**, so pl
 
 ## Languages
 
-English and Korean. The language comes from the visitor's saved choice (the EN / 한국어 switch in
-the header, stored in the `norabox_locale` cookie), otherwise from their browser's `Accept-Language`,
-falling back to English. URLs are the same in both languages, so invite links work for everyone.
+English, Korean and Japanese. The language comes from the visitor's saved choice (the language
+menu in the header, stored in the `norabox_locale` cookie), otherwise from their browser's
+`Accept-Language`, falling back to English. URLs are the same in every language, so invite links
+work for everyone.
 
-- UI text lives in `src/i18n/messages/en.ts` and `ko.ts`. `ko` is typed against `en`, so a missing
-  Korean string fails `npm run typecheck`.
+- UI text lives in `src/i18n/messages/en.ts`, `ko.ts` and `ja.ts` (named by language code: `ja` is
+  Japanese, like `ko` is Korean). `ko` and `ja` are typed against `en`, so a missing string fails
+  `npm run typecheck`.
+- Fonts: Inter for Latin (next/font, preloaded), Pretendard on Korean pages and Noto Sans JP on
+  Japanese pages. The two CJK fonts are self-hosted in `public/fonts/v1/`, split by character range,
+  and each page loads only its own language's stylesheet (`CJK_FONTS` in `src/app/layout.tsx`).
+  All use `font-display: optional`, so text never switches font after it shows. To update a font,
+  put it under a new version folder (`v2`): `/fonts/*` is cached for a year (`next.config.ts`).
 - Server Components use `await getI18n()` (`src/i18n/server.ts`); Client Components use `useI18n()`
   (`src/i18n/client.tsx`).
 - The API and realtime server return error *codes* (keys of `errors` in the dictionaries), and the
