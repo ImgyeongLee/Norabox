@@ -1,7 +1,7 @@
 import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
 
-// English UI text. This object's shape is the source of truth: the Korean
-// dictionary is typed against it, so a missing translation fails the typecheck.
+// English UI text. This object's shape is the source of truth: the Korean and Japanese
+// dictionaries are typed against it, so a missing translation fails the typecheck.
 
 export const en = {
     meta: {
@@ -19,6 +19,8 @@ export const en = {
         announcements: 'Announcements',
         newAnnouncement: 'New announcement',
         editAnnouncement: 'Edit announcement',
+        terms: 'Terms of Service',
+        privacy: 'Privacy Policy',
         room: (code: string) => `Room ${code}`,
         postDescription: (scenario: string) => `A playlist for ${scenario}`,
         scenarioBy: (name: string, writer: string) => `${name} by ${writer}`,
@@ -44,6 +46,8 @@ export const en = {
         liked: 'Liked playlists',
         logout: 'Log out',
         announcements: 'Announcements',
+        terms: 'Terms',
+        privacy: 'Privacy',
         language: 'Language',
         footer: 'Norabox · music from YouTube',
         contact: 'Contact',
@@ -114,6 +118,9 @@ export const en = {
         email: 'Email address',
         password: 'Password',
         passwordConfirm: 'Confirm password',
+        ageConfirm: 'I am 14 or older',
+        // Sentence split around two links: before [terms] middle [privacy] after
+        consent: { before: 'By signing up, you agree to the ', terms: 'Terms of Service', middle: ' and ', privacy: 'Privacy Policy', after: '.' },
         submitSignup: 'Sign up',
         submitLogin: 'Log in',
         wait: 'Please wait…',
@@ -441,6 +448,9 @@ export const en = {
         deleteTitle: 'Delete this announcement?',
         deleteBody: "This can't be undone.",
     },
+    legal: {
+        available: 'This page is available in English and Korean.',
+    },
     memo: {
         label: 'Memo',
         add: 'Add memo',
@@ -494,6 +504,7 @@ export const en = {
         passwordLong: 'Password is too long',
         emailInvalid: 'Enter a valid email address',
         passwordsMismatch: 'Passwords do not match',
+        ageRequired: 'You must be 14 or older to sign up',
         emailRequired: 'Enter your email',
         passwordRequired: 'Enter your password',
         currentPasswordRequired: 'Enter your current password',

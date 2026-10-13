@@ -1,10 +1,12 @@
 import type { Locale } from "@/i18n/config";
 import { en, type ErrorCode, type Messages } from "@/i18n/messages/en";
+import { ja } from "@/i18n/messages/ja";
 import { ko } from "@/i18n/messages/ko";
 
 export type { ErrorCode, Messages };
 
-export const messagesFor = (locale: Locale): Messages => (locale === "ko" ? ko : en);
+const MESSAGES: Record<Locale, Messages> = { en, ko, ja };
+export const messagesFor = (locale: Locale): Messages => MESSAGES[locale];
 
 /** Types a string as an error code, for server code that returns codes to the client. */
 export const errorCode = (code: ErrorCode) => code;
