@@ -170,7 +170,8 @@ export function SyncedPlayer(props: Props) {
     }
 
     return (
-        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
+        // At least 200x200px (YouTube's minimum player size): on narrow phones 16:9 would be shorter.
+        <div className="relative aspect-video min-h-[200px] w-full overflow-hidden rounded-xl bg-black">
             {/* The iframe is display-only; the room controls playback. */}
             <div ref={host} className="pointer-events-none absolute inset-0 [&>iframe]:size-full" />
             {!props.videoId && (

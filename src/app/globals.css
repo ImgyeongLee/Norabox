@@ -196,6 +196,22 @@ input[type="range"].slider::-moz-range-thumb {
   padding: 0.3em 0.6em;
 }
 
+/* Page transition (src/app/template.tsx): pages fade in when you navigate to them. Opacity only:
+   a transform would briefly move fixed elements (room backgrounds, toasts) during the fade. */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+}
+.page-enter {
+  animation: page-enter 200ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
+}
+
 /* Legal pages (terms, privacy policy): a bigger title, room between articles, and tables that
    scroll sideways instead of overflowing on phones. */
 .legal h1 {

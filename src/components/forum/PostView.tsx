@@ -76,8 +76,7 @@ export async function PostView({
         <article className="mx-auto max-w-3xl px-4 py-10">
             <Link
                 href={isAuthor ? '/playlists' : '/forum'}
-                className="inline-flex items-center gap-1 text-sm muted hover:text-lime"
-            >
+                className="inline-flex items-center gap-1 text-sm muted hover:text-lime">
                 <Icon as={LuArrowLeft} className="size-4" />
                 {isAuthor ? t.myPlaylists.title : t.post.back}
             </Link>
@@ -93,8 +92,7 @@ export async function PostView({
                         <Link
                             href={`/forum?scenario=${post.scenario.id}`}
                             className="font-medium text-moss underline-offset-4 hover:underline"
-                            title={t.post.seeScenario}
-                        >
+                            title={t.post.seeScenario}>
                             {post.scenario.name}
                         </Link>
                         {post.scenario.writer && <span className="muted"> · {post.scenario.writer}</span>}
@@ -134,28 +132,32 @@ export async function PostView({
                 </div>
             </header>
 
-            <ol className="mt-8 space-y-6">
+            {/* Compact rows: a small thumbnail on the left and the song on the right. Pressing play
+                widens the player to the whole row, since YouTube players must be 200x200px or more. */}
+            <ol className="mt-8 space-y-3">
                 {post.tracks.map((track, i) => (
-                    <li key={track.id} className="card space-y-4 p-4 sm:p-5">
-                        <div className="flex items-baseline gap-3">
-                            <span className="font-mono text-sm font-semibold text-moss">
-                                {String(i + 1).padStart(2, '0')}
-                            </span>
-                            <div className="min-w-0">
-                                <h2 className="font-semibold leading-snug">{track.title}</h2>
-                                <p className="text-sm text-lime/55">
-                                    {t.post.videoBy(track.channel)}
-                                    {track.durationSec ? ` · ${formatDuration(track.durationSec)}` : ''}
-                                </p>
-                            </div>
+                    <li key={track.id} className="card group flex flex-wrap gap-3 p-3 sm:gap-4 sm:p-4">
+                        <div className="w-32 shrink-0 group-has-[iframe]:w-full sm:w-56">
+                            <YouTubeEmbed videoId={track.videoId} title={track.title} compact />
                         </div>
-                        <YouTubeEmbed videoId={track.videoId} title={track.title} />
-                        {track.memo && (
-                            <div className="flex items-start gap-2 rounded-lg bg-moss/15 px-3 py-2 text-sm text-lime/85">
-                                <Icon as={LuStickyNote} className="mt-0.5 size-4 shrink-0 text-moss" />
-                                <p className="min-w-0 whitespace-pre-wrap break-words">{track.memo}</p>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-baseline gap-2">
+                                <span className="font-mono text-xs font-semibold text-moss">
+                                    {String(i + 1).padStart(2, '0')}
+                                </span>
+                                <h2 className="line-clamp-2 font-semibold leading-snug">{track.title}</h2>
                             </div>
-                        )}
+                            <p className="mt-0.5 truncate text-sm text-lime/55">
+                                {t.post.videoBy(track.channel)}
+                                {track.durationSec ? ` · ${formatDuration(track.durationSec)}` : ''}
+                            </p>
+                            {track.memo && (
+                                <div className="mt-2 flex items-start gap-2 rounded-lg bg-moss/15 px-3 py-2 text-sm text-lime/85">
+                                    <Icon as={LuStickyNote} className="mt-0.5 size-4 shrink-0 text-moss" />
+                                    <p className="min-w-0 whitespace-pre-wrap wrap-break-word">{track.memo}</p>
+                                </div>
+                            )}
+                        </div>
                     </li>
                 ))}
             </ol>

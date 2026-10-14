@@ -21,6 +21,7 @@ export const ja: Messages = {
         editAnnouncement: 'お知らせを編集',
         terms: '利用規約',
         privacy: 'プライバシーポリシー',
+        explore: '探す',
         room: (code) => `ルーム ${code}`,
         postDescription: (scenario) => `${scenario}のためのプレイリスト`,
         scenarioBy: (name, writer) => `${name}（${writer}）`,
@@ -37,6 +38,7 @@ export const ja: Messages = {
     },
     nav: {
         forum: 'フォーラム',
+        explore: '探す',
         login: 'ログイン',
         signup: '新規登録',
         profile: 'プロフィール',
@@ -436,6 +438,11 @@ export const ja: Messages = {
         deleting: '削除中…',
         deleteTitle: 'このお知らせを削除しますか？',
         deleteBody: 'この操作は取り消せません。',
+    },
+    explore: {
+        title: '探す',
+        lead: 'Noraboxのプレイリストに入っている曲から、ランダムに30曲を選びました。毎日0時（韓国時間）に入れ替わります。',
+        empty: 'まだ曲がありません。',
     },
     legal: {
         available: 'このページは英語と韓国語でご覧いただけます。',
