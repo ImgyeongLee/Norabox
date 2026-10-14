@@ -335,7 +335,7 @@ function MemoLine({
                 className="ml-10 flex w-full min-w-0 items-start gap-1.5 rounded-lg bg-moss/15 px-2 py-1 text-left text-xs text-lime/85 hover:bg-moss/25"
             >
                 <Icon as={LuStickyNote} className="mt-px size-3.5 shrink-0 text-moss" />
-                <span className="whitespace-pre-wrap break-words">{memo}</span>
+                <span className="whitespace-pre-wrap wrap-break-word">{memo}</span>
             </button>
         ) : null;
     }

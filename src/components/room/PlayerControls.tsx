@@ -62,7 +62,7 @@ export function PlayerControls({ current, playback, loopMode, canControl, hasIte
                 {current?.memo && (
                     <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-moss/15 px-2.5 py-1.5 text-sm text-lime/90">
                         <Icon as={LuStickyNote} className="mt-0.5 size-4 shrink-0 text-moss" />
-                        <span className="whitespace-pre-wrap break-words">{current.memo}</span>
+                        <span className="whitespace-pre-wrap wrap-break-word">{current.memo}</span>
                     </p>
                 )}
             </div>

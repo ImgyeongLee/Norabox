@@ -15,6 +15,7 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 
 **서비스를 이용하면서 회원이 직접 올리는 정보**
 - 프로필 사진 (선택), 플레이리스트와 메모, 좋아요 등 게시물
+- 플레이리스트에 담은 곡은 공개 범위와 상관없이 둘러보기 페이지에 나올 수 있어요. 곡 정보만 보이고, 플레이리스트와 그 제목, 작성자, 메모는 보이지 않아요.
 
 **로그인 없이 방을 이용할 때**
 - 방에서 쓰는 표시 이름: 방에 있는 동안에만 쓰이며 저장하지 않습니다.
@@ -87,6 +88,7 @@ Imgyeong Lee (the "Operator"), who runs Norabox (the "Service"), values your pri
 
 **What members add while using the Service**
 - Profile image (optional), and content such as playlists, memos and likes
+- Songs you add to any playlist, whatever its visibility, may appear on the Explore page. Only the song is shown, never the playlist, its title, author or memos.
 
 **When you use a room without logging in**
 - The display name you use in a room: used only while you're in the room, and not stored.

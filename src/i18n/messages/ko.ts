@@ -21,6 +21,7 @@ export const ko: Messages = {
         editAnnouncement: '공지 수정',
         terms: '이용약관',
         privacy: '개인정보처리방침',
+        explore: '둘러보기',
         room: (code) => `${code} 방`,
         postDescription: (scenario) => `${scenario}을(를) 위한 플레이리스트`,
         scenarioBy: (name, writer) => `${name} (${writer})`,
@@ -37,6 +38,7 @@ export const ko: Messages = {
     },
     nav: {
         forum: '포럼',
+        explore: '둘러보기',
         login: '로그인',
         signup: '회원가입',
         profile: '프로필',
@@ -441,6 +443,11 @@ export const ko: Messages = {
         deleting: '삭제 중…',
         deleteTitle: '이 공지를 삭제할까요?',
         deleteBody: '삭제하면 되돌릴 수 없어요.',
+    },
+    explore: {
+        title: '둘러보기',
+        lead: 'Norabox 플레이리스트에 담긴 곡 중 무작위 30곡이에요. 매일 자정(한국 시간)에 바뀌어요.',
+        empty: '아직 곡이 없어요.',
     },
     legal: {
         available: '이 페이지는 영어와 한국어로 제공돼요.',

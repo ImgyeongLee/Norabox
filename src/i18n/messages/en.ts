@@ -21,6 +21,7 @@ export const en = {
         editAnnouncement: 'Edit announcement',
         terms: 'Terms of Service',
         privacy: 'Privacy Policy',
+        explore: 'Explore',
         room: (code: string) => `Room ${code}`,
         postDescription: (scenario: string) => `A playlist for ${scenario}`,
         scenarioBy: (name: string, writer: string) => `${name} by ${writer}`,
@@ -37,6 +38,7 @@ export const en = {
     },
     nav: {
         forum: 'Forum',
+        explore: 'Explore',
         login: 'Log in',
         signup: 'Sign up',
         profile: 'Profile',
@@ -447,6 +449,11 @@ export const en = {
         deleting: 'Deleting…',
         deleteTitle: 'Delete this announcement?',
         deleteBody: "This can't be undone.",
+    },
+    explore: {
+        title: 'Explore',
+        lead: '30 random songs from Norabox playlists, new every day at midnight (Korea time).',
+        empty: 'No songs yet.',
     },
     legal: {
         available: 'This page is available in English and Korean.',
