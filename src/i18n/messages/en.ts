@@ -482,6 +482,8 @@ export const en = {
         deletePostFailed: 'Could not delete the post',
         badCredentials: 'Incorrect email or password',
         accountLocked: `This account is locked after ${MAX_LOGIN_ATTEMPTS} wrong passwords in a row.`,
+        botCheckFailed: "Please complete the check that you're not a robot, then try again",
+        tooManyAttempts: 'Too many attempts. Please wait a while and try again.',
         currentPasswordWrong: 'Current password is incorrect',
         usernameTaken: 'That username is taken',
         emailTaken: 'An account with this email already exists',

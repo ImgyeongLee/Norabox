@@ -46,6 +46,8 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 | Supabase, Inc. | 데이터베이스 (회원 정보, 게시물, 방) | 미국 |
 | Amazon Web Services, Inc. | 프로필 사진 저장 | 미국 |
 | Google LLC (YouTube) | 영상 재생 | 미국 |
+| Cloudflare, Inc. | 가입·로그인 시 로봇 확인 (Turnstile): IP 주소와 브라우저 정보를 확인 | 미국 등 |
+| Upstash, Inc. | 가입·로그인 시도 횟수 제한: IP 주소를 최대 1시간 보관 | 미국 |
 
 방에서 영상을 재생하면 YouTube가 자체 쿠키를 설정할 수 있으며, 이에는 [Google 개인정보처리방침](https://policies.google.com/privacy)이 적용됩니다.
 
@@ -119,6 +121,8 @@ The Service runs on the following providers' servers, and information is stored 
 | Supabase, Inc. | Database (member information, content, rooms) | United States |
 | Amazon Web Services, Inc. | Profile image storage | United States |
 | Google LLC (YouTube) | Video playback | United States |
+| Cloudflare, Inc. | Bot check on sign-up and log-in (Turnstile): checks your IP address and browser information | United States and elsewhere |
+| Upstash, Inc. | Limits on sign-up and log-in attempts: keeps your IP address for up to 1 hour | United States |
 
 When a video plays in a room, YouTube may set its own cookies, which are covered by the [Google Privacy Policy](https://policies.google.com/privacy).
 
