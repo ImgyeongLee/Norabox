@@ -159,13 +159,15 @@ function Row({
         <li
             ref={setNodeRef}
             style={{ transform: CSS.Transform.toString(transform), transition }}
-            className={`group flex flex-wrap items-center gap-2 rounded-xl border p-2 transition ${
+            // relative: keeps the screen-reader-only "Hidden" text (absolutely positioned) inside the
+            // row; otherwise it escapes the playlist's scroll box and makes the page much taller.
+            className={`group relative flex flex-wrap items-center gap-2 rounded-xl border p-2 transition ${
                 current
                     ? 'border-moss/70 bg-leaf/40'
                     : item.hidden
                       ? 'border-dashed border-lime/25 bg-pine/20 hover:bg-fern/30'
                       : 'border-transparent bg-pine/40 hover:bg-fern/50'
-            } ${isDragging ? 'relative z-10 shadow-2xl ring-2 ring-moss' : ''}`}>
+            } ${isDragging ? 'z-10 shadow-2xl ring-2 ring-moss' : ''}`}>
             {editable ? (
                 <button
                     ref={setActivatorNodeRef}
