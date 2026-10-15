@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import { Field } from '@/components/auth/Field';
+import { Turnstile } from '@/components/auth/Turnstile';
 import { useI18n } from '@/i18n/client';
 import { useJsonForm } from '@/lib/use-json-form';
 
@@ -13,6 +15,7 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
     const redirectTo = next?.startsWith('/') && !next.startsWith('//') ? next : '/';
     const { errors: codes, busy, submit } = useJsonForm();
     const { t, tError } = useI18n();
+    const [attempts, setAttempts] = useState(0);
     const errors = Object.fromEntries(Object.entries(codes).map(([k, v]) => [k, tError(v)]));
 
     async function onSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -22,6 +25,9 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
         if (ok) {
             router.push(redirectTo);
             router.refresh();
+        } else {
+            // The bot-check token was used up; get a fresh one for the next try.
+            setAttempts((n) => n + 1);
         }
     }
 
@@ -119,6 +125,7 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
                         )}
                     </div>
                 )}
+                <Turnstile resetKey={attempts} />
                 <button className="btn-primary w-full" disabled={busy}>
                     {busy ? t.auth.wait : isSignup ? t.auth.submitSignup : t.auth.submitLogin}
                 </button>

@@ -3,11 +3,17 @@ import { NextResponse } from 'next/server';
 import { startSession } from '@/lib/auth';
 import { jsonError, readJson, validationError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
+import { allowAttempt, clientIp } from '@/lib/rate-limit';
+import { turnstileToken, verifyTurnstile } from '@/lib/turnstile';
 import { signupSchema } from '@/lib/validation';
 
 export async function POST(req: Request) {
-    const parsed = signupSchema.safeParse(await readJson(req));
+    const ip = clientIp(req);
+    if (!(await allowAttempt('signup', ip))) return jsonError('tooManyAttempts', 429);
+    const body = await readJson(req);
+    const parsed = signupSchema.safeParse(body);
     if (!parsed.success) return validationError(parsed.error);
+    if (!(await verifyTurnstile(turnstileToken(body), ip))) return jsonError('botCheckFailed', 400);
     const { username, email, password } = parsed.data;
 
     const clash = await prisma.user.findFirst({

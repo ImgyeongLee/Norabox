@@ -135,6 +135,7 @@ to the function's own region.
 
 ## Notes
 
+- Sign-up and log-in have a Cloudflare Turnstile bot check (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`) and attempt limits per IP counted in Upstash Redis (`UPSTASH_REDIS_REST_URL`/`_TOKEN`, or Vercel's `KV_REST_API_URL`/`_TOKEN`): 10 sign-ups per hour and 20 log-ins per 10 minutes (`src/lib/rate-limit.ts`). Both are off when their variables aren't set.
 - After 5 wrong passwords in a row (`MAX_LOGIN_ATTEMPTS` in `src/lib/limits.ts`) an account is locked; a correct password resets the count. The login form then tells people to email `CONTACT_EMAIL`. To unlock an account, run in the database's SQL editor: `update "User" set "lockedAt" = null, "failedLogins" = 0 where email = '<their email>';`
 - On iOS, a page can't change media volume (the hardware buttons control it), so the volume sliders have no effect there.
 - Rooms are deleted after 6 hours with nobody in them and no changes (playlist and DJs included); the name becomes free again. The realtime server sweeps every 10 minutes, and every room lookup also checks expiry, so it holds while a free-tier host is asleep. The TTL is `ROOM_INACTIVE_TTL_MS` in `src/lib/rooms.ts`.

@@ -475,6 +475,8 @@ export const ko: Messages = {
         deletePostFailed: '게시글을 삭제하지 못했어요',
         badCredentials: '이메일 또는 비밀번호가 올바르지 않아요',
         accountLocked: `비밀번호를 ${MAX_LOGIN_ATTEMPTS}번 연속으로 틀려서 계정이 잠겼어요.`,
+        botCheckFailed: '로봇이 아닌지 확인을 완료한 뒤 다시 시도해 주세요',
+        tooManyAttempts: '시도가 너무 많아요. 잠시 후 다시 시도해 주세요.',
         currentPasswordWrong: '현재 비밀번호가 올바르지 않아요',
         usernameTaken: '이미 사용 중인 사용자 이름이에요',
         emailTaken: '이미 가입된 이메일이에요',

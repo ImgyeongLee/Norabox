@@ -470,6 +470,8 @@ export const ja: Messages = {
         deletePostFailed: '投稿を削除できませんでした',
         badCredentials: 'メールアドレスまたはパスワードが正しくありません',
         accountLocked: `パスワードを${MAX_LOGIN_ATTEMPTS}回続けて間違えたため、アカウントがロックされました。`,
+        botCheckFailed: 'ロボットでないことの確認を完了してから、もう一度お試しください',
+        tooManyAttempts: '試行回数が多すぎます。しばらくしてからもう一度お試しください。',
         currentPasswordWrong: '現在のパスワードが正しくありません',
         usernameTaken: 'そのユーザー名はすでに使われています',
         emailTaken: 'このメールアドレスはすでに登録されています',
