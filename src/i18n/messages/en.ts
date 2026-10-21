@@ -69,6 +69,11 @@ export const en = {
             login: 'log in',
             after: '.',
         },
+        plainTheme: {
+            offer: 'Not a fan of these frog colors? Press me 5 times.',
+            progress: (n: number, total: number) => `${n}/${total}`,
+            back: 'The frog has left... Press me 5 more times to call it back.',
+        },
         startRoom: 'Start a room',
         joinFriend: 'Join a friend',
         importing: 'Importing playlist',

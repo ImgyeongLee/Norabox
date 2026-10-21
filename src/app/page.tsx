@@ -1,14 +1,17 @@
-import Link from "next/link";
-import { CreateRoomForm, JoinRoomForm } from "@/components/home/RoomForms";
-import { getCurrentUser } from "@/lib/auth";
-import { getI18n } from "@/i18n/server";
-import { canViewPost } from "@/lib/post-access";
-import { prisma } from "@/lib/prisma";
+import { cookies } from 'next/headers';
+import Link from 'next/link';
+import { PlainThemeButton } from '@/components/home/PlainThemeButton';
+import { CreateRoomForm, JoinRoomForm } from '@/components/home/RoomForms';
+import { getCurrentUser } from '@/lib/auth';
+import { getI18n } from '@/i18n/server';
+import { canViewPost } from '@/lib/post-access';
+import { prisma } from '@/lib/prisma';
+import { isPlainTheme, PLAIN_THEME_COOKIE } from '@/lib/site-theme';
 
 /** The forum post named by `?import=<postId>` (from a post's Import button), if it exists. */
 async function importingPlaylist(id: unknown, shareToken: unknown, viewerId: string | undefined) {
-  if (typeof id !== "string" || !/^[a-z0-9]{10,40}$/.test(id)) return null;
-  const token = typeof shareToken === "string" ? shareToken : null;
+  if (typeof id !== 'string' || !/^[a-z0-9]{10,40}$/.test(id)) return null;
+  const token = typeof shareToken === 'string' ? shareToken : null;
   const post = await prisma.post.findUnique({
     where: { id },
     select: {
@@ -18,7 +21,7 @@ async function importingPlaylist(id: unknown, shareToken: unknown, viewerId: str
       shareToken: true,
       title: true,
       scenario: { select: { name: true } },
-      tracks: { orderBy: { position: "asc" }, take: 1, select: { thumbnail: true } },
+      tracks: { orderBy: { position: 'asc' }, take: 1, select: { thumbnail: true } },
       _count: { select: { tracks: true } },
     },
   });
@@ -34,11 +37,11 @@ async function importingPlaylist(id: unknown, shareToken: unknown, viewerId: str
   };
 }
 
-export default async function Home(props: PageProps<"/">) {
+export default async function Home(props: PageProps<'/'>) {
   const { import: importId, s: shareToken } = await props.searchParams;
-  const [user, { t }] = await Promise.all([getCurrentUser(), getI18n()]);
+  const [user, { t }, cookieStore] = await Promise.all([getCurrentUser(), getI18n(), cookies()]);
   const importing = await importingPlaylist(importId, shareToken, user?.id);
-  const link = "font-semibold text-moss underline-offset-4 hover:underline";
+  const link = 'font-semibold text-moss underline-offset-4 hover:underline';
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:py-16">
       <section className="grid items-start gap-10 lg:grid-cols-[1.1fr_1fr]">
@@ -52,6 +55,7 @@ export default async function Home(props: PageProps<"/">) {
             <span className="text-moss">{t.home.title2}</span>
           </h1>
           <p className="mt-5 max-w-lg text-lg text-lime/70">{t.home.lead}</p>
+          <PlainThemeButton on={isPlainTheme(cookieStore.get(PLAIN_THEME_COOKIE)?.value)} />
           {!user && (
             <p className="mt-6 text-sm muted">
               {t.home.cta.before}
@@ -67,7 +71,7 @@ export default async function Home(props: PageProps<"/">) {
           )}
         </div>
 
-        <div id="start-room" className={`card scroll-mt-24 space-y-6 p-5 sm:p-7 ${importing ? "border-moss/70" : ""}`}>
+        <div id="start-room" className={`card scroll-mt-24 space-y-6 p-5 sm:p-7 ${importing ? 'border-moss/70' : ''}`}>
           <div>
             <h2 className="mb-4 text-xl font-bold">{t.home.startRoom}</h2>
             <CreateRoomForm importing={importing} />

@@ -16,6 +16,7 @@ import {
     type RoomTheme,
 } from '@/lib/room-themes';
 import { purgeIfExpired } from '@/lib/rooms';
+import { isPlainTheme, PLAIN_PALETTE, PLAIN_THEME_COOKIE } from '@/lib/site-theme';
 
 const getRoom = cache(async (code: string) => {
     if (!/^[A-Za-z0-9]{1,32}$/.test(code)) return null;
@@ -32,8 +33,11 @@ export async function generateMetadata(props: PageProps<'/room/[code]'>): Promis
 
 /** Tints the mobile browser bar to match the room's theme. */
 export async function generateViewport(props: PageProps<'/room/[code]'>): Promise<Viewport> {
-    const room = await getRoom((await props.params).code);
-    return { themeColor: THEME_PALETTES[themeOf(room)].pine };
+    const [room, cookieStore] = await Promise.all([getRoom((await props.params).code), cookies()]);
+    const theme = themeOf(room);
+    // Default-theme rooms take the visitor's white & black look (src/lib/site-theme.ts) when it's on.
+    const plain = theme === 'default' && isPlainTheme(cookieStore.get(PLAIN_THEME_COOKIE)?.value);
+    return { themeColor: plain ? PLAIN_PALETTE.pine : THEME_PALETTES[theme].pine };
 }
 
 export default async function RoomPage(props: PageProps<'/room/[code]'>) {

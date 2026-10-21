@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
@@ -7,6 +8,8 @@ import { Header } from "@/components/Header";
 import type { Locale } from "@/i18n/config";
 import { I18nProvider } from "@/i18n/client";
 import { getI18n } from "@/i18n/server";
+import { paletteCss } from "@/lib/room-themes";
+import { isPlainTheme, PLAIN_PALETTE, PLAIN_THEME_COOKIE } from "@/lib/site-theme";
 import "./globals.css";
 
 // All fonts use font-display: optional, so text is never redrawn in another font after it shows
@@ -30,10 +33,14 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { themeColor: "#132a13" };
+const plainThemeOn = async () => isPlainTheme((await cookies()).get(PLAIN_THEME_COOKIE)?.value);
+
+export async function generateViewport(): Promise<Viewport> {
+  return { themeColor: (await plainThemeOn()) ? PLAIN_PALETTE.pine : "#132a13" };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { locale, t } = await getI18n();
+  const [{ locale, t }, plain] = await Promise.all([getI18n(), plainThemeOn()]);
   // Where "Contact" in the footer sends email; set CONTACT_EMAIL in .env / Vercel. Hidden when unset.
   const contactEmail = process.env.CONTACT_EMAIL?.trim();
   return (
@@ -43,6 +50,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {/* React puts this in <head> and holds the first paint until it loads, so the font is
             known before any text shows. */}
         {CJK_FONTS[locale] && <link rel="stylesheet" href={CJK_FONTS[locale]} precedence="default" />}
+        {/* White & black for a day, from the home page's PlainThemeButton. */}
+        {plain && <style>{paletteCss(PLAIN_PALETTE)}</style>}
         <I18nProvider locale={locale}>
           <ConfirmProvider>
             <Header />

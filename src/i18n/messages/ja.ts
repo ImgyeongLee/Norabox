@@ -68,6 +68,11 @@ export const ja: Messages = {
             login: 'ログイン',
             after: 'してください。',
         },
+        plainTheme: {
+            offer: 'このカエル色が苦手なら、私を5回押してください。',
+            progress: (n, total) => `${n}/${total}`,
+            back: 'カエルは去っていきました…呼び戻すには、もう一度5回押してください。',
+        },
         startRoom: 'ルームを作る',
         joinFriend: '友だちのルームに参加',
         importing: 'プレイリストを読み込み中',
