@@ -14,7 +14,7 @@ export const hasAnimatedBackdrop = (theme: RoomTheme) => ANIMATED_THEMES.include
 /** Set to "off" when someone turns room background animations off; read by the room page. */
 export const MOTION_COOKIE = "norabox_motion";
 
-type Palette = {
+export type Palette = {
   /** Page background (darkest). */
   pine: string;
   /** Cards and surfaces. */
@@ -125,7 +125,10 @@ export const THEME_PALETTES: Record<RoomTheme, Palette> = {
 
 /** CSS that applies a theme to the whole page (used inside a <style> tag). */
 export function themeCss(theme: RoomTheme) {
-  const p = THEME_PALETTES[theme];
+  return paletteCss(THEME_PALETTES[theme]);
+}
+
+export function paletteCss(p: Palette) {
   const danger = p.danger ? `--color-danger:${p.danger};` : "";
   return `:root{color-scheme:${p.scheme ?? "dark"};--color-pine:${p.pine};--color-fern:${p.fern};--color-leaf:${p.leaf};--color-moss:${p.moss};--color-lime:${p.lime};${danger}--page-bg:${p.pageBackground};}`;
 }
