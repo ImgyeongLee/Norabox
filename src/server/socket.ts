@@ -523,10 +523,11 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
 
     // ---- Playlist (Admin / DJ) ----
     /**
-     * Appends songs to the playlist (one DB write, one broadcast); starts playback if nothing is selected.
+     * Appends songs to the playlist (one DB write, one broadcast); starts playback if nothing is selected,
+     * or with `play`, plays the first added song right away.
      * Songs from a playlist bring its memos, which only the admin sees.
      */
-    async function addSongs(videos: unknown[], ack: Ack | undefined) {
+    async function addSongs(videos: unknown[], ack: Ack | undefined, play = false) {
       const c = ctx();
       if (!c) return fail(ack, "notInRoom");
       if (c.role === "listener") return fail(ack, "controlOnly");
@@ -548,7 +549,7 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
         });
         rows.sort((a, b) => a.position - b.position);
         rows.forEach((row, i) => room.items.push({ ...parsed.data[i], id: row.id, addedBy: row.addedBy }));
-        if (!room.playback.itemId) room.setPlayback({ itemId: rows[0].id, position: 0, isPlaying: true });
+        if (play || !room.playback.itemId) room.setPlayback({ itemId: rows[0].id, position: 0, isPlaying: true });
         else room.broadcast();
         ok(ack);
       } catch (e) {
@@ -557,7 +558,8 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       }
     }
 
-    socket.on("playlist:add", (p, ack) => addSongs([p?.video], ack));
+    // "Play now" from the search tab adds the song and plays it.
+    socket.on("playlist:add", (p, ack) => addSongs([p?.video], ack, p?.play === true));
     // "Add all" / "Add selected" from the Library tab.
     socket.on("playlist:addMany", (p, ack) => addSongs(Array.isArray(p?.videos) ? p.videos : [], ack));
 

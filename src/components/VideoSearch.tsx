@@ -3,14 +3,15 @@
 /* eslint-disable @next/next/no-img-element -- YouTube thumbnails */
 import { useState } from 'react';
 import { LuLink, LuSearch } from 'react-icons/lu';
-import { Icon } from '@/components/icons';
+import { Icon, PlayIcon } from '@/components/icons';
 import { useI18n } from '@/i18n/client';
 import { formatDuration } from '@/lib/format';
 import type { Video } from '@/lib/validation';
 import { parseVideoId } from '@/lib/youtube-url';
 
 type Props = {
-    onAdd: (video: Video) => Promise<string | null | void> | string | null | void;
+    /** `play`: "Play now", which also adds the song and starts it right away. */
+    onAdd: (video: Video, play?: boolean) => Promise<string | null | void> | string | null | void;
     /** Video ids already in the list, shown as "Added". */
     addedIds?: Set<string>;
     disabled?: boolean;
@@ -54,7 +55,8 @@ export function VideoSearch({ onAdd, addedIds, disabled, disabledReason, searchA
     const [results, setResults] = useState<Video[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [pending, setPending] = useState<string | null>(null);
+    /** The button waiting for its add to finish. */
+    const [pending, setPending] = useState<{ videoId: string; play: boolean } | null>(null);
 
     function switchMode(next: Mode) {
         setMode(next);
@@ -112,9 +114,9 @@ export function VideoSearch({ onAdd, addedIds, disabled, disabledReason, searchA
         }
     }
 
-    async function add(v: Video) {
-        setPending(v.videoId);
-        const err = await onAdd(v);
+    async function add(v: Video, play = false) {
+        setPending({ videoId: v.videoId, play });
+        const err = await onAdd(v, play);
         setPending(null);
         if (err) setError(err);
         else if (mode === 'link') {
@@ -208,6 +210,7 @@ export function VideoSearch({ onAdd, addedIds, disabled, disabledReason, searchA
                 <ul className="mt-3 divide-y divide-leaf/25">
                     {results.map((v) => {
                         const added = addedIds?.has(v.videoId);
+                        const busy = pending?.videoId === v.videoId;
                         return (
                             <li key={v.videoId} className="flex items-center gap-3 py-2.5">
                                 <img
@@ -222,15 +225,31 @@ export function VideoSearch({ onAdd, addedIds, disabled, disabledReason, searchA
                                         {v.durationSec ? ` · ${formatDuration(v.durationSec)}` : ''}
                                     </p>
                                 </div>
-                                <button
-                                    type="button"
-                                    className={added ? 'btn-ghost shrink-0 px-3 py-2' : 'btn-secondary shrink-0 px-3 py-2'}
-                                    disabled={disabled || pending === v.videoId}
-                                    onClick={() => add(v)}
-                                    aria-label={t.search.addLabel(v.title)}
-                                >
-                                    {pending === v.videoId ? '…' : added ? t.search.addAgain : t.search.add}
-                                </button>
+                                <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row">
+                                    <button
+                                        type="button"
+                                        className={added ? 'btn-ghost px-3 py-2' : 'btn-secondary px-3 py-2'}
+                                        disabled={disabled || busy}
+                                        onClick={() => add(v)}
+                                        aria-label={t.search.addLabel(v.title)}
+                                    >
+                                        {busy && !pending.play ? '…' : added ? t.search.addAgain : t.search.add}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn-primary gap-1 px-3 py-2"
+                                        disabled={disabled || busy}
+                                        onClick={() => add(v, true)}
+                                        aria-label={t.search.playLabel(v.title)}
+                                    >
+                                        {busy && pending.play ? '…' : (
+                                            <>
+                                                <PlayIcon className="size-3.5" />
+                                                {t.search.play}
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </li>
                         );
                     })}

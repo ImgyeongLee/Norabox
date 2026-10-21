@@ -68,7 +68,7 @@ export interface ClientToServerEvents {
   "player:duration": (p: { itemId: string; duration: number }) => void;
   "room:loop": (p: { mode: LoopMode }, ack?: Ack) => void;
   "room:masterVolume": (p: { volume: number }, ack?: Ack) => void;
-  "playlist:add": (p: { video: RoomSong }, ack?: Ack) => void;
+  "playlist:add": (p: { video: RoomSong; play?: boolean }, ack?: Ack) => void;
   "playlist:addMany": (p: { videos: RoomSong[] }, ack?: Ack) => void;
   "playlist:remove": (p: { itemId: string }, ack?: Ack) => void;
   "playlist:reorder": (p: { orderedIds: string[] }, ack?: Ack) => void;
