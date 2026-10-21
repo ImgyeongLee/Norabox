@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { LuChevronDown, LuChevronUp, LuPlus } from 'react-icons/lu';
+import { LuChevronDown, LuChevronUp, LuMusic, LuPlus } from 'react-icons/lu';
 import { Icon, TrashIcon } from '@/components/icons';
 import { ScenarioField } from '@/components/forum/ScenarioField';
 import { VisibilityPicker } from '@/components/forum/VisibilityPicker';
@@ -34,8 +34,10 @@ type Song = {
     memo: string;
 };
 
-const newSong = (): Song => ({
-    key: crypto.randomUUID(),
+// Cards on the first render get keys by position, so the server's HTML and the browser agree on
+// their ids; cards added later only ever exist in the browser and can use random keys.
+const newSong = (key: string = crypto.randomUUID()): Song => ({
+    key,
     link: '',
     video: null,
     loading: false,
@@ -53,13 +55,13 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
     const [visibility, setVisibility] = useState<Visibility>(initial?.visibility ?? defaultVisibility);
     const [songs, setSongs] = useState<Song[]>(() =>
         initial?.tracks.length
-            ? initial.tracks.map(({ memo, ...video }) => ({
-                  ...newSong(),
+            ? initial.tracks.map(({ memo, ...video }, i) => ({
+                  ...newSong(`initial-${i}`),
                   link: `https://www.youtube.com/watch?v=${video.videoId}`,
                   video,
                   memo,
               }))
-            : [newSong()],
+            : [newSong('initial-0')],
     );
     const { errors, setErrors, busy, submit } = useJsonForm();
     // Song keys in the order they were sent, to map server errors like "tracks.2.memo" back to cards.
@@ -186,102 +188,122 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
                 {songs.map((song, i) => {
                     const err = songError(song);
                     return (
-                        <article key={song.key} className="card space-y-4 p-4 sm:p-5">
-                            <div className="flex items-center gap-2">
-                                <span className="font-mono text-sm font-semibold text-moss">
-                                    {String(i + 1).padStart(2, '0')}
-                                </span>
-                                <div className="ml-auto flex items-center gap-1">
-                                    <button
-                                        type="button"
-                                        className="icon-btn size-8 text-sm"
-                                        onClick={() => move(i, -1)}
-                                        disabled={i === 0}
-                                        aria-label={t.editor.moveUp(i + 1)}
-                                    >
-                                        <Icon as={LuChevronUp} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="icon-btn size-8 text-sm"
-                                        onClick={() => move(i, 1)}
-                                        disabled={i === songs.length - 1}
-                                        aria-label={t.editor.moveDown(i + 1)}
-                                    >
-                                        <Icon as={LuChevronDown} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="icon-btn size-8 hover:text-danger"
-                                        onClick={() =>
-                                            setSongs((ss) =>
-                                                ss.length === 1 ? [newSong()] : ss.filter((s) => s.key !== song.key),
-                                            )
-                                        }
-                                        aria-label={t.editor.removeSong(i + 1)}
-                                    >
-                                        <TrashIcon className="size-4" />
-                                    </button>
+                        // Two columns: the video in a 200x200px square (YouTube's minimum player size) on
+                        // the left, the fields on the right, centered against each other. On narrow screens
+                        // the fields wrap below and the square is centered across.
+                        <article
+                            key={song.key}
+                            className="card flex flex-wrap items-center justify-center gap-3 p-3 sm:gap-4 sm:p-4">
+                            {song.video ? (
+                                <YouTubeEmbed videoId={song.video.videoId} title={song.video.title} compact square />
+                            ) : (
+                                <div
+                                    aria-hidden
+                                    className="flex size-50 shrink-0 items-center justify-center rounded-xl border border-dashed border-leaf/50 text-lime/30">
+                                    {song.loading ? '…' : <Icon as={LuMusic} className="size-8" />}
                                 </div>
-                            </div>
+                            )}
 
-                            <div>
-                                <label htmlFor={`link-${song.key}`} className="label">
-                                    {t.editor.youtubeLink}
-                                </label>
-                                <input
-                                    id={`link-${song.key}`}
-                                    className="input"
-                                    type="url"
-                                    inputMode="url"
-                                    value={song.link}
-                                    onChange={(e) => changeLink(song.key, e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-                                    placeholder="https://www.youtube.com/watch?v=…"
-                                    aria-invalid={!!err && !song.video}
-                                />
-                                {song.loading && <p className="mt-1.5 text-sm text-lime/55">{t.editor.loadingVideo}</p>}
-                            </div>
-
-                            {song.video && (
-                                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-start">
-                                    <YouTubeEmbed videoId={song.video.videoId} title={song.video.title} />
-                                    <div className="min-w-0">
-                                        <p className="font-semibold leading-snug">{song.video.title}</p>
-                                        <p className="mt-1 text-sm muted">
-                                            {t.post.videoBy(song.video.channel)}
-                                            {song.video.durationSec ? ` · ${formatDuration(song.video.durationSec)}` : ''}
-                                        </p>
+                            <div className="min-w-60 flex-1 space-y-2.5">
+                                <div className="flex items-start gap-2">
+                                    <span className="pt-1 font-mono text-sm font-semibold text-moss">
+                                        {String(i + 1).padStart(2, '0')}
+                                    </span>
+                                    <div className="min-w-0 flex-1 pt-0.5">
+                                        {song.video ? (
+                                            <>
+                                                <p className="line-clamp-1 text-sm font-semibold leading-snug">
+                                                    {song.video.title}
+                                                </p>
+                                                <p className="truncate text-xs muted">
+                                                    {t.post.videoBy(song.video.channel)}
+                                                    {song.video.durationSec
+                                                        ? ` · ${formatDuration(song.video.durationSec)}`
+                                                        : ''}
+                                                </p>
+                                            </>
+                                        ) : (
+                                            song.loading && <p className="text-sm text-lime/55">{t.editor.loadingVideo}</p>
+                                        )}
+                                    </div>
+                                    <div className="-mr-1 -mt-1 flex shrink-0 items-center">
+                                        <button
+                                            type="button"
+                                            className="icon-btn size-8 text-sm"
+                                            onClick={() => move(i, -1)}
+                                            disabled={i === 0}
+                                            aria-label={t.editor.moveUp(i + 1)}
+                                        >
+                                            <Icon as={LuChevronUp} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="icon-btn size-8 text-sm"
+                                            onClick={() => move(i, 1)}
+                                            disabled={i === songs.length - 1}
+                                            aria-label={t.editor.moveDown(i + 1)}
+                                        >
+                                            <Icon as={LuChevronDown} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="icon-btn size-8 hover:text-danger"
+                                            onClick={() =>
+                                                setSongs((ss) =>
+                                                    ss.length === 1 ? [newSong()] : ss.filter((s) => s.key !== song.key),
+                                                )
+                                            }
+                                            aria-label={t.editor.removeSong(i + 1)}
+                                        >
+                                            <TrashIcon className="size-4" />
+                                        </button>
                                     </div>
                                 </div>
-                            )}
 
-                            <div>
-                                <label htmlFor={`memo-${song.key}`} className="label">
-                                    {t.editor.memo} <span className="font-normal text-lime/45">{t.common.optional}</span>
-                                </label>
-                                <textarea
-                                    id={`memo-${song.key}`}
-                                    className="input min-h-16 resize-y"
-                                    rows={2}
-                                    value={song.memo}
-                                    onChange={(e) => update(song.key, { memo: e.target.value })}
-                                    maxLength={MAX_MEMO}
-                                    placeholder={t.editor.memoPlaceholder}
-                                />
-                                <p className="mt-1 flex gap-2 text-xs text-lime/45">
-                                    <span className="flex-1">{t.editor.memoHint}</span>
-                                    {/* Older posts can have longer memos; the count shows how much to cut. */}
-                                    <span
-                                        className={`shrink-0 font-mono ${song.memo.trim().length > MAX_MEMO ? 'text-danger' : ''}`}>
-                                        {song.memo.trim().length}/{MAX_MEMO}
-                                    </span>
-                                </p>
+                                <div>
+                                    <label htmlFor={`link-${song.key}`} className="sr-only">
+                                        {t.editor.youtubeLink}
+                                    </label>
+                                    <input
+                                        id={`link-${song.key}`}
+                                        className="input py-2 text-sm"
+                                        type="url"
+                                        inputMode="url"
+                                        value={song.link}
+                                        onChange={(e) => changeLink(song.key, e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                                        placeholder="https://www.youtube.com/watch?v=…"
+                                        aria-invalid={!!err && !song.video}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor={`memo-${song.key}`} className="label">
+                                        {t.editor.memo} <span className="font-normal text-lime/45">{t.common.optional}</span>
+                                    </label>
+                                    <textarea
+                                        id={`memo-${song.key}`}
+                                        className="input min-h-10 resize-y py-2 text-sm"
+                                        rows={1}
+                                        value={song.memo}
+                                        onChange={(e) => update(song.key, { memo: e.target.value })}
+                                        maxLength={MAX_MEMO}
+                                        placeholder={t.editor.memoPlaceholder}
+                                    />
+                                    <p className="mt-1 flex gap-2 text-xs text-lime/45">
+                                        <span className="flex-1">{t.editor.memoHint}</span>
+                                        {/* Older posts can have longer memos; the count shows how much to cut. */}
+                                        <span
+                                            className={`shrink-0 font-mono ${song.memo.trim().length > MAX_MEMO ? 'text-danger' : ''}`}>
+                                            {song.memo.trim().length}/{MAX_MEMO}
+                                        </span>
+                                    </p>
+                                </div>
+
+                                {(err || (song.error && !song.loading)) && (
+                                    <p className="field-error">{tError(err ?? song.error)}</p>
+                                )}
                             </div>
-
-                            {(err || (song.error && !song.loading)) && (
-                                <p className="field-error">{tError(err ?? song.error)}</p>
-                            )}
                         </article>
                     );
                 })}
