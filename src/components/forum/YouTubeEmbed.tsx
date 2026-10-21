@@ -9,14 +9,25 @@ import { useI18n } from '@/i18n/client';
  * Lightweight YouTube embed: shows the thumbnail until clicked, then loads the player.
  * `compact` draws a smaller play button, for small thumbnails. Once playing it is never smaller
  * than 200x200px, YouTube's minimum player size (narrow screens get a letterboxed player).
+ * `square` is a fixed 200x200px box, that minimum, from the start.
  */
-export function YouTubeEmbed({ videoId, title, compact = false }: { videoId: string; title: string; compact?: boolean }) {
+export function YouTubeEmbed({
+    videoId,
+    title,
+    compact = false,
+    square = false,
+}: {
+    videoId: string;
+    title: string;
+    compact?: boolean;
+    square?: boolean;
+}) {
     const { t } = useI18n();
     const [active, setActive] = useState(false);
     return (
         <div
-            className={`relative aspect-video w-full overflow-hidden rounded-xl bg-black ${
-                active ? 'min-h-[200px] min-w-[200px]' : ''
+            className={`relative overflow-hidden rounded-xl bg-black ${
+                square ? 'size-50 shrink-0' : `aspect-video w-full ${active ? 'min-h-[200px] min-w-[200px]' : ''}`
             }`}>
             {active ? (
                 <iframe
