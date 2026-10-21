@@ -186,6 +186,7 @@ export const en = {
         emptyListen: 'The playlist is empty. Waiting for the DJ…',
         searchDenied: 'Only the admin or a DJ can add songs. Ask the admin to make you a DJ.',
         added: (title: string) => `Added “${title}”`,
+        playingNow: (title: string) => `Now playing “${title}”`,
         closedBadge: 'Closed',
         closedBadgeHint: 'The admin closed this room: nobody new can join.',
         hiddenHint:
@@ -280,6 +281,8 @@ export const en = {
         addLabel: (title: string) => `Add ${title}`,
         add: 'Add',
         addAgain: 'Add again',
+        playLabel: (title: string) => `Play ${title} now`,
+        play: 'Play now',
         modeSearch: 'Search',
         modeLink: 'Paste link',
         modesLabel: 'How to add songs',

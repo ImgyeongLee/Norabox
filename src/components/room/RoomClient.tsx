@@ -295,9 +295,9 @@ function RoomView({
     const expectedPosition = useCallback(() => positionOf(snapshot.playback), [positionOf, snapshot.playback]);
     const addedIds = useMemo(() => new Set(snapshot.items.map((i) => i.videoId)), [snapshot.items]);
 
-    async function addVideo(video: Video) {
-        const res = await run('playlist:add', { video });
-        if (res.ok) setToast(t.room.added(video.title));
+    async function addVideo(video: Video, play = false) {
+        const res = await run('playlist:add', { video, play });
+        if (res.ok) setToast(play ? t.room.playingNow(video.title) : t.room.added(video.title));
         return null;
     }
 

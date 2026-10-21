@@ -175,6 +175,7 @@ export const ja: Messages = {
         emptyListen: 'プレイリストが空です。DJを待っています…',
         searchDenied: '曲を追加できるのは管理者かDJだけです。管理者にDJにしてもらいましょう。',
         added: (title) => `「${title}」を追加しました`,
+        playingNow: (title) => `「${title}」を再生中`,
         closedBadge: '非公開',
         closedBadgeHint: '管理者がこのルームを閉じました。新しい人は参加できません。',
         hiddenHint:
@@ -269,6 +270,8 @@ export const ja: Messages = {
         addLabel: (title) => `${title}を追加`,
         add: '追加',
         addAgain: 'もう一度追加',
+        playLabel: (title) => `${title}をすぐ再生`,
+        play: 'すぐ再生',
         modeSearch: '検索',
         modeLink: 'リンクを貼り付け',
         modesLabel: '曲の追加方法',
