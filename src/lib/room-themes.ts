@@ -2,7 +2,7 @@
 // the room sees it. A theme swaps the five palette colors every component uses
 // (see @theme in globals.css), plus the page background.
 
-export const ROOM_THEMES = ["default", "mono", "starry", "candy", "cosmos"] as const;
+export const ROOM_THEMES = ["default", "mono", "starry", "candy", "cosmos", "roach"] as const;
 export type RoomTheme = (typeof ROOM_THEMES)[number];
 
 export const isRoomTheme = (v: unknown): v is RoomTheme => ROOM_THEMES.includes(v as RoomTheme);
@@ -119,6 +119,24 @@ export const THEME_PALETTES: Record<RoomTheme, Palette> = {
       "radial-gradient(1000px 560px at 90% -10%, rgb(215 117 117 / 0.07), transparent 60%)",
       "radial-gradient(900px 520px at -5% 105%, rgb(217 240 217 / 0.05), transparent 60%)",
       "#0e0e14",
+    ].join(", "),
+  },
+  roach: {
+    // Cockroach: a red-tinted near-black floor, glossy red-brown shell cards, bright red borders
+    // like the wings, and a sickly green accent (~10:1 on the background). Errors use orange,
+    // so they don't blend into the red borders.
+    pine: "#170a08",
+    fern: "#45160f",
+    leaf: "#c0392b",
+    moss: "#9fc65a",
+    lime: "#f3e2d6",
+    danger: "#f4a259",
+    pageBackground: [
+      // A strong red glow, a red-brown sheen, a faint green one, then the dark floor.
+      "radial-gradient(1100px 600px at 12% -10%, rgb(192 57 43 / 0.4), transparent 60%)",
+      "radial-gradient(900px 520px at 50% 115%, rgb(120 30 20 / 0.45), transparent 65%)",
+      "radial-gradient(900px 500px at 105% 15%, rgb(159 198 90 / 0.1), transparent 60%)",
+      "#170a08",
     ].join(", "),
   },
 };

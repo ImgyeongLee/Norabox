@@ -104,7 +104,7 @@ export const ja: Messages = {
         joining: '参加中…',
         theme: 'ルームのテーマ',
         themeHint: 'ルームの全員にこのテーマが表示されます。',
-        themes: { default: 'デフォルト', mono: 'モノクロ', starry: '星降る夜', candy: 'ピンクカップル', cosmos: 'コスモス' },
+        themes: { default: 'デフォルト', mono: 'モノクロ', starry: '星降る夜', candy: 'ピンクカップル', cosmos: 'コスモス', roach: 'ゴキブリ' },
     },
     auth: {
         signupTitle: 'アカウントを作成',
