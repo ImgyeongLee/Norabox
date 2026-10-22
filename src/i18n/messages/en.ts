@@ -114,6 +114,7 @@ export const en = {
             starry: 'Starry Sky',
             candy: 'Pink Couple',
             cosmos: 'Cosmos',
+            roach: 'Cockroach',
         },
     },
     auth: {
