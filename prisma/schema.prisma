@@ -14,8 +14,8 @@ model User {
   username     String    @unique
   email        String    @unique
   passwordHash String
-  // "active" | "deleted". Deleting an account only flips this: the row and the
-  // user's posts stay, and the author is shown as "Deleted user".
+  // "active" | "deleted". Deleting an account now removes the row; "deleted" only remains
+  // on older accounts, whose posts show the author as "Deleted user".
   status       String    @default("active")
   // Set when the user has a profile image; the image itself lives in S3 at
   // images/avatars/<id> (see src/lib/storage.ts).

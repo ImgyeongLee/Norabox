@@ -38,9 +38,9 @@ export const terms = {
 
 ## 제7조 (회원 탈퇴 및 데이터 삭제)
 1. 회원은 언제든지 서비스 내 기능을 통해 탈퇴할 수 있습니다.
-2. 탈퇴 신청 시 계정은 즉시 "탈퇴 상태"로 전환됩니다.
-3. 탈퇴일로부터 1개월이 지나면 해당 회원의 이메일 주소와 게시물 등 관련 데이터를 모두 삭제합니다.
-4. 다만 관련 법령에 따라 보관 의무가 있는 정보는 해당 법령이 정한 기간 동안 보관할 수 있습니다.
+2. 탈퇴하면 해당 회원의 계정과 이메일 주소, 게시물 등 관련 데이터를 즉시 삭제하며, 삭제된 데이터는 복구할 수 없습니다.
+3. 다만 방 이름과 방의 재생목록은 해당 방이 삭제될 때 함께 삭제됩니다.
+4. 관련 법령에 따라 보관 의무가 있는 정보는 해당 법령이 정한 기간 동안 보관할 수 있습니다.
 
 ## 제8조 (개인정보 보호)
 1. 운영자는 서비스 운영에 필요한 최소한의 정보만 수집합니다.
@@ -69,36 +69,29 @@ export const terms = {
 3. 서비스에서 재생되는 영상은 YouTube에서 직접 제공되며, 운영자는 영상을 저장하거나 배포하지 않습니다. 영상의 내용과 권리에 대한 책임은 해당 영상의 게시자와 YouTube에 있습니다.
 4. Norabox는 YouTube 또는 Google과 제휴하거나 그 승인을 받은 서비스가 아닙니다.
 
-## 제12조 (후원)
-1. 서비스는 이용자의 자발적인 후원으로만 운영됩니다.
-2. 후원은 선택 사항이며, 후원 여부에 따라 서비스 이용에 차별을 두지 않습니다.
-3. 후원은 대가 없는 자발적 지원이므로, 관련 법령에서 달리 정하는 경우를 제외하고 환불되지 않습니다.
-4. 또한 후원은 자발적으로 이루어지며 서비스 이용 품질에 차별을 두는 보상은 제공하지 않습니다.
-5. 후원 결제는 종류에 따라 계좌 이체와 외부 플랫폼(크레페)을 통해 이루어지며, 해당 플랫폼의 약관이 함께 적용됩니다.
-
-## 제13조 (오픈소스)
+## 제12조 (오픈소스)
 1. 서비스의 소스코드는 2026년 10월 말까지 GNU Affero General Public License v3.0(AGPL-3.0)에 따라 [${REPO}](${REPO})에 공개될 예정입니다.
 2. 소스코드의 사용, 수정, 배포에는 AGPL-3.0이 적용되며, 이 약관은 AGPL-3.0이 부여하는 권리를 제한하지 않습니다.
 3. 이 약관은 운영자가 운영하는 서비스 인스턴스의 이용에만 적용됩니다. 제3자가 소스코드로 운영하는 서비스는 운영자와 무관합니다.
 
-## 제14조 (면책)
+## 제13조 (면책)
 1. 서비스는 "있는 그대로" 제공되며, 운영자는 서비스의 정확성, 안정성, 지속성 등에 대해 보증하지 않습니다.
 2. 운영자는 천재지변, 외부 서비스의 장애나 정책 변경, 이용자의 귀책사유로 발생한 손해에 대해 책임지지 않습니다.
 3. 운영자는 이용자 간 또는 이용자와 제3자 간에 서비스를 매개로 발생한 분쟁에 개입할 의무가 없으며, 이로 인한 손해를 책임지지 않습니다.
 4. 위 각 항에도 불구하고, 운영자의 고의 또는 중대한 과실로 인한 손해에 대해서는 관련 법령에 따라 책임을 집니다.
 
-## 제15조 (이용 제한)
+## 제14조 (이용 제한)
 운영자는 이용자가 제9조를 위반한 경우 경고, 게시물 삭제, 일시적 이용 정지, 계정 해지 등의 조치를 할 수 있습니다.
 
-## 제16조 (준거법 및 분쟁 해결)
+## 제15조 (준거법 및 분쟁 해결)
 1. 이 약관은 대한민국 법령에 따라 해석됩니다.
 2. 서비스 이용과 관련한 분쟁은 먼저 운영자와 이용자 간 협의로 해결하도록 노력합니다.
 
-## 제17조 (문의)
+## 제16조 (문의)
 서비스 및 이 약관에 관한 문의는 [imgyeonglee@gmail.com](mailto:imgyeonglee@gmail.com)로 해 주세요.
 
 ## 부칙
-이 약관은 KST 2026년 10월 14일부터 시행합니다.
+이 약관은 KST 2026년 11월 6일부터 시행합니다.
 `,
     en: `# Terms of Service
 
@@ -134,9 +127,9 @@ Children under 14 may not sign up as members.
 
 ## Article 7 (Account Deletion and Data Removal)
 1. Members may delete their account at any time using the Service's features.
-2. When a member asks to delete their account, it immediately becomes "deleted."
-3. One month after the deletion date, the member's email address, content and other related data are all removed.
-4. However, information that must be kept by law may be kept for the period the law requires.
+2. When a member deletes their account, the account, email address, content and other related data are removed immediately and can't be recovered.
+3. However, room names and room playlists are removed when the room is deleted.
+4. Information that must be kept by law may be kept for the period the law requires.
 
 ## Article 8 (Privacy)
 1. The Operator collects only the minimum information needed to run the Service.
@@ -165,35 +158,28 @@ Users must not:
 3. Videos played on the Service are provided directly by YouTube; the Operator does not store or distribute them. The uploader of each video and YouTube are responsible for its content and rights.
 4. Norabox is not affiliated with, endorsed or approved by YouTube or Google.
 
-## Article 12 (Donations)
-1. The Service runs only on voluntary donations from users.
-2. Donating is optional, and the Service treats users the same whether or not they donate.
-3. Donations are voluntary support given without anything in return, so they are not refunded except where the law provides otherwise.
-4. Donations are made voluntarily, and no reward that differentiates the quality of the Service is given for them.
-5. Depending on the type, donations are made by bank transfer or through an external platform (Crepe), whose terms also apply.
-
-## Article 13 (Open Source)
+## Article 12 (Open Source)
 1. The Service's source code will be published at [${REPO}](${REPO}) under the GNU Affero General Public License v3.0 (AGPL-3.0) by the end of October 2026.
 2. AGPL-3.0 governs the use, modification and distribution of the source code, and these Terms do not limit any rights AGPL-3.0 grants.
 3. These Terms apply only to the instance of the Service run by the Operator. Services that third parties run from the source code have nothing to do with the Operator.
 
-## Article 14 (Disclaimer)
+## Article 13 (Disclaimer)
 1. The Service is provided "as is," and the Operator makes no warranty as to its accuracy, reliability or continuity.
 2. The Operator is not liable for damages caused by natural disasters, outages or policy changes of external services, or causes attributable to users.
 3. The Operator has no obligation to intervene in disputes arising through the Service between users or between users and third parties, and is not liable for resulting damages.
 4. Notwithstanding the above, the Operator is liable under applicable law for damages caused by the Operator's intentional misconduct or gross negligence.
 
-## Article 15 (Restrictions)
+## Article 14 (Restrictions)
 If a user violates Article 9, the Operator may issue a warning, remove content, suspend use temporarily, or terminate the account.
 
-## Article 16 (Governing Law and Disputes)
+## Article 15 (Governing Law and Disputes)
 1. These Terms are interpreted under the laws of the Republic of Korea.
 2. The Operator and users will first try to resolve any dispute about the Service through discussion.
 
-## Article 17 (Contact)
+## Article 16 (Contact)
 For questions about the Service or these Terms, email [imgyeonglee@gmail.com](mailto:imgyeonglee@gmail.com).
 
 ## Addendum
-These Terms take effect on October 14, 2026 (KST).
+These Terms take effect on November 6, 2026 (KST).
 `,
 };

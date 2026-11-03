@@ -11,29 +11,38 @@ import { memoSchema, videoSchema } from '@/lib/validation';
 const touch = (id: string) => prisma.post.update({ where: { id }, data: { updatedAt: new Date() } });
 
 const newTrackSchema = videoSchema.extend({ memo: memoSchema.nullish() });
+const newTracksSchema = z.object({
+    tracks: z.array(newTrackSchema).min(1, 'songsRequired').max(MAX_POST_TRACKS, 'songsMax'),
+});
 
-/** Appends a song (e.g. one just heard in a room, with the room memo the admin wrote) to the end of the playlist. */
+/**
+ * Appends songs (e.g. ones just heard in a room, with the room memos the admin wrote) to the end of the playlist.
+ * Songs already in the playlist are skipped; if the rest don't fit, nothing is added.
+ */
 export async function POST(req: Request, ctx: RouteContext<'/api/posts/[id]/tracks'>) {
     const { id } = await ctx.params;
     const { error } = await ownPost(id);
     if (error) return error;
-    const parsed = newTrackSchema.safeParse(await readJson(req));
+    const parsed = newTracksSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationError(parsed.error);
 
-    const { _count, _max } = await prisma.postTrack.aggregate({
-        where: { postId: id },
-        _count: true,
-        _max: { position: true },
+    const existing = await prisma.postTrack.findMany({ where: { postId: id }, select: { videoId: true, position: true } });
+    const seen = new Set(existing.map((t) => t.videoId));
+    const fresh = parsed.data.tracks.filter((t) => {
+        if (seen.has(t.videoId)) return false;
+        seen.add(t.videoId);
+        return true;
     });
-    if (_count >= MAX_POST_TRACKS) return jsonError('songsMax');
-    const [track] = await prisma.$transaction([
-        prisma.postTrack.create({
-            data: { ...parsed.data, memo: parsed.data.memo || null, postId: id, position: (_max.position ?? -1) + 1 },
+    if (existing.length + fresh.length > MAX_POST_TRACKS) return jsonError('songsMax');
+    const start = Math.max(-1, ...existing.map((t) => t.position)) + 1;
+    const [tracks] = await prisma.$transaction([
+        prisma.postTrack.createManyAndReturn({
+            data: fresh.map((t, i) => ({ ...t, memo: t.memo || null, postId: id, position: start + i })),
             select: { id: true, videoId: true, title: true, channel: true, thumbnail: true, durationSec: true, memo: true },
         }),
         touch(id),
     ]);
-    return NextResponse.json({ track }, { status: 201 });
+    return NextResponse.json({ tracks, skipped: parsed.data.tracks.length - fresh.length }, { status: 201 });
 }
 
 const reorderSchema = z.object({ orderedIds: z.array(z.string()).max(MAX_POST_TRACKS) });

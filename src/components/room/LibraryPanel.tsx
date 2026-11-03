@@ -2,7 +2,15 @@
 
 /* eslint-disable @next/next/no-img-element -- YouTube thumbnails */
 import { useEffect, useState } from 'react';
-import { LuArrowUpDown, LuCheck, LuChevronDown, LuChevronUp, LuExternalLink, LuPlus } from 'react-icons/lu';
+import {
+    LuArrowUpDown,
+    LuCheck,
+    LuChevronDown,
+    LuChevronUp,
+    LuExternalLink,
+    LuPlus,
+    LuStickyNote,
+} from 'react-icons/lu';
 import { Icon } from '@/components/icons';
 import { Playlist } from '@/components/room/Playlist';
 import { useI18n } from '@/i18n/client';
@@ -243,21 +251,28 @@ function PlaylistItem({ playlist: p, canControl, addedIds, onAdd, onReorder }: I
                     <ul className="divide-y divide-leaf/20">
                         {p.tracks.map((v, i) => (
                             <li key={`${i}:${v.videoId}`}>
-                                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-2 hover:bg-fern/40">
+                                <label className="flex cursor-pointer items-start gap-2 rounded-md px-1 py-2 hover:bg-fern/40">
                                     <input
                                         type="checkbox"
                                         checked={selected.has(i)}
                                         onChange={() => toggle(i)}
-                                        className="size-4 shrink-0 accent-[var(--color-moss)]"
+                                        className="mt-0.5 size-4 shrink-0 accent-[var(--color-moss)]"
                                     />
                                     <span className="min-w-0 flex-1">
                                         <span className="line-clamp-1 text-sm">{v.title}</span>
                                         <span className="block truncate text-xs text-lime/50">
                                             {v.channel} · {formatDuration(v.durationSec)}
                                         </span>
+                                        {/* The playlist's cue for this song; it comes along into the room. */}
+                                        {v.memo && (
+                                            <span className="mt-1 flex items-start gap-1 text-xs text-lime/75">
+                                                <Icon as={LuStickyNote} className="mt-px size-3 shrink-0 text-moss" />
+                                                <span className="whitespace-pre-wrap wrap-break-word">{v.memo}</span>
+                                            </span>
+                                        )}
                                     </span>
                                     {addedIds.has(v.videoId) && (
-                                        <span className="inline-flex shrink-0 items-center gap-0.5 text-[11px] text-moss">
+                                        <span className="mt-0.5 inline-flex shrink-0 items-center gap-0.5 text-[11px] text-moss">
                                             <Icon as={LuCheck} className="size-3" />
                                             {t.likedTab.inRoom}
                                         </span>
