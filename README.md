@@ -119,8 +119,10 @@ Signed-in users are recognised by account instead, so the admin role works acros
 Set `DIRECT_URL` (Neon's unpooled URL) for migrations; through the pooler, `prisma migrate` can time out
 acquiring its lock (error P1002).
 
-Deleting an account only sets `User.status` to `deleted`: the user can no longer sign in, their posts stay
-up with the author shown as "Deleted user", and their email and username stay reserved.
+Deleting an account removes it right away: the profile image in S3, the `User` row, and through database
+cascades their posts, tracks and likes. Rooms they own stay until they expire, and the email and username
+become free again. Older accounts may still have `User.status` set to `deleted`; those stay hidden, and their
+posts show the author as "Deleted user".
 
 Schema changes: edit `prisma/schema.prisma`, then `npm run db:migrate -- --name <change>` (needs a
 database Prisma can create a shadow copy of; with Neon, a dev branch works well), and `npm run db:deploy` in production.

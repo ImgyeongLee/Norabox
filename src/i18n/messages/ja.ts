@@ -146,10 +146,9 @@ export const ja: Messages = {
         passwordChanged: 'パスワードを変更しました',
         deleteAccount: 'アカウントを削除',
         deleteAccountBody:
-            'アカウントを削除するとログアウトされます。フォーラムの投稿は残り、投稿者は「退会したユーザー」と表示されます。',
+            'アカウントを削除するとログアウトされ、プロフィール画像、プレイリスト、メモ、いいねがすぐに削除されます。',
         deleteConfirmTitle: 'アカウントを削除しますか？',
-        deleteConfirmBody:
-            '二度とログインできなくなり、このメールアドレスとユーザー名は新しいアカウントに使えません。この操作は取り消せません。',
+        deleteConfirmBody: 'すぐに削除され、この操作は取り消せません。',
         deleting: '削除中…',
     },
     notFound: {
@@ -239,12 +238,26 @@ export const ja: Messages = {
     saveTo: {
         title: 'マイプレイリストに追加',
         loading: '読み込み中…',
+        titleMany: (n) => `${n}曲をマイプレイリストに追加`,
         empty: 'まだプレイリストを作っていません。',
-        create: 'プレイリストを作る',
         inPlaylist: '追加済み',
         full: '満杯',
+        onlyLeft: (n) => `残り${n}曲分`,
         added: (title) => `「${title}」に追加しました`,
+        addedMany: (title, n) => `「${title}」に${n}曲を追加しました`,
+        newPlaylist: '新しいプレイリスト',
+        newTitle: 'プレイリストのタイトル',
+        createNew: '作成',
+        newHint: '最初は非公開です。「マイプレイリスト」で変更できます。',
+        created: (title, n) => `${n}曲で「${title}」を作りました`,
         close: '閉じる',
+    },
+    saveMany: {
+        start: 'マイプレイリストに保存',
+        startHint: 'このルームの曲を選んで、まとめてプレイリストに追加します',
+        hint: '保存する曲を選んでください。',
+        cancel: 'キャンセル',
+        save: (n) => (n === 0 ? '選んだ曲を保存' : `${n}曲を保存`),
     },
     access: {
         title: '入室設定',

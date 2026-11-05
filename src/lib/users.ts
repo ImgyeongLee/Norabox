@@ -1,7 +1,7 @@
 import { avatarUrlFor } from "@/lib/avatar";
 
-// Account status. Deleting an account only sets status to "deleted"; the row stays
-// so the user's forum posts keep working, shown with the author as "Deleted user".
+// Account status. Deleting an account now removes its row; status "deleted" only remains on
+// accounts deleted before that, whose forum posts show the author as "Deleted user".
 export const USER_ACTIVE = "active";
 export const USER_DELETED = "deleted";
 

@@ -23,13 +23,13 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 - 방의 이름과 재생목록: 아무도 없는 상태로 6시간이 지나면 삭제됩니다.
 
 **자동으로 생성되는 정보**
-- 쿠키: 로그인 유지, 선택한 언어, 배경 애니메이션 설정 (아래 6항)
+- 쿠키: 로그인 유지, 선택한 언어, 배경 애니메이션 설정, 흰색·검은색 화면 설정 (아래 6항)
 - 서버 접속 기록(IP 주소, 브라우저 정보 등): 보안과 장애 대응을 위해 서비스를 호스팅하는 업체가 일정 기간 보관합니다.
 - 방문 통계: 쿠키를 쓰지 않는 익명 통계(Vercel Web Analytics)로, 개인을 식별하지 않습니다.
 
 ## 2. 보관 기간과 파기
-- 회원 정보(이메일 주소 포함)와 게시물은 탈퇴일로부터 1개월이 지나면 삭제합니다.
-- 방 정보는 6시간 동안 활동이 없으면 삭제합니다.
+- 회원 정보(이메일 주소 포함)와 프로필 사진, 플레이리스트, 메모, 좋아요 등 게시물은 탈퇴하면 즉시 삭제합니다.
+- 방 정보는 6시간 동안 활동이 없으면 삭제합니다. 탈퇴 전에 방에 남은 사용자 이름, 방 이름과 재생목록도 이때 함께 삭제됩니다.
 - 다만 관련 법령에 따라 보관 의무가 있는 정보는 해당 기간 동안 보관합니다.
 - 삭제한 정보는 복구할 수 없는 방법으로 파기합니다.
 
@@ -53,7 +53,7 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 
 ## 5. 이용자의 권리
 - 프로필 화면에서 사용자 이름, 프로필 사진, 비밀번호를 바꿀 수 있습니다.
-- 프로필 화면에서 언제든지 탈퇴할 수 있습니다.
+- 프로필 화면에서 언제든지 탈퇴할 수 있으며, 탈퇴하면 위 2항에 따라 정보가 즉시 삭제됩니다.
 - 그 밖에 개인정보의 열람, 정정, 삭제를 원하면 아래 연락처로 요청해 주세요.
 
 ## 6. 쿠키
@@ -62,6 +62,7 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 | norabox_session | 로그인 유지 | 30일 |
 | norabox_locale | 선택한 언어 | 1년 |
 | norabox_motion | 방 배경 애니메이션을 끈 경우 | 1년 |
+| norabox_plain | 흰색·검은색 화면으로 바꾼 경우 | 24시간 |
 
 브라우저 설정에서 쿠키를 삭제하거나 차단할 수 있습니다. 로그인 쿠키를 차단하면 로그인할 수 없습니다.
 
@@ -75,7 +76,7 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 ## 9. 처리방침의 변경
 이 처리방침을 바꿀 때는 시행 7일 전부터 서비스 내에 공지합니다.
 
-이 처리방침은 KST 2026년 10월 14일부터 시행합니다.
+이 처리방침은 KST 2026년 11월 6일부터 시행합니다.
 `,
     en: `# Privacy Policy
 
@@ -98,13 +99,13 @@ Imgyeong Lee (the "Operator"), who runs Norabox (the "Service"), values your pri
 - Room names and playlists: deleted after 6 hours with nobody in the room.
 
 **Created automatically**
-- Cookies: to keep you logged in, and to remember your language and background animation setting (section 6)
+- Cookies: to keep you logged in, and to remember your language, background animation and white & black look settings (section 6)
 - Server logs (IP address, browser information, etc.): kept for a limited time by our hosting providers, for security and troubleshooting.
 - Visit statistics: anonymous statistics without cookies (Vercel Web Analytics) that don't identify you.
 
 ## 2. Retention and Deletion
-- Member information (including the email address) and content are deleted one month after the account is deleted.
-- Room information is deleted after 6 hours without activity.
+- Member information (including the email address) and content such as your profile image, playlists, memos and likes are deleted immediately when you delete your account.
+- Room information is deleted after 6 hours without activity. Usernames, room names and playlists left in rooms before you deleted your account are deleted with it at that time.
 - Information that must be kept by law is kept for the period the law requires.
 - Deleted information is destroyed so that it can't be recovered.
 
@@ -128,7 +129,7 @@ When a video plays in a room, YouTube may set its own cookies, which are covered
 
 ## 5. Your Rights
 - You can change your username, profile image and password on your profile page.
-- You can delete your account at any time on your profile page.
+- You can delete your account at any time on your profile page. Your information is then deleted immediately, as described in section 2.
 - To access, correct or delete any other personal information, contact us below.
 
 ## 6. Cookies
@@ -137,6 +138,7 @@ When a video plays in a room, YouTube may set its own cookies, which are covered
 | norabox_session | Keeps you logged in | 30 days |
 | norabox_locale | Your chosen language | 1 year |
 | norabox_motion | Set if you turn off room background animation | 1 year |
+| norabox_plain | Set if you switch to the white & black look | 24 hours |
 
 You can delete or block cookies in your browser settings. If you block the login cookie, you won't be able to log in.
 
@@ -150,6 +152,6 @@ Children under 14 may not sign up as members.
 ## 9. Changes to This Policy
 Changes to this policy are announced on the Service at least 7 days before they take effect.
 
-This policy takes effect on October 14, 2026 (KST).
+This policy takes effect on November 6, 2026 (KST).
 `,
 };

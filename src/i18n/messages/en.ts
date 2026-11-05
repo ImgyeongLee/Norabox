@@ -158,10 +158,9 @@ export const en = {
         passwordChanged: 'Password changed',
         deleteAccount: 'Delete account',
         deleteAccountBody:
-            "Your account will be deleted and you'll be signed out. Your forum posts stay up, with the author shown as “Deleted user”.",
+            "You'll be signed out, and your profile image, playlists, memos and likes will be deleted right away.",
         deleteConfirmTitle: 'Delete your account?',
-        deleteConfirmBody:
-            "You won't be able to sign in again, and this email and username can't be used for a new account. This can't be undone.",
+        deleteConfirmBody: "This happens right away and can't be undone.",
         deleting: 'Deleting…',
     },
     notFound: {
@@ -251,12 +250,26 @@ export const en = {
     saveTo: {
         title: 'Add to my playlist',
         loading: 'Loading…',
+        titleMany: (n: number) => (n === 1 ? 'Add 1 song to my playlist' : `Add ${n} songs to my playlist`),
         empty: "You haven't made any playlists yet.",
-        create: 'Make a playlist',
         inPlaylist: 'Already in it',
         full: 'Full',
+        onlyLeft: (n: number) => (n === 1 ? 'Room for 1' : `Room for ${n}`),
         added: (title: string) => `Added to “${title}”`,
+        addedMany: (title: string, n: number) => `Added ${n === 1 ? '1 song' : `${n} songs`} to “${title}”`,
+        newPlaylist: 'New playlist',
+        newTitle: 'Playlist title',
+        createNew: 'Create',
+        newHint: 'It starts out private. You can change that on My playlists.',
+        created: (title: string, n: number) => `Made “${title}” with ${n === 1 ? '1 song' : `${n} songs`}`,
         close: 'Close',
+    },
+    saveMany: {
+        start: 'Save to my playlist',
+        startHint: 'Pick songs from this room and add them all to one of your playlists',
+        hint: 'Pick the songs to save.',
+        cancel: 'Cancel',
+        save: (n: number) => (n === 0 ? 'Save selected' : n === 1 ? 'Save 1 song' : `Save ${n} songs`),
     },
     access: {
         title: 'Room access',

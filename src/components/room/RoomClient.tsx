@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { LuEye, LuEyeOff, LuLock } from 'react-icons/lu';
+import { LuEye, LuEyeOff, LuListPlus, LuLock } from 'react-icons/lu';
 import { Avatar } from '@/components/Avatar';
 import { CopyButton } from '@/components/CopyButton';
 import { Icon } from '@/components/icons';
@@ -12,6 +12,7 @@ import { LibraryPanel } from '@/components/room/LibraryPanel';
 import { MembersPanel, RoleBadge } from '@/components/room/MembersPanel';
 import { PlayerControls } from '@/components/room/PlayerControls';
 import { Playlist } from '@/components/room/Playlist';
+import { SaveManyToPlaylist } from '@/components/room/SaveManyToPlaylist';
 import { SaveToPlaylist } from '@/components/room/SaveToPlaylist';
 import { SyncedPlayer } from '@/components/room/SyncedPlayer';
 import { useRoom, type ConnectionStatus } from '@/components/room/useRoom';
@@ -161,24 +162,42 @@ function JoinGate({ code, user, onJoin }: { code: string; user: Props['user']; o
     );
 }
 
-/** Admin-only: "Hide all" / "Show all" above the playlist, with a note on how hidden songs behave. */
-function HideAllBar({
+/**
+ * Above the playlist: "Save to my playlist" (signed-in members) and the admin's "Hide all" /
+ * "Show all", with a note on how hidden songs behave.
+ */
+function PlaylistToolbar({
     items,
     currentId,
     onHideAll,
+    onSaveMany,
 }: {
     items: RoomReady['snapshot']['items'];
     currentId: string | null;
-    onHideAll: (hidden: boolean) => void;
+    /** Admin only. */
+    onHideAll?: (hidden: boolean) => void;
+    /** Signed-in members: picks songs to save to one of their playlists. */
+    onSaveMany?: () => void;
 }) {
     const { t } = useI18n();
     const anyHidden = items.some((i) => i.hidden);
     // Everything but the selected song (which can't be hidden) is already hidden.
     const allHidden = items.every((i) => i.hidden || i.id === currentId);
+    if (!onHideAll && !onSaveMany) return null;
     return (
         <div className="mb-2 space-y-1.5">
             <div className="flex flex-wrap justify-end gap-1.5">
-                {anyHidden && (
+                {onSaveMany && (
+                    <button
+                        type="button"
+                        onClick={onSaveMany}
+                        title={t.saveMany.startHint}
+                        className="btn-ghost gap-1 px-2 py-1 text-xs">
+                        <Icon as={LuListPlus} className="size-3.5" />
+                        {t.saveMany.start}
+                    </button>
+                )}
+                {onHideAll && anyHidden && (
                     <button
                         type="button"
                         onClick={() => onHideAll(false)}
@@ -188,7 +207,7 @@ function HideAllBar({
                         {t.playlist.showAll}
                     </button>
                 )}
-                {!allHidden && (
+                {onHideAll && !allHidden && (
                     <button
                         type="button"
                         onClick={() => onHideAll(true)}
@@ -199,7 +218,7 @@ function HideAllBar({
                     </button>
                 )}
             </div>
-            {anyHidden && <p className="text-xs text-lime/45">{t.room.hiddenHint}</p>}
+            {onHideAll && anyHidden && <p className="text-xs text-lime/45">{t.room.hiddenHint}</p>}
         </div>
     );
 }
@@ -252,6 +271,8 @@ function RoomView({
         return saved && TAB_IDS.includes(saved) ? saved : 'playlist';
     });
     const [toast, setToast] = useState<string | null>(null);
+    // Picking room songs to save to one of the member's playlists (replaces the playlist view).
+    const [savingMany, setSavingMany] = useState(false);
     const [personal, setPersonal] = useState(readStoredVolume);
     const [muted, setMutedState] = useState(() => readStored('local', MUTED_KEY) === '1');
 
@@ -407,16 +428,24 @@ function RoomView({
                         ))}
                     </div>
                     <div className="min-h-0 flex-1 overflow-y-auto px-1 pb-1">
-                        {tab === 'playlist' && (
+                        {tab === 'playlist' && savingMany && (
+                            <SaveManyToPlaylist
+                                items={snapshot.items}
+                                onClose={() => setSavingMany(false)}
+                                onMessage={setToast}
+                            />
+                        )}
+                        {tab === 'playlist' && !savingMany && (
                             <>
                                 {canControl && snapshot.items.length > 1 && (
                                     <p className="mb-2 text-xs text-lime/45">{t.room.dragHint}</p>
                                 )}
-                                {isAdmin && snapshot.items.length > 0 && (
-                                    <HideAllBar
+                                {snapshot.items.length > 0 && (
+                                    <PlaylistToolbar
                                         items={snapshot.items}
                                         currentId={snapshot.playback.itemId}
-                                        onHideAll={(hidden) => run('playlist:hideAll', { hidden })}
+                                        onHideAll={isAdmin ? (hidden) => run('playlist:hideAll', { hidden }) : undefined}
+                                        onSaveMany={signedIn ? () => setSavingMany(true) : undefined}
                                     />
                                 )}
                                 <Playlist
