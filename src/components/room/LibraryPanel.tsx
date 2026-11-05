@@ -281,7 +281,7 @@ function PlaylistItem({ playlist: p, canControl, addedIds, onAdd, onReorder }: I
                             </li>
                         ))}
                     </ul>
-                    <div className="sticky bottom-0 mt-2 flex justify-end bg-gradient-to-t from-pine/90 pt-2">
+                    <div className="sticky bottom-0 mt-2 flex justify-end pt-2">
                         <button
                             type="button"
                             className="btn-primary px-3 py-2 text-sm"

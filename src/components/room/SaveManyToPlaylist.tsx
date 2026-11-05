@@ -98,14 +98,17 @@ export function SaveManyToPlaylist({ items, onClose, onMessage }: Props) {
                     </li>
                 ))}
             </ul>
-            <div className="sticky bottom-0 mt-2 space-y-2 bg-gradient-to-t from-pine/90 pt-2">
+            <div className="sticky bottom-0 mt-2 pt-2">
                 {picking && videos.length > 0 ? (
-                    <PlaylistPicker
-                        videos={videos}
-                        onSaved={onClose}
-                        onClose={() => setPicking(false)}
-                        onMessage={onMessage}
-                    />
+                    // Solid underneath, so the songs scrolling past don't show through the panel.
+                    <div className="rounded-lg bg-pine shadow-xl">
+                        <PlaylistPicker
+                            videos={videos}
+                            onSaved={onClose}
+                            onClose={() => setPicking(false)}
+                            onMessage={onMessage}
+                        />
+                    </div>
                 ) : (
                     <div className="flex justify-end">
                         <button
