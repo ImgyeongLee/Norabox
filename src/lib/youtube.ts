@@ -107,6 +107,22 @@ export async function getVideo(id: string): Promise<Video | null> {
   return videoFromOEmbed(id);
 }
 
+/**
+ * Looks up several videos in one API call (up to 50); missing, private and non-embeddable ones are
+ * left out. Falls back to oEmbed like getVideo.
+ */
+export async function getVideos(ids: string[]): Promise<Video[]> {
+  if (process.env.YOUTUBE_API_KEY) {
+    try {
+      return await videosById(ids);
+    } catch (e) {
+      if (!(e instanceof YouTubeError && e.code === "youtubeQuota")) throw e;
+    }
+  }
+  const videos = await Promise.all(ids.map(videoFromOEmbed));
+  return videos.filter((v): v is Video => !!v);
+}
+
 /** Title and channel from YouTube's public oEmbed endpoint (no API key or quota; no duration). */
 async function videoFromOEmbed(id: string): Promise<Video | null> {
   const res = await fetch(

@@ -2,9 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { LuChevronDown, LuChevronUp, LuMusic, LuPlus } from 'react-icons/lu';
+import { LuChevronDown, LuChevronUp, LuClipboardList, LuMusic, LuPlus } from 'react-icons/lu';
 import { Icon, TrashIcon } from '@/components/icons';
 import { ScenarioField } from '@/components/forum/ScenarioField';
+import { SongImport } from '@/components/forum/SongImport';
 import { VisibilityPicker } from '@/components/forum/VisibilityPicker';
 import { YouTubeEmbed } from '@/components/forum/YouTubeEmbed';
 import { formatDuration } from '@/lib/format';
@@ -66,6 +67,11 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
     const { errors, setErrors, busy, submit } = useJsonForm();
     // Song keys in the order they were sent, to map server errors like "tracks.2.memo" back to cards.
     const [sentKeys, setSentKeys] = useState<string[]>([]);
+    const [importing, setImporting] = useState(false);
+
+    // Cards with nothing typed in don't count: they're skipped on save, and a pasted list replaces them.
+    const isBlank = (s: Song) => !s.link.trim() && !s.memo.trim();
+    const slots = MAX_POST_TRACKS - songs.filter((s) => !isBlank(s)).length;
 
     const update = (key: string, patch: Partial<Song>) =>
         setSongs((ss) => ss.map((s) => (s.key === key ? { ...s, ...patch } : s)));
@@ -101,6 +107,18 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
         }
     }
 
+    function addImported(added: { video: Video; memo: string }[]) {
+        setSongs((ss) => [
+            ...ss.filter((s) => !isBlank(s)),
+            ...added.map(({ video, memo }) => ({
+                ...newSong(),
+                link: `https://www.youtube.com/watch?v=${video.videoId}`,
+                video,
+                memo,
+            })),
+        ]);
+    }
+
     function move(index: number, dir: -1 | 1) {
         setSongs((ss) => {
             const next = [...ss];
@@ -113,7 +131,7 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
     async function onSubmit(e: React.SubmitEvent) {
         e.preventDefault();
         // Skip untouched cards; every other card needs a loaded video.
-        const filled = songs.filter((s) => s.link.trim() || s.memo.trim());
+        const filled = songs.filter((s) => !isBlank(s));
         const cardErrors: Record<string, string> = {};
         for (const s of filled) {
             if (s.loading) cardErrors[`song.${s.key}`] = 'songLoading';
@@ -309,15 +327,34 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
                 })}
 
                 {errors.tracks && <p className="field-error">{tError(errors.tracks)}</p>}
-                <button
-                    type="button"
-                    className="btn-secondary w-full border-dashed"
-                    onClick={() => setSongs((ss) => [...ss, newSong()])}
-                    disabled={songs.length >= MAX_POST_TRACKS}
-                >
-                    <Icon as={LuPlus} />
-                    {t.editor.addSong}
-                </button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                        type="button"
+                        className="btn-secondary flex-1 border-dashed"
+                        onClick={() => setSongs((ss) => [...ss, newSong()])}
+                        disabled={songs.length >= MAX_POST_TRACKS}
+                    >
+                        <Icon as={LuPlus} />
+                        {t.editor.addSong}
+                    </button>
+                    <button
+                        type="button"
+                        className="btn-secondary flex-1 border-dashed"
+                        onClick={() => setImporting(true)}
+                        disabled={importing || slots <= 0}
+                    >
+                        <Icon as={LuClipboardList} />
+                        {t.editor.importOpen}
+                    </button>
+                </div>
+                {importing && (
+                    <SongImport
+                        existingIds={songs.flatMap((s) => s.video?.videoId ?? parseVideoId(s.link) ?? [])}
+                        slots={slots}
+                        onAdd={addImported}
+                        onClose={() => setImporting(false)}
+                    />
+                )}
             </section>
 
             {errors.form && (

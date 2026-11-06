@@ -364,6 +364,22 @@ export const en = {
         memoHint:
             "Anyone who can see this playlist can read its memos. When it's added to a room, they come along, and there only the room's admin sees them.",
         addSong: 'Add song',
+        importOpen: 'Paste a list',
+        importTitle: 'Add songs from a list',
+        importHint:
+            'One song per line: a YouTube link, then a comma and a memo (optional). Rows copied from a spreadsheet work too.',
+        importLabel: 'Song list',
+        importPlaceholder:
+            'https://youtu.be/…, When the party enters the crypt\nhttps://www.youtube.com/watch?v=…, Boss fight',
+        importSubmit: 'Add songs',
+        importAdding: 'Looking up songs…',
+        importClose: 'Close',
+        importAdded: (n: number) => (n === 0 ? 'No songs were added.' : n === 1 ? 'Added 1 song.' : `Added ${n} songs.`),
+        importFailed: (n: number) =>
+            n === 1
+                ? "1 line couldn't be added. It's left in the box so you can fix it and try again."
+                : `${n} lines couldn't be added. They're left in the box so you can fix them and try again.`,
+        importLine: (n: number) => `Line ${n}`,
         publish: 'Publish post',
         saveChanges: 'Save changes',
     },
@@ -551,6 +567,9 @@ export const en = {
         songLinkRequired: 'Paste a YouTube link for this song',
         songLinkInvalid: 'Paste a YouTube video link',
         songLoading: 'Still loading this video…',
+        importDuplicate: 'Already in this playlist',
+        importRepeated: 'Same song as an earlier line',
+        importNoRoom: `No room left: a playlist can have up to ${MAX_POST_TRACKS} songs`,
         fixFields: 'Please fix the highlighted fields',
         notInRoom: 'You are not in a room',
         adminOnly: 'Only the admin can do that',
