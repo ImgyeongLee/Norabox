@@ -33,6 +33,7 @@ export const ko: Messages = {
     copied: '복사됨!',
     optional: '(선택)',
     deletedUser: '탈퇴한 사용자',
+    anonymous: '익명',
     confirm: '확인',
     songs: (n) => `${n}곡`,
   },
@@ -360,6 +361,8 @@ export const ko: Messages = {
     memoHint:
       '이 플레이리스트를 볼 수 있는 사람은 메모도 볼 수 있어요. 방에 추가하면 메모도 함께 들어가고, 방에서는 관리자만 볼 수 있어요.',
     addSong: '곡 추가',
+    anonymous: '익명으로 공개',
+    anonymousHint: '다른 사람에게는 내 이름과 프로필 사진 대신 “익명”으로 보여요. 내 플레이리스트라는 건 나만 알 수 있어요.',
     importOpen: '목록 붙여 넣기',
     importTitle: '목록으로 곡 추가',
     importHint: '한 줄에 한 곡씩, YouTube 링크 뒤에 쉼표와 메모(선택)를 적어 주세요. 스프레드시트에서 복사한 행도 돼요.',
@@ -429,6 +432,11 @@ export const ko: Messages = {
     reorder: '순서 바꾸기',
     doneReorder: '완료',
     reorderHint: '손잡이를 끌어 순서를 바꾸면 내 플레이리스트에 바로 저장돼요.',
+  },
+  listView: {
+    label: '보기 방식',
+    card: '카드형',
+    list: '목록형',
   },
   visibility: {
     label: '공개 범위',

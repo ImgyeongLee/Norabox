@@ -33,6 +33,7 @@ export const ja: Messages = {
         copied: 'コピーしました！',
         optional: '（任意）',
         deletedUser: '退会したユーザー',
+        anonymous: '匿名',
         confirm: '確認',
         songs: (n) => `${n}曲`,
     },
@@ -352,6 +353,8 @@ export const ja: Messages = {
         memoHint:
             'このプレイリストを見られる人はメモも見られます。ルームに追加するとメモも一緒に入り、ルームでは管理者だけが見られます。',
         addSong: '曲を追加',
+        anonymous: '匿名で公開',
+        anonymousHint: '他の人には名前とプロフィール画像の代わりに「匿名」と表示されます。自分のものだと分かるのは自分だけです。',
         importOpen: 'リストを貼り付け',
         importTitle: 'リストから曲を追加',
         importHint:
@@ -422,6 +425,11 @@ export const ja: Messages = {
         reorder: '並べ替え',
         doneReorder: '完了',
         reorderHint: 'ハンドルをドラッグして並べ替えると、プレイリストにすぐ保存されます。',
+    },
+    listView: {
+        label: '表示方法',
+        card: 'カード',
+        list: 'リスト',
     },
     visibility: {
         label: '公開範囲',

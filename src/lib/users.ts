@@ -10,8 +10,16 @@ export const authorSelect = { id: true, username: true, avatarMime: true, update
 
 type Author = { id: string; username: string; avatarMime: string | null; updatedAt: Date; status: string };
 
-/** Display info for an author; `name` is null for deleted accounts (show "Deleted user", no picture). */
-export function authorView(author: Author) {
-  if (author.status === USER_DELETED) return { name: null, avatarUrl: null };
-  return { name: author.username, avatarUrl: avatarUrlFor(author) };
+/**
+ * Display info for a post's author. `name` is null for an anonymous post (show "Anonymous") or a
+ * deleted account (show "Deleted user"); neither shows a picture, whose URL holds the user's id.
+ */
+export function authorView(author: Author, anonymous: boolean) {
+  if (anonymous) return { name: null, avatarUrl: null, anonymous };
+  if (author.status === USER_DELETED) return { name: null, avatarUrl: null, anonymous };
+  return { name: author.username, avatarUrl: avatarUrlFor(author), anonymous };
 }
+
+/** The name a room or the Library tab credits for a post: none when anonymous or deleted. */
+export const authorName = (author: { username: string; status: string }, anonymous: boolean) =>
+  anonymous || author.status === USER_DELETED ? null : author.username;

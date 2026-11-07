@@ -58,7 +58,7 @@ export async function PostView({
 }) {
     const { t, locale } = await getI18n();
     const isAuthor = user?.id === post.authorId;
-    const author = authorView(post.author);
+    const author = authorView(post.author, post.anonymous);
     const liked = user
         ? !!(await prisma.postLike.findUnique({ where: { userId_postId: { userId: user.id, postId: post.id } } }))
         : false;
@@ -102,7 +102,9 @@ export async function PostView({
                     <Avatar name={author.name ?? '?'} src={author.avatarUrl} size="md" />
                     <div className="text-sm">
                         <p className={`font-semibold ${author.name ? '' : 'italic muted'}`}>
-                            {author.name ?? t.common.deletedUser}
+                            {author.name ?? (author.anonymous ? t.common.anonymous : t.common.deletedUser)}
+                            {/* Only the author sees whose anonymous post it is. */}
+                            {author.anonymous && isAuthor && <span className="font-normal not-italic"> {t.members.you}</span>}
                         </p>
                         <p className="text-lime/55">
                             <time dateTime={post.createdAt.toISOString()}>{formatDate(post.createdAt, locale)}</time>

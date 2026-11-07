@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { canViewPost } from '@/lib/post-access';
 import { ROOM_THEMES } from '@/lib/room-themes';
 import { purgeIfExpired } from '@/lib/rooms';
-import { USER_DELETED } from '@/lib/users';
+import { authorName } from '@/lib/users';
 import { roomCodeSchema } from '@/lib/validation';
 
 const createRoomSchema = z.object({
@@ -35,6 +35,7 @@ export async function POST(req: Request) {
                   authorId: true,
                   visibility: true,
                   shareToken: true,
+                  anonymous: true,
                   author: { select: { username: true, status: true } },
                   tracks: {
                       orderBy: { position: 'asc' },
@@ -68,8 +69,8 @@ export async function POST(req: Request) {
                           // Older playlist memos can be longer than a room memo allows.
                           memo: memo?.slice(0, MAX_MEMO) || null,
                           position,
-                          // No credit for deleted accounts; the UI then shows just the channel.
-                          addedBy: imported.author.status === USER_DELETED ? '' : imported.author.username,
+                          // No credit for anonymous posts or deleted accounts; the UI then shows just the channel.
+                          addedBy: authorName(imported.author, imported.anonymous) ?? '',
                       })),
                   }
                 : undefined,

@@ -11,7 +11,7 @@ export async function PATCH(req: Request, ctx: RouteContext<'/api/posts/[id]'>) 
     if (error) return error;
     const parsed = postSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationError(parsed.error);
-    const { title, scenario, writer, visibility, tracks } = parsed.data;
+    const { title, scenario, writer, visibility, anonymous, tracks } = parsed.data;
 
     const scenarioId = scenario ? (await findOrCreateScenario(scenario, writer)).id : null;
     await prisma.$transaction([
@@ -21,6 +21,7 @@ export async function PATCH(req: Request, ctx: RouteContext<'/api/posts/[id]'>) 
             data: {
                 title,
                 visibility,
+                anonymous,
                 scenarioId,
                 tracks: {
                     create: tracks.map((t, position) => ({ ...t, memo: t.memo || null, position })),

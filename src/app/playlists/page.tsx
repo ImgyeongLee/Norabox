@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LuPlus } from 'react-icons/lu';
-import { PostCard, postCardSelect } from '@/components/forum/PostCard';
+import { PostCard, postCardSelect, postListClass } from '@/components/forum/PostCard';
+import { ViewToggle } from '@/components/forum/ViewToggle';
 import { Icon } from '@/components/icons';
 import { getI18n } from '@/i18n/server';
 import { getCurrentUser } from '@/lib/auth';
+import { LIST_VIEW_COOKIE, listViewFrom } from '@/lib/list-view';
 import { prisma } from '@/lib/prisma';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,11 +18,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** The signed-in user's own playlists, of every visibility, newest edits first. */
 export default async function MyPlaylistsPage(props: PageProps<'/playlists'>) {
-    const [user, { t }, sp] = await Promise.all([getCurrentUser(), getI18n(), props.searchParams]);
+    const [user, { t }, sp, cookieStore] = await Promise.all([
+        getCurrentUser(),
+        getI18n(),
+        props.searchParams,
+        cookies(),
+    ]);
 
     if (!user) redirect('/login?next=/playlists');
 
     const q = typeof sp.q === 'string' ? sp.q.trim().slice(0, 100) : '';
+    const view = listViewFrom(cookieStore.get(LIST_VIEW_COOKIE)?.value);
     const text = { contains: q, mode: 'insensitive' as const };
     const posts = await prisma.post.findMany({
         where: {
@@ -43,17 +52,22 @@ export default async function MyPlaylistsPage(props: PageProps<'/playlists'>) {
                     {t.myPlaylists.new}
                 </Link>
             </div>
-            <form className="mt-6 flex max-w-md gap-2" role="search">
-                <input
-                    name="q"
-                    type="search"
-                    defaultValue={q}
-                    className="input"
-                    placeholder={t.myPlaylists.searchPlaceholder}
-                    aria-label={t.myPlaylists.searchLabel}
-                />
-                <button className="btn-secondary shrink-0">{t.myPlaylists.search}</button>
-            </form>
+            <div className="mt-6 flex items-center gap-3">
+                <form className="flex max-w-md flex-1 gap-2" role="search">
+                    <input
+                        name="q"
+                        type="search"
+                        defaultValue={q}
+                        className="input"
+                        placeholder={t.myPlaylists.searchPlaceholder}
+                        aria-label={t.myPlaylists.searchLabel}
+                    />
+                    <button className="btn-secondary shrink-0">{t.myPlaylists.search}</button>
+                </form>
+                <div className="ml-auto">
+                    <ViewToggle view={view} />
+                </div>
+            </div>
             {posts.length === 0 ? (
                 <div className="card mt-8 p-10 text-center">
                     <p className="text-lg font-semibold">{q ? t.myPlaylists.noMatch : t.myPlaylists.empty}</p>
@@ -65,10 +79,10 @@ export default async function MyPlaylistsPage(props: PageProps<'/playlists'>) {
                     )}
                 </div>
             ) : (
-                <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <ul className={postListClass(view)}>
                     {posts.map((post) => (
                         <li key={post.id}>
-                            <PostCard post={post} viewerId={user.id} showVisibility />
+                            <PostCard post={post} viewerId={user.id} showVisibility view={view} />
                         </li>
                     ))}
                 </ul>

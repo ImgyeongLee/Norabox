@@ -121,6 +121,8 @@ model Post {
   // Secret for the share link /s/<shareToken>; different from the post's own URL.
   // Resetting it invalidates links shared earlier.
   shareToken String    @unique
+  // Shown as "Anonymous" (no name or picture) to everyone, wherever the post is shown.
+  anonymous  Boolean   @default(false)
   // Optional: a post doesn't have to be about a particular scenario.
   scenarioId String?
   scenario   Scenario? @relation(fields: [scenarioId], references: [id])

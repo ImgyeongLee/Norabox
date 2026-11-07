@@ -87,6 +87,8 @@ export const postSchema = z
     title: z.string().trim().min(1, e("titleRequired")).max(120, e("titleLong")),
     scenario: z.string().trim().max(120, e("scenarioLong")).optional().default(""),
     visibility: z.enum(["private", "unlisted", "public"], e("invalidInput")).optional().default("private"),
+    // Hides the author's name and picture from everyone else.
+    anonymous: z.boolean().optional().default(false),
     writer: z.string().trim().max(80, e("writerLong")).optional().default(""),
     tracks: z
       .array(

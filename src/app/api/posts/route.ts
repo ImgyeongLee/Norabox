@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     if (!me) return jsonError('loginToShare', 401);
     const parsed = postSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationError(parsed.error);
-    const { title, scenario, writer, visibility, tracks } = parsed.data;
+    const { title, scenario, writer, visibility, anonymous, tracks } = parsed.data;
 
     const scenarioId = scenario ? (await findOrCreateScenario(scenario, writer)).id : null;
     const post = await prisma.post.create({
@@ -19,6 +19,7 @@ export async function POST(req: Request) {
             authorId: me.id,
             title,
             visibility,
+            anonymous,
             shareToken: newShareToken(),
             scenarioId,
             tracks: {

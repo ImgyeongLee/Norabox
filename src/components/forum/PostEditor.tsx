@@ -23,6 +23,7 @@ type Initial = {
     scenario: string;
     writer: string;
     visibility: Visibility;
+    anonymous: boolean;
     tracks: InitialTrack[];
 };
 
@@ -54,6 +55,7 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
     const [scenario, setScenario] = useState(initial?.scenario ?? '');
     const [writer, setWriter] = useState(initial?.writer ?? '');
     const [visibility, setVisibility] = useState<Visibility>(initial?.visibility ?? defaultVisibility);
+    const [anonymous, setAnonymous] = useState(initial?.anonymous ?? false);
     const [songs, setSongs] = useState<Song[]>(() =>
         initial?.tracks.length
             ? initial.tracks.map(({ memo, ...video }, i) => ({
@@ -149,6 +151,7 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
             scenario,
             writer,
             visibility,
+            anonymous,
             tracks: filled.map((s) => ({ ...s.video!, memo: s.memo })),
         };
         const res = await submit<{ id: string }>(
@@ -193,6 +196,21 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
                     errors={{ scenario: errors.scenario, writer: errors.writer }}
                 />
                 <VisibilityPicker value={visibility} onChange={setVisibility} />
+                {/* Only matters once others can see the playlist; kept as is while it's private. */}
+                {visibility !== 'private' && (
+                    <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+                        <input
+                            type="checkbox"
+                            checked={anonymous}
+                            onChange={(e) => setAnonymous(e.target.checked)}
+                            className="mt-0.5 size-4 shrink-0 accent-[var(--color-moss)]"
+                        />
+                        <span>
+                            <span className="font-semibold">{t.editor.anonymous}</span>
+                            <span className="block text-xs muted">{t.editor.anonymousHint}</span>
+                        </span>
+                    </label>
+                )}
             </section>
 
             <section className="space-y-4">

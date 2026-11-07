@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
-import { PostCard, postCardSelect } from '@/components/forum/PostCard';
+import { PostCard, postCardSelect, postListClass } from '@/components/forum/PostCard';
+import { ViewToggle } from '@/components/forum/ViewToggle';
 import { getCurrentUser } from '@/lib/auth';
 import { getI18n } from '@/i18n/server';
 import type { Prisma } from '@/generated/prisma/client';
+import { LIST_VIEW_COOKIE, listViewFrom } from '@/lib/list-view';
 import { prisma } from '@/lib/prisma';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,8 +29,9 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
         ...(q ? { OR: [{ title: text }, { scenario: { name: text } }, { scenario: { writer: text } }] } : {}),
     };
 
-    const [{ t }, user, scenario, posts, total] = await Promise.all([
+    const [{ t }, cookieStore, user, scenario, posts, total] = await Promise.all([
         getI18n(),
+        cookies(),
         getCurrentUser(),
         scenarioId
             ? prisma.scenario.findUnique({ where: { id: scenarioId }, select: { name: true, writer: true } })
@@ -42,6 +46,7 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
         prisma.post.count({ where }),
     ]);
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const view = listViewFrom(cookieStore.get(LIST_VIEW_COOKIE)?.value);
     const pageHref = (p: number) =>
         `/forum?${new URLSearchParams({ ...(q ? { q } : {}), ...(scenarioId ? { scenario: scenarioId } : {}), page: String(p) })}`;
 
@@ -63,17 +68,22 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                 </Link>
             </div>
 
-            <form className="mt-6 flex max-w-md gap-2" role="search">
-                <input
-                    name="q"
-                    defaultValue={q}
-                    className="input"
-                    placeholder={t.forum.searchPlaceholder}
-                    aria-label={t.forum.searchLabel}
-                />
-                {scenarioId && <input type="hidden" name="scenario" value={scenarioId} />}
-                <button className="btn-secondary shrink-0 text-sm">{t.forum.search}</button>
-            </form>
+            <div className="mt-6 flex items-center gap-3">
+                <form className="flex max-w-md flex-1 gap-2" role="search">
+                    <input
+                        name="q"
+                        defaultValue={q}
+                        className="input"
+                        placeholder={t.forum.searchPlaceholder}
+                        aria-label={t.forum.searchLabel}
+                    />
+                    {scenarioId && <input type="hidden" name="scenario" value={scenarioId} />}
+                    <button className="btn-secondary shrink-0 text-sm">{t.forum.search}</button>
+                </form>
+                <div className="ml-auto">
+                    <ViewToggle view={view} />
+                </div>
+            </div>
 
             {scenario && (
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
@@ -98,10 +108,10 @@ export default async function ForumPage(props: PageProps<'/forum'>) {
                     </p>
                 </div>
             ) : (
-                <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <ul className={postListClass(view)}>
                     {posts.map((p) => (
                         <li key={p.id}>
-                            <PostCard post={p} viewerId={user?.id ?? null} />
+                            <PostCard post={p} viewerId={user?.id ?? null} view={view} />
                         </li>
                     ))}
                 </ul>

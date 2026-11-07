@@ -33,6 +33,7 @@ export const en = {
         copied: 'Copied!',
         optional: '(optional)',
         deletedUser: 'Deleted user',
+        anonymous: 'Anonymous',
         confirm: 'Confirm',
         songs: (n: number) => (n === 1 ? '1 song' : `${n} songs`),
     },
@@ -364,6 +365,8 @@ export const en = {
         memoHint:
             "Anyone who can see this playlist can read its memos. When it's added to a room, they come along, and there only the room's admin sees them.",
         addSong: 'Add song',
+        anonymous: 'Post anonymously',
+        anonymousHint: "Others see “Anonymous” instead of your name and picture. Only you can tell it's yours.",
         importOpen: 'Paste a list',
         importTitle: 'Add songs from a list',
         importHint:
@@ -438,6 +441,11 @@ export const en = {
         reorder: 'Reorder',
         doneReorder: 'Done',
         reorderHint: 'Drag the handle to reorder. The new order is saved to your playlist.',
+    },
+    listView: {
+        label: 'View',
+        card: 'Cards',
+        list: 'List',
     },
     visibility: {
         label: 'Visibility',

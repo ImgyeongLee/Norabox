@@ -32,6 +32,7 @@ export default async function EditPostPage(props: PageProps<'/forum/[id]/edit'>)
                     scenario: post.scenario?.name ?? '',
                     writer: post.scenario?.writer ?? '',
                     visibility: VISIBILITIES.includes(post.visibility as Visibility) ? (post.visibility as Visibility) : 'private',
+                    anonymous: post.anonymous,
                     tracks: post.tracks.map(({ videoId, title, channel, thumbnail, durationSec, memo }) => ({
                         videoId,
                         title,

@@ -1,11 +1,12 @@
 import { listableFor } from "@/lib/post-access";
 import { prisma } from "@/lib/prisma";
 import type { ImportablePlaylist } from "@/lib/playlist-types";
-import { USER_DELETED } from "@/lib/users";
+import { authorName } from "@/lib/users";
 
 const select = {
   id: true,
   title: true,
+  anonymous: true,
   author: { select: { username: true, status: true } },
   scenario: { select: { name: true, writer: true } },
   tracks: {
@@ -17,13 +18,14 @@ const select = {
 type Row = {
   id: string;
   title: string;
+  anonymous: boolean;
   author: { username: string; status: string };
   scenario: ImportablePlaylist["scenario"];
   tracks: ImportablePlaylist["tracks"];
 };
-const toPlaylist = (p: Row): ImportablePlaylist => ({
+const toPlaylist = ({ anonymous, ...p }: Row): ImportablePlaylist => ({
   ...p,
-  author: p.author.status === USER_DELETED ? null : p.author.username,
+  author: authorName(p.author, anonymous),
 });
 
 /** A user's liked posts, most recently liked first. */
