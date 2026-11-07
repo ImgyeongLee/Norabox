@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
 import { cookies } from "next/headers";
+import { Suspense } from "react";
 import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { Header } from "@/components/Header";
+import { NavigationProgress } from "@/components/NavigationProgress";
 import { KeepPlainTheme } from "@/components/home/PlainThemeButton";
 import type { Locale } from "@/i18n/config";
 import { I18nProvider } from "@/i18n/client";
@@ -54,6 +56,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {/* White & black, from the home page's PlainThemeButton. */}
         {plain && <style>{paletteCss(PLAIN_PALETTE)}</style>}
         {plain && <KeepPlainTheme />}
+        {/* It reads the URL's query, which needs a Suspense boundary. */}
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <I18nProvider locale={locale}>
           <ConfirmProvider>
             <Header />

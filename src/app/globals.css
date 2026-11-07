@@ -212,6 +212,50 @@ input[type="range"].slider::-moz-range-thumb {
   }
 }
 
+/* Navigation progress bar (src/components/NavigationProgress.tsx). While loading it creeps toward
+   the end, slowing down, and only shows after 120ms so quick navigations don't flash it; when the
+   page arrives it runs to the end and fades out. Transform and opacity only, so it stays smooth. */
+.nav-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 60;
+  height: 2px;
+  background: var(--color-moss);
+  box-shadow: 0 0 8px var(--color-moss);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+  pointer-events: none;
+}
+.nav-progress[data-state="loading"] {
+  animation:
+    nav-progress 10s cubic-bezier(0.1, 0.8, 0.2, 1) 120ms both,
+    nav-appear 150ms ease-out 120ms both;
+}
+.nav-progress[data-state="done"] {
+  transform: scaleX(1);
+  opacity: 0;
+  transition:
+    transform 200ms ease-out,
+    opacity 250ms ease-in 150ms;
+}
+@keyframes nav-progress {
+  from {
+    transform: scaleX(0.08);
+  }
+  to {
+    transform: scaleX(0.92);
+  }
+}
+@keyframes nav-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Legal pages (terms, privacy policy): a bigger title, room between articles, and tables that
    scroll sideways instead of overflowing on phones. */
 .legal h1 {
