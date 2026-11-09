@@ -5,8 +5,9 @@ import { LuX } from 'react-icons/lu';
 import { Icon } from '@/components/icons';
 import { useI18n } from '@/i18n/client';
 import type { ErrorCode } from '@/i18n/messages/en';
-import { parseSongList, type SongRowFailure } from '@/lib/song-import';
+import { parseSongList, playlistIdsIn, type SongRowFailure } from '@/lib/song-import';
 import type { Video } from '@/lib/validation';
+import { playlistVideoIds } from '@/lib/youtube-iframe';
 
 type Props = {
     /** Video ids already in the playlist; pasting them again is reported, not added. */
@@ -19,18 +20,26 @@ type Props = {
 };
 
 /**
- * The playlist editor's "Paste a list": one "YouTube link, memo" per line. Songs that are found
- * are added; the lines that failed stay in the box, listed with their line number and why.
+ * The playlist editor's "Paste a list": one "YouTube link, memo" per line, or a YouTube playlist
+ * link for all its songs. Songs that are found are added; the lines that failed stay in the box,
+ * listed with their line number and why.
  */
 export function SongImport({ existingIds, slots, onAdd, onClose }: Props) {
     const { t, tError } = useI18n();
     const [text, setText] = useState('');
     const [busy, setBusy] = useState(false);
-    const [result, setResult] = useState<{ added: number; failures: SongRowFailure[] } | null>(null);
+    const [result, setResult] = useState<{ added: number; skipped: number; failures: SongRowFailure[] } | null>(
+        null,
+    );
 
     async function run() {
-        const { rows, failures } = parseSongList(text, existingIds, slots);
         setBusy(true);
+        // Linked YouTube playlists are read through YouTube's player in this browser (no API quota).
+        const playlists = new Map<string, string[] | null>();
+        for (const id of playlistIdsIn(text)) {
+            playlists.set(id, await playlistVideoIds(id).catch(() => null));
+        }
+        const { rows, failures, skipped } = parseSongList(text, existingIds, slots, playlists);
         let found = new Map<string, Video>();
         let lookupError: ErrorCode | null = null;
         if (rows.length > 0) {
@@ -46,16 +55,21 @@ export function SongImport({ existingIds, slots, onAdd, onClose }: Props) {
         setBusy(false);
 
         const added = rows.filter((r) => found.has(r.videoId));
+        let unplayable = 0;
         for (const r of rows) {
-            if (!found.has(r.videoId)) {
-                failures.push({ line: r.line, text: r.text, error: lookupError ?? 'videoUnavailable' });
-            }
+            if (found.has(r.videoId)) continue;
+            // A playlist's songs that can't be played are counted, not listed one by one.
+            if (r.fromPlaylist && !lookupError) unplayable++;
+            else failures.push({ line: r.line, text: r.text, error: lookupError ?? 'videoUnavailable' });
         }
-        failures.sort((a, b) => a.line - b.line);
+        // One entry per line and reason: a playlist line can fail the same way for many songs.
+        const shown = failures
+            .filter((f, i) => failures.findIndex((o) => o.line === f.line && o.error === f.error) === i)
+            .sort((a, b) => a.line - b.line);
         if (added.length > 0) onAdd(added.map((r) => ({ video: found.get(r.videoId)!, memo: r.memo })));
-        setResult({ added: added.length, failures });
+        setResult({ added: added.length, skipped: skipped + unplayable, failures: shown });
         // Leave only what still needs fixing.
-        setText(failures.map((f) => f.text).join('\n'));
+        setText([...new Set(shown.map((f) => f.text))].join('\n'));
     }
 
     return (
@@ -85,12 +99,13 @@ export function SongImport({ existingIds, slots, onAdd, onClose }: Props) {
             {result && (
                 <div role="status" className="space-y-2 text-sm">
                     <p className={result.added > 0 ? 'text-moss' : 'text-lime/70'}>{t.editor.importAdded(result.added)}</p>
+                    {result.skipped > 0 && <p className="text-xs text-lime/60">{t.editor.importSkipped(result.skipped)}</p>}
                     {result.failures.length > 0 && (
                         <div className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2">
                             <p className="text-danger">{t.editor.importFailed(result.failures.length)}</p>
                             <ul className="mt-2 space-y-1.5">
                                 {result.failures.map((f) => (
-                                    <li key={f.line} className="text-xs">
+                                    <li key={`${f.line}:${f.error}`} className="text-xs">
                                         <span className="font-semibold text-danger">{t.editor.importLine(f.line)}</span>
                                         <span className="text-lime/80"> · {tError(f.error)}</span>
                                         <span className="block truncate font-mono text-lime/45">{f.text}</span>

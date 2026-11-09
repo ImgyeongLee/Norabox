@@ -13,7 +13,7 @@ import { useI18n } from '@/i18n/client';
 import { useJsonForm } from '@/lib/use-json-form';
 import { MAX_MEMO } from '@/lib/limits';
 import { MAX_POST_TRACKS, type Video } from '@/lib/validation';
-import { parseVideoId } from '@/lib/youtube-url';
+import { parsePlaylistId, parseVideoId } from '@/lib/youtube-url';
 import type { Visibility } from '@/lib/visibility';
 
 type InitialTrack = Video & { memo: string };
@@ -82,7 +82,9 @@ export function PostEditor({ initial, defaultVisibility = 'private' }: { initial
         const id = parseVideoId(link);
         const current = songs.find((s) => s.key === key);
         if (!id) {
-            update(key, { link, video: null, loading: false, error: link.trim() ? 'songLinkInvalid' : null });
+            // A playlist link belongs in "Paste a list", which adds all its songs.
+            const error = !link.trim() ? null : parsePlaylistId(link) ? 'songIsPlaylist' : 'songLinkInvalid';
+            update(key, { link, video: null, loading: false, error });
             return;
         }
         if (current?.video?.videoId === id) return update(key, { link, error: null });

@@ -376,17 +376,19 @@ export const en = {
         addSong: 'Add song',
         anonymous: 'Post anonymously',
         anonymousHint: "Others see “Anonymous” instead of your name and picture. Only you can tell it's yours.",
-        importOpen: 'Paste a list',
-        importTitle: 'Add songs from a list',
+        importOpen: 'Paste a list or playlist',
+        importTitle: 'Add songs from a list or a YouTube playlist',
         importHint:
-            'One song per line: a YouTube link, then a comma and a memo (optional). Rows copied from a spreadsheet work too.',
+            'One song per line: a YouTube link, then a comma and a memo (optional). Rows copied from a spreadsheet work too. A YouTube playlist link adds its songs, as many as fit.',
         importLabel: 'Song list',
         importPlaceholder:
-            'https://youtu.be/…, When the party enters the crypt\nhttps://www.youtube.com/watch?v=…, Boss fight',
+            'https://youtu.be/…, When the party enters the crypt\nhttps://www.youtube.com/watch?v=…, Boss fight\nhttps://www.youtube.com/playlist?list=…',
         importSubmit: 'Add songs',
         importAdding: 'Looking up songs…',
         importClose: 'Close',
         importAdded: (n: number) => (n === 0 ? 'No songs were added.' : n === 1 ? 'Added 1 song.' : `Added ${n} songs.`),
+        importSkipped: (n: number) =>
+            `${n === 1 ? '1 song' : `${n} songs`} from YouTube playlists left out: already in this playlist, or can't be played here.`,
         importFailed: (n: number) =>
             n === 1
                 ? "1 line couldn't be added. It's left in the box so you can fix it and try again."
@@ -585,6 +587,7 @@ export const en = {
         invalidVideo: 'Invalid YouTube video',
         songLinkRequired: 'Paste a YouTube link for this song',
         songLinkInvalid: 'Paste a YouTube video link',
+        songIsPlaylist: 'That’s a playlist link. Use “Paste a list or playlist” below to add its songs.',
         songLoading: 'Still loading this video…',
         importDuplicate: 'Already in this playlist',
         importRepeated: 'Same song as an earlier line',
