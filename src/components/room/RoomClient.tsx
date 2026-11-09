@@ -20,6 +20,7 @@ import { MotionToggle } from '@/components/room/MotionToggle';
 import { VolumePanel } from '@/components/room/VolumePanel';
 import { useI18n } from '@/i18n/client';
 import { forgetJoin, getJoinedName, getNickname, rememberJoin, setNickname } from '@/lib/client-identity';
+import { MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
 import { canControl as canControlRole, type AckResult } from '@/lib/room-types';
 import type { RoomSong, Video } from '@/lib/validation';
 
@@ -332,6 +333,21 @@ function RoomView({
         return res.ok;
     }
 
+    /**
+     * Adds a YouTube playlist's songs, in batches of MAX_POST_TRACKS (as many as the realtime server
+     * takes at once). Stops at the first batch that fails; the toast says how many made it.
+     */
+    async function addPlaylist(videos: Video[]) {
+        let added = 0;
+        for (let i = 0; i < videos.length; i += MAX_POST_TRACKS) {
+            const batch = videos.slice(i, i + MAX_POST_TRACKS);
+            if (!(await run('playlist:addMany', { videos: batch })).ok) break;
+            added += batch.length;
+        }
+        if (added > 0) setToast(t.likedTab.added(added));
+        return added === videos.length;
+    }
+
     const inviteLink = () => `${window.location.origin}/room/${code}`;
     const TABS: { id: Tab; label: string }[] = [
         { id: 'playlist', label: t.room.tabs.playlist(snapshot.items.length) },
@@ -481,6 +497,8 @@ function RoomView({
                         {tab === 'search' && (
                             <VideoSearch
                                 onAdd={addVideo}
+                                onAddMany={addPlaylist}
+                                spaceLeft={MAX_ROOM_ITEMS - snapshot.items.length}
                                 searchAvailable={searchAvailable}
                                 addedIds={addedIds}
                                 disabled={!canControl}

@@ -156,3 +156,44 @@ export async function searchVideos(query: string): Promise<Video[]> {
   const ids = data.items.map((i) => i.id.videoId).filter((x): x is string => !!x);
   return videosById(ids);
 }
+
+export type YouTubePlaylist = {
+  /** null when YouTube doesn't say. */
+  title: string | null;
+  /** Songs that can be played here, in the playlist's order (deleted, private and non-embeddable ones left out). */
+  videos: Video[];
+  /** Songs YouTube listed for the playlist, playable or not. */
+  total: number;
+};
+
+/**
+ * A YouTube playlist's title and songs, given the video ids the browser read from it
+ * (playlistVideoIds). Uses oEmbed only, so it needs no API key and no quota; songs come without a
+ * duration (the room fills it in when one plays).
+ */
+export async function playlistFromIds(listId: string, ids: string[]): Promise<YouTubePlaylist> {
+  const [title, videos] = await Promise.all([playlistTitle(listId), videosFromOEmbed(ids)]);
+  return { title, videos, total: ids.length };
+}
+
+async function playlistTitle(listId: string): Promise<string | null> {
+  const url = `https://www.youtube.com/playlist?list=${listId}`;
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`, {
+      cache: "no-store",
+    });
+    return res.ok ? ((await res.json()) as { title?: string }).title ?? null : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Looks videos up through oEmbed, 20 at a time; ones it can't find or embed are left out. */
+async function videosFromOEmbed(ids: string[]): Promise<Video[]> {
+  const found: (Video | null)[] = [];
+  for (let i = 0; i < ids.length; i += 20) {
+    const batch = ids.slice(i, i + 20).map((id) => videoFromOEmbed(id).catch(() => null));
+    found.push(...(await Promise.all(batch)));
+  }
+  return found.filter((v): v is Video => !!v);
+}
