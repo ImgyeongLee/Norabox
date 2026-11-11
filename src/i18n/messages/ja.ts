@@ -1,4 +1,4 @@
-import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
+import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS, MAX_ROOM_MEMBERS } from '@/lib/limits';
 import type { Messages } from '@/i18n/messages/en';
 
 // Japanese UI text. Typed against the English dictionary, so every key must exist.
@@ -603,6 +603,7 @@ export const ja: Messages = {
         bodyRequired: '本文を入力してください',
         bodyLong: `本文は${MAX_ANNOUNCEMENT_BODY}文字以内にしてください`,
         roomLocked: 'このルームは新しい人の参加を受け付けていません。管理者にルームを開いてもらってください。',
+        roomFull: `ルームが満員です（最大${MAX_ROOM_MEMBERS}人）。誰かが退出したらもう一度お試しください。`,
         hideCurrent: '再生中または選択中の曲は隠せません',
     },
 };

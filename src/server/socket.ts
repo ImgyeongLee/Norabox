@@ -7,7 +7,7 @@ import { USER_ACTIVE } from "@/lib/users";
 import { inactiveCutoff, purgeIfExpired } from "@/lib/rooms";
 import { verifySocketToken } from "@/lib/session";
 import { z } from "zod";
-import { MAX_MEMO, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from "@/lib/limits";
+import { MAX_MEMO, MAX_POST_TRACKS, MAX_ROOM_ITEMS, MAX_ROOM_MEMBERS } from "@/lib/limits";
 import { roomSongSchema } from "@/lib/validation";
 import type { ErrorCode } from "@/i18n/messages/en";
 import type {
@@ -417,6 +417,11 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
           : String(payload?.name ?? "").trim().slice(0, 24) || `Guest-${clientId.slice(0, 4)}`;
 
         let member = room.members.get(identity);
+        // A full room takes nobody new. Its admin always gets back in, and people already in it
+        // (another tab, or a refresh within the grace period) keep their seat.
+        if (!member && room.members.size >= MAX_ROOM_MEMBERS && !room.isOwner(clientId, user?.id ?? null)) {
+          return ack({ ok: false, error: "roomFull" });
+        }
         if (!member) {
           member = {
             memberId: randomUUID(),

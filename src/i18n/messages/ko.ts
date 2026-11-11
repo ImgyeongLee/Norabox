@@ -1,4 +1,4 @@
-import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
+import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS, MAX_ROOM_MEMBERS } from '@/lib/limits';
 import type { Messages } from '@/i18n/messages/en';
 
 // Korean UI text. Typed against the English dictionary, so every key must exist.
@@ -612,6 +612,7 @@ export const ko: Messages = {
     bodyRequired: '내용을 입력해 주세요',
     bodyLong: `내용은 ${MAX_ANNOUNCEMENT_BODY}자 이내로 적어 주세요`,
     roomLocked: '닫힌 방이에요. 관리자에게 방을 열어 달라고 요청해 주세요.',
+    roomFull: `방이 가득 찼어요 (최대 ${MAX_ROOM_MEMBERS}명). 누군가 나가면 다시 시도해 주세요.`,
     hideCurrent: '재생 중이거나 선택된 곡은 숨길 수 없어요',
   },
 };

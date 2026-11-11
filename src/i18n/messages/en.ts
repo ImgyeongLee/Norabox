@@ -1,4 +1,4 @@
-import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
+import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS, MAX_ROOM_MEMBERS } from '@/lib/limits';
 
 // English UI text. This object's shape is the source of truth: the Korean and Japanese
 // dictionaries are typed against it, so a missing translation fails the typecheck.
@@ -621,6 +621,7 @@ export const en = {
         bodyRequired: 'Write the message',
         bodyLong: `Keep the message under ${MAX_ANNOUNCEMENT_BODY} characters`,
         roomLocked: 'This room is closed to new people. Ask the admin to open it.',
+        roomFull: `This room is full (up to ${MAX_ROOM_MEMBERS} people). Try again when someone leaves.`,
         hideCurrent: "The song that's playing or selected can't be hidden",
     },
 };
