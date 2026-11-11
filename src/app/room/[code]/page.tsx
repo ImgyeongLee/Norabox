@@ -16,7 +16,7 @@ import {
     type RoomTheme,
 } from '@/lib/room-themes';
 import { purgeIfExpired } from '@/lib/rooms';
-import { isPlainTheme, PLAIN_PALETTE, PLAIN_THEME_COOKIE } from '@/lib/site-theme';
+import { isPlainTheme, PLAIN_THEME_COOKIE, seasonOn, sitePalette } from '@/lib/site-theme';
 
 const getRoom = cache(async (code: string) => {
     if (!/^[A-Za-z0-9]{1,32}$/.test(code)) return null;
@@ -35,9 +35,10 @@ export async function generateMetadata(props: PageProps<'/room/[code]'>): Promis
 export async function generateViewport(props: PageProps<'/room/[code]'>): Promise<Viewport> {
     const [room, cookieStore] = await Promise.all([getRoom((await props.params).code), cookies()]);
     const theme = themeOf(room);
-    // Default-theme rooms take the visitor's white & black look (src/lib/site-theme.ts) when it's on.
-    const plain = theme === 'default' && isPlainTheme(cookieStore.get(PLAIN_THEME_COOKIE)?.value);
-    return { themeColor: plain ? PLAIN_PALETTE.pine : THEME_PALETTES[theme].pine };
+    // Default-theme rooms take the site's look for this visitor: white & black, or the season's
+    // (src/lib/site-theme.ts).
+    const site = theme === 'default' ? sitePalette(isPlainTheme(cookieStore.get(PLAIN_THEME_COOKIE)?.value)) : null;
+    return { themeColor: (site ?? THEME_PALETTES[theme]).pine };
 }
 
 export default async function RoomPage(props: PageProps<'/room/[code]'>) {
@@ -48,12 +49,16 @@ export default async function RoomPage(props: PageProps<'/room/[code]'>) {
 
     const [user, cookieStore] = await Promise.all([getCurrentUser(), cookies()]);
     const theme = themeOf(room);
-    // Themes with a moving background; each visitor can turn it off (MotionToggle).
-    const motion = hasAnimatedBackdrop(theme) ? (cookieStore.get(MOTION_COOKIE)?.value === 'off' ? 'off' : 'on') : null;
+    // Themes with a moving background, and default-theme rooms while the season's snow falls (the
+    // root layout draws it); each visitor can turn it off (MotionToggle).
+    const snowy = theme === 'default' && seasonOn(isPlainTheme(cookieStore.get(PLAIN_THEME_COOKIE)?.value));
+    const animated = hasAnimatedBackdrop(theme) || snowy;
+    const motion = animated ? (cookieStore.get(MOTION_COOKIE)?.value === 'off' ? 'off' : 'on') : null;
     return (
         <>
             {/* The room's theme recolors the whole page for everyone in it; it goes away when they leave. */}
-            {theme !== 'default' && <style>{themeCss(theme)}</style>}
+            {/* data-own-theme: the season's snow stays out of rooms with their own theme (globals.css). */}
+            {theme !== 'default' && <style data-own-theme="">{themeCss(theme)}</style>}
             {motion === 'on' && <ThemeBackdrop theme={theme} />}
             <RoomClient
                 code={room.code}

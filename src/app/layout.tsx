@@ -8,11 +8,12 @@ import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { Header } from "@/components/Header";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import { KeepPlainTheme } from "@/components/home/PlainThemeButton";
+import { Snowfall } from "@/components/Snowfall";
 import type { Locale } from "@/i18n/config";
 import { I18nProvider } from "@/i18n/client";
 import { getI18n } from "@/i18n/server";
-import { paletteCss } from "@/lib/room-themes";
-import { isPlainTheme, PLAIN_PALETTE, PLAIN_THEME_COOKIE } from "@/lib/site-theme";
+import { MOTION_COOKIE, paletteCss, THEME_PALETTES } from "@/lib/room-themes";
+import { isPlainTheme, PLAIN_THEME_COOKIE, SEASON, seasonOn, sitePalette } from "@/lib/site-theme";
 import "./globals.css";
 
 // All fonts use font-display: optional, so text is never redrawn in another font after it shows
@@ -39,23 +40,33 @@ export async function generateMetadata(): Promise<Metadata> {
 const plainThemeOn = async () => isPlainTheme((await cookies()).get(PLAIN_THEME_COOKIE)?.value);
 
 export async function generateViewport(): Promise<Viewport> {
-  return { themeColor: (await plainThemeOn()) ? PLAIN_PALETTE.pine : "#132a13" };
+  return { themeColor: (sitePalette(await plainThemeOn()) ?? THEME_PALETTES.default).pine };
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [{ locale, t }, plain] = await Promise.all([getI18n(), plainThemeOn()]);
+  const [{ locale, t }, cookieStore] = await Promise.all([getI18n(), cookies()]);
+  const plain = isPlainTheme(cookieStore.get(PLAIN_THEME_COOKIE)?.value);
+  const palette = sitePalette(plain);
+  const season = seasonOn(plain) ? SEASON : null;
+  // The same per-browser switch that turns room backdrops off also stops the snow.
+  const snow = season === "christmas" && cookieStore.get(MOTION_COOKIE)?.value !== "off";
   // Where "Contact" in the footer sends email; set CONTACT_EMAIL in .env / Vercel. Hidden when unset.
   const contactEmail = process.env.CONTACT_EMAIL?.trim();
   return (
-    <html lang={locale} className={`${inter.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang={locale}
+      data-season={season ?? undefined}
+      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+    >
       {/* Extensions such as Grammarly add attributes to <body> before React loads; don't warn about those. */}
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
         {/* React puts this in <head> and holds the first paint until it loads, so the font is
             known before any text shows. */}
         {CJK_FONTS[locale] && <link rel="stylesheet" href={CJK_FONTS[locale]} precedence="default" />}
-        {/* White & black, from the home page's PlainThemeButton. */}
-        {plain && <style>{paletteCss(PLAIN_PALETTE)}</style>}
+        {/* White & black (from the home page's PlainThemeButton) or the season's look. */}
+        {palette && <style>{paletteCss(palette)}</style>}
         {plain && <KeepPlainTheme />}
+        {snow && <Snowfall />}
         {/* It reads the URL's query, which needs a Suspense boundary. */}
         <Suspense fallback={null}>
           <NavigationProgress />
