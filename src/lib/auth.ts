@@ -10,6 +10,10 @@ export type CurrentUser = {
   username: string;
   email: string;
   avatarUrl: string | null;
+  /** Whether they confirmed their email address through the link we emailed them. */
+  emailVerified: boolean;
+  /** When the last verification email was sent (null: none yet, or it couldn't be sent). */
+  verifyEmailSentAt: Date | null;
 };
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
@@ -19,10 +23,25 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   // Sessions of deleted accounts stop working immediately.
   const user = await prisma.user.findUnique({
     where: { id: userId, status: USER_ACTIVE },
-    select: { id: true, username: true, email: true, avatarMime: true, updatedAt: true },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      avatarMime: true,
+      updatedAt: true,
+      emailVerifiedAt: true,
+      verifyEmailSentAt: true,
+    },
   });
   if (!user) return null;
-  return { id: user.id, username: user.username, email: user.email, avatarUrl: avatarUrlFor(user) };
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    avatarUrl: avatarUrlFor(user),
+    emailVerified: user.emailVerifiedAt !== null,
+    verifyEmailSentAt: user.verifyEmailSentAt,
+  };
 });
 
 export async function startSession(userId: string) {

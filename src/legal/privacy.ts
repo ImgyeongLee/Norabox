@@ -9,7 +9,7 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 ## 1. 수집하는 정보
 
 **회원가입 시**
-- 이메일 주소 (필수): 계정을 구분하고 스팸·무분별한 게시물을 막기 위한 목적으로만 씁니다. 광고나 뉴스레터를 보내지 않습니다.
+- 이메일 주소 (필수): 계정을 구분하고 스팸·무분별한 게시물을 막기 위한 목적, 그리고 본인 확인 메일과 비밀번호 재설정 메일을 보내는 데에만 씁니다. 광고나 뉴스레터를 보내지 않습니다.
 - 사용자 이름 (필수): 다른 이용자에게 공개됩니다.
 - 비밀번호 (필수): 원래 값으로 되돌릴 수 없는 형태(해시)로만 저장하며, 운영자도 알 수 없습니다.
 
@@ -46,8 +46,9 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 | Supabase, Inc. | 데이터베이스 (회원 정보, 게시물, 방) | 미국 |
 | Amazon Web Services, Inc. | 프로필 사진 저장 | 미국 |
 | Google LLC (YouTube) | 영상 재생 | 미국 |
-| Cloudflare, Inc. | 가입·로그인 시 로봇 확인 (Turnstile): IP 주소와 브라우저 정보를 확인 | 미국 등 |
-| Upstash, Inc. | 가입·로그인 시도 횟수 제한: IP 주소를 최대 1시간 보관 | 미국 |
+| Cloudflare, Inc. | 가입·로그인·비밀번호 찾기 시 로봇 확인 (Turnstile): IP 주소와 브라우저 정보를 확인 | 미국 등 |
+| Upstash, Inc. | 가입·로그인·메일 요청 시도 횟수 제한: IP 주소를 최대 1시간 보관 | 미국 |
+| Sendinblue SAS (Brevo) | 본인 확인·비밀번호 재설정 메일 발송: 이메일 주소와 사용자 이름, 메일 내용을 처리하며 발송 기록을 보관 | 프랑스 등 유럽연합 |
 
 방에서 영상을 재생하면 YouTube가 자체 쿠키를 설정할 수 있으며, 이에는 [Google 개인정보처리방침](https://policies.google.com/privacy)이 적용됩니다.
 
@@ -63,6 +64,8 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 | norabox_locale | 선택한 언어 | 1년 |
 | norabox_motion | 방 배경 애니메이션을 끈 경우 | 1년 |
 | norabox_plain | 흰색·검은색 화면으로 바꾼 경우 | 24시간 |
+| norabox_reset | 비밀번호 재설정 링크를 연 경우, 새 비밀번호를 정할 때까지 | 최대 1시간 |
+| norabox_verify_later | 이메일 인증 안내 배너에서 "나중에"를 누른 경우 | 브라우저를 닫을 때까지 |
 
 브라우저 설정에서 쿠키를 삭제하거나 차단할 수 있습니다. 로그인 쿠키를 차단하면 로그인할 수 없습니다.
 
@@ -76,7 +79,7 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 ## 9. 처리방침의 변경
 이 처리방침을 바꿀 때는 시행 7일 전부터 서비스 내에 공지합니다.
 
-이 처리방침은 KST 2026년 11월 6일부터 시행합니다.
+이 처리방침은 KST 2026년 11월 23일부터 시행합니다.
 `,
     en: `# Privacy Policy
 
@@ -85,7 +88,7 @@ Imgyeong Lee (the "Operator"), who runs Norabox (the "Service"), values your pri
 ## 1. Information We Collect
 
 **When you sign up**
-- Email address (required): used only to tell accounts apart and to prevent spam and indiscriminate posting. We never send ads or newsletters.
+- Email address (required): used only to tell accounts apart, to prevent spam and indiscriminate posting, and to send you email-verification and password-reset emails. We never send ads or newsletters.
 - Username (required): shown to other users.
 - Password (required): stored only in a form that can't be turned back into the original (a hash), so even the Operator can't see it.
 
@@ -122,8 +125,9 @@ The Service runs on the following providers' servers, and information is stored 
 | Supabase, Inc. | Database (member information, content, rooms) | United States |
 | Amazon Web Services, Inc. | Profile image storage | United States |
 | Google LLC (YouTube) | Video playback | United States |
-| Cloudflare, Inc. | Bot check on sign-up and log-in (Turnstile): checks your IP address and browser information | United States and elsewhere |
-| Upstash, Inc. | Limits on sign-up and log-in attempts: keeps your IP address for up to 1 hour | United States |
+| Cloudflare, Inc. | Bot check on sign-up, log-in and password recovery (Turnstile): checks your IP address and browser information | United States and elsewhere |
+| Upstash, Inc. | Limits on sign-up, log-in and email requests: keeps your IP address for up to 1 hour | United States |
+| Sendinblue SAS (Brevo) | Sending email-verification and password-reset emails: processes your email address, username and the email's content, and keeps sending logs | France and elsewhere in the EU |
 
 When a video plays in a room, YouTube may set its own cookies, which are covered by the [Google Privacy Policy](https://policies.google.com/privacy).
 
@@ -139,6 +143,8 @@ When a video plays in a room, YouTube may set its own cookies, which are covered
 | norabox_locale | Your chosen language | 1 year |
 | norabox_motion | Set if you turn off room background animation | 1 year |
 | norabox_plain | Set if you switch to the white & black look | 24 hours |
+| norabox_reset | Set when you open a password-reset link, until you choose the new password | Up to 1 hour |
+| norabox_verify_later | Set if you press "Later" on the email-verification banner | Until you close the browser |
 
 You can delete or block cookies in your browser settings. If you block the login cookie, you won't be able to log in.
 
@@ -152,6 +158,6 @@ Children under 14 may not sign up as members.
 ## 9. Changes to This Policy
 Changes to this policy are announced on the Service at least 7 days before they take effect.
 
-This policy takes effect on November 6, 2026 (KST).
+This policy takes effect on November 23, 2026 (KST).
 `,
 };

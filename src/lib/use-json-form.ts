@@ -6,10 +6,13 @@ import { useState } from "react";
 export function useJsonForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  // When the API says "today's email limit is reached", it also says when emails work again.
+  const [retryAt, setRetryAt] = useState<string | null>(null);
 
   async function submit<T = unknown>(url: string, body: unknown, method = "POST"): Promise<T | null> {
     setBusy(true);
     setErrors({});
+    setRetryAt(null);
     try {
       const res = await fetch(url, {
         method,
@@ -20,6 +23,7 @@ export function useJsonForm() {
       if (!res.ok) {
         // Values are error codes; components translate them with useI18n().tError.
         setErrors({ ...(data.fields ?? {}), form: data.error ?? "generic" });
+        setRetryAt(typeof data.retryAt === "string" ? data.retryAt : null);
         return null;
       }
       return data as T;
@@ -31,5 +35,5 @@ export function useJsonForm() {
     }
   }
 
-  return { errors, setErrors, busy, submit };
+  return { errors, setErrors, busy, submit, retryAt };
 }

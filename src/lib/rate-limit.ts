@@ -7,20 +7,23 @@ import { Redis } from '@upstash/redis';
 // Names set by Upstash, or by Vercel's Upstash integration.
 const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
 const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
-const redis = url && token ? new Redis({ url, token }) : null;
+/** Shared with the daily email count (src/lib/email.ts). */
+export const redis = url && token ? new Redis({ url, token }) : null;
 
 // Generous, since people at a school or café can share one IP. Logins are also limited per
 // account (src/lib/login.ts).
 const limiters = redis && {
     signup: new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, '1 h'), prefix: 'norabox:rl:signup' }),
     login: new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(20, '10 m'), prefix: 'norabox:rl:login' }),
+    // Verification and password-reset emails: each one uses up some of the daily email quota.
+    email: new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, '1 h'), prefix: 'norabox:rl:email' }),
 };
 
 /**
  * Whether this IP may make another `action` attempt now. Always yes without Redis, and also if
  * Redis can't be reached: an outage there shouldn't lock everyone out of their account.
  */
-export async function allowAttempt(action: 'signup' | 'login', ip: string) {
+export async function allowAttempt(action: 'signup' | 'login' | 'email', ip: string) {
     if (!limiters) return true;
     try {
         return (await limiters[action].limit(ip)).success;

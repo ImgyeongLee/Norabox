@@ -24,6 +24,13 @@ model User {
   // is locked (lockedAt set) until the site admin unlocks it (see README).
   failedLogins Int       @default(0)
   lockedAt     DateTime?
+  // Set when the user opens the link in the verification email (or resets their password by
+  // email, which proves the same thing). Accounts made before email verification start as null.
+  emailVerifiedAt   DateTime?
+  // When the last verification / password-reset email was sent: a short cooldown between sends
+  // keeps one person from using up the daily email quota (see src/lib/email-flows.ts).
+  verifyEmailSentAt DateTime?
+  resetEmailSentAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

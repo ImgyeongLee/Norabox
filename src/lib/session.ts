@@ -12,7 +12,8 @@ const SOCKET_TOKEN_MAX_AGE = 60 * 5; // 5 minutes; fetched fresh on every (re)co
 const SESSION_AUD = "norabox:session";
 const SOCKET_AUD = "norabox:socket";
 
-function secretKey() {
+/** The key that signs sessions and the links in emails (AUTH_SECRET). */
+export function secretKey() {
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV === "production") {

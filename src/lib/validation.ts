@@ -47,6 +47,22 @@ export const loginSchema = z.object({
   password: z.string().min(1, e("passwordRequired")),
 });
 
+/** "Forgot your password?": the email address of the account. */
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().min(1, e("emailRequired")).pipe(z.email(e("emailInvalid"))),
+});
+
+/** The new password, chosen on the page the reset email links to. */
+export const resetPasswordSchema = z
+  .object({
+    password: passwordSchema,
+    passwordConfirm: z.string(),
+  })
+  .refine((d) => d.password === d.passwordConfirm, {
+    message: e("passwordsMismatch"),
+    path: ["passwordConfirm"],
+  });
+
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, e("currentPasswordRequired")),

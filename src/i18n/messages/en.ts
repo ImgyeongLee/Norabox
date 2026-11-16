@@ -22,6 +22,9 @@ export const en = {
         terms: 'Terms of Service',
         privacy: 'Privacy Policy',
         explore: 'Explore',
+        forgotPassword: 'Forgot password',
+        resetPassword: 'Choose a new password',
+        verifyEmail: 'Confirm your email',
         room: (code: string) => `Room ${code}`,
         postDescription: (scenario: string) => `A playlist for ${scenario}`,
         scenarioBy: (name: string, writer: string) => `${name} by ${writer}`,
@@ -138,6 +141,64 @@ export const en = {
         lockedContact: 'To unlock it, email',
         lockedNoContact: 'Contact the site admin to unlock it.',
         lockedSubject: '[Norabox] Account unlock request',
+        forgotPassword: 'Forgot your password?',
+        // Sentence split after a link: [link] after
+        lockedReset: { link: 'Reset your password by email', after: ' to unlock it.' },
+        lockedNoEmail: "Didn't get the email? Write to",
+    },
+    forgot: {
+        title: 'Forgot your password?',
+        lead: "Enter your account's email address and we'll send you a link to choose a new password. It also unlocks a locked account.",
+        submit: 'Send reset link',
+        sent: (email: string) => `We sent a link to ${email}. Open it within an hour to choose a new password.`,
+        checkSpam: "Can't find it? Check your spam folder.",
+        backToLogin: 'Back to log in',
+    },
+    reset: {
+        title: 'Choose a new password',
+        lead: 'Your account is unlocked once you save it, and you will be logged in.',
+        newPassword: 'New password',
+        confirmPassword: 'Confirm new password',
+        submit: 'Save new password',
+        invalidTitle: 'This link no longer works',
+        invalidBody: 'Reset links work for an hour and only once. Ask for a new one.',
+        requestNew: 'Send a new link',
+    },
+    verify: {
+        okTitle: 'Email confirmed',
+        okBody: 'Thanks! Your email address is confirmed.',
+        invalidTitle: 'This link no longer works',
+        invalidBody: 'Confirmation links work for 24 hours. Log in and send a new one from the banner at the bottom of the page.',
+        continue: 'Go to Norabox',
+        // The banner at the bottom of every page for members who haven't confirmed their email.
+        bannerAsk: 'Please confirm your email address.',
+        bannerSent: (email: string) => `We sent a confirmation link to ${email}. Open it to finish.`,
+        send: 'Send confirmation email',
+        resend: 'Resend',
+        sending: 'Sending…',
+        later: 'Later',
+        dismiss: 'Hide this banner',
+    },
+    email: {
+        /** Brevo's free plan sends a limited number of emails a day; `time` is when it works again, in KST. */
+        quota: (time: string) => `Today's email limit has been reached. You can try again from ${time}.`,
+    },
+    // The emails themselves (subject and text), in the language the person was using.
+    emails: {
+        verifySubject: 'Confirm your email for Norabox',
+        verifyHeading: 'Confirm your email address',
+        verifyBody: (username: string) =>
+            `Hi ${username}, press the button below to confirm that this email address is yours.`,
+        verifyButton: 'Confirm email',
+        verifyExpiry: 'This link works for 24 hours.',
+        resetSubject: 'Reset your Norabox password',
+        resetHeading: 'Choose a new password',
+        resetBody: (username: string) =>
+            `Hi ${username}, press the button below to choose a new password. This also unlocks your account if it was locked.`,
+        resetButton: 'Choose a new password',
+        resetExpiry: 'This link works for 1 hour, and only once.',
+        linkFallback: "If the button doesn't work, copy this link into your browser:",
+        ignore: "If you didn't ask for this, you can ignore this email.",
     },
     profile: {
         title: 'Profile',
@@ -623,6 +684,12 @@ export const en = {
         roomLocked: 'This room is closed to new people. Ask the admin to open it.',
         roomFull: `This room is full (up to ${MAX_ROOM_MEMBERS} people). Try again when someone leaves.`,
         hideCurrent: "The song that's playing or selected can't be hidden",
+        emailNotFound: 'There is no account with this email address',
+        emailQuota: "Today's email limit has been reached. Please try again tomorrow.",
+        emailCooldown: 'An email was just sent. Please wait a minute before asking for another.',
+        emailFailed: "The email couldn't be sent. Please try again later.",
+        resetLinkInvalid: 'This reset link no longer works. Ask for a new one.',
+        alreadyVerified: 'Your email address is already confirmed',
     },
 };
 

@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
+import { getI18n } from '@/i18n/server';
 import { startSession } from '@/lib/auth';
+import { appOrigin, sendVerificationEmail } from '@/lib/email-flows';
 import { jsonError, readJson, validationError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
 import { allowAttempt, clientIp } from '@/lib/rate-limit';
@@ -28,8 +30,15 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.create({
         data: { username, email, passwordHash: await bcrypt.hash(password, 12) },
-        select: { id: true },
+        select: { id: true, username: true, email: true },
     });
     await startSession(user.id);
-    return NextResponse.json({ ok: true }, { status: 201 });
+    // The account works right away; until the link is opened, a banner asks them to confirm their
+    // email (and to resend it, e.g. when today's email limit was reached).
+    const { t } = await getI18n();
+    const verification = await sendVerificationEmail(user, t, appOrigin(req)).catch((e) => {
+        console.error('[signup] verification email failed', e);
+        return { ok: false, error: 'emailFailed' } as const;
+    });
+    return NextResponse.json({ ok: true, verification }, { status: 201 });
 }

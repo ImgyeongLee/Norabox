@@ -61,6 +61,13 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
                     required
                     error={errors.password}
                 />
+                {!isSignup && (
+                    <p className="-mt-2 text-right text-sm">
+                        <Link href="/forgot-password" className="font-semibold text-moss hover:underline">
+                            {t.auth.forgotPassword}
+                        </Link>
+                    </p>
+                )}
                 {isSignup && (
                     <Field
                         label={t.auth.passwordConfirm}
@@ -108,9 +115,17 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
                         <p>{errors.form}</p>
                         {codes.form === 'accountLocked' && (
                             <p className="mt-1">
+                                <Link href="/forgot-password" className="font-semibold underline underline-offset-2">
+                                    {t.auth.lockedReset.link}
+                                </Link>
+                                {t.auth.lockedReset.after}
+                            </p>
+                        )}
+                        {codes.form === 'accountLocked' && (
+                            <p className="mt-1">
                                 {contactEmail ? (
                                     <>
-                                        {t.auth.lockedContact}{' '}
+                                        {t.auth.lockedNoEmail}{' '}
                                         <a
                                             href={`mailto:${contactEmail}?subject=${encodeURIComponent(t.auth.lockedSubject)}`}
                                             className="font-semibold underline underline-offset-2"
