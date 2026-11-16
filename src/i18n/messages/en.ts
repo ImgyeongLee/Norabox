@@ -4,7 +4,7 @@ import {
     MAX_POST_TRACKS,
     MAX_ROOM_ITEMS,
     MAX_ROOM_MEMBERS,
-    UNVERIFIED_DAILY_ROOMS,
+    ROOMS_PER_MINUTE,
 } from '@/lib/limits';
 
 // English UI text. This object's shape is the source of truth: the Korean and Japanese
@@ -187,7 +187,7 @@ export const en = {
         // The banner at the bottom of every page for members who haven't confirmed their email.
         bannerAsk: 'Please confirm your email address.',
         bannerSent: (email: string) => `We sent a confirmation link to ${email}. Open it to finish.`,
-        bannerLimit: `Until you do, you can make one playlist and ${UNVERIFIED_DAILY_ROOMS} rooms a day.`,
+        bannerLimit: 'Until you do, you can make one playlist a day.',
         send: 'Send confirmation email',
         resend: 'Resend',
         sending: 'Sending…',
@@ -704,7 +704,7 @@ export const en = {
         resetLinkInvalid: 'This reset link no longer works. Ask for a new one.',
         alreadyVerified: 'Your email address is already confirmed',
         emailNotVerified: 'Confirm your email address first: open the link we emailed you.',
-        roomDailyLimit: `Without a confirmed email you can make up to ${UNVERIFIED_DAILY_ROOMS} rooms a day. Try again tomorrow (from midnight KST), or log in with a confirmed account.`,
+        roomRateLimit: `You can make up to ${ROOMS_PER_MINUTE} rooms a minute. Please wait a moment and try again.`,
         unverifiedPlaylistLimit:
             'Until you confirm your email, you can make one playlist a day. Confirm it from the banner below, or try again tomorrow (KST).',
     },

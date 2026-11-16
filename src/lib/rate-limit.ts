@@ -1,5 +1,6 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { ROOMS_PER_MINUTE } from '@/lib/limits';
 
 // Attempt limits per IP address, counted in Upstash Redis: serverless functions don't remember
 // anything between requests, so the counts live there. Works without Redis (local dev): no limits.
@@ -17,13 +18,15 @@ const limiters = redis && {
     login: new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(20, '10 m'), prefix: 'norabox:rl:login' }),
     // Verification and password-reset emails: each one uses up some of the daily email quota.
     email: new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, '1 h'), prefix: 'norabox:rl:email' }),
+    // Making rooms, for everyone: stops a script from making dozens of rooms in a burst.
+    room: new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(ROOMS_PER_MINUTE, '1 m'), prefix: 'norabox:rl:room' }),
 };
 
 /**
  * Whether this IP may make another `action` attempt now. Always yes without Redis, and also if
  * Redis can't be reached: an outage there shouldn't lock everyone out of their account.
  */
-export async function allowAttempt(action: 'signup' | 'login' | 'email', ip: string) {
+export async function allowAttempt(action: 'signup' | 'login' | 'email' | 'room', ip: string) {
     if (!limiters) return true;
     try {
         return (await limiters[action].limit(ip)).success;

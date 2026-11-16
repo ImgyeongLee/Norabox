@@ -5,11 +5,10 @@ import { jsonError, readJson, validationError } from '@/lib/http';
 import { MAX_MEMO } from '@/lib/limits';
 import { prisma } from '@/lib/prisma';
 import { canViewPost } from '@/lib/post-access';
+import { allowAttempt, clientIp } from '@/lib/rate-limit';
 import { ROOM_THEMES } from '@/lib/room-themes';
 import { purgeIfExpired } from '@/lib/rooms';
 import { authorName } from '@/lib/users';
-import { clientIp } from '@/lib/rate-limit';
-import { claimRoom, withDailyClaim } from '@/lib/unverified-limits';
 import { roomCodeSchema } from '@/lib/validation';
 
 const createRoomSchema = z.object({
@@ -24,6 +23,7 @@ const createRoomSchema = z.object({
 });
 
 export async function POST(req: Request) {
+    if (!(await allowAttempt('room', clientIp(req)))) return jsonError('roomRateLimit', 429);
     const parsed = createRoomSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationError(parsed.error);
     const { name, clientId, theme, importPostId, importShareToken } = parsed.data;
@@ -56,33 +56,28 @@ export async function POST(req: Request) {
     if (existing) {
         return jsonError('roomNameTaken', 409, { name: 'roomNameTaken' });
     }
-    // Guests and members who haven't confirmed their email: a few rooms a day.
-    const claim = me?.emailVerified ? null : await claimRoom(me?.id ?? null, clientIp(req));
-    if (claim && !claim.ok) return jsonError('roomDailyLimit', 429);
-    const createRoom = () =>
-        prisma.room.create({
-            data: {
-                code: name,
-                slug,
-                ownerClientId: clientId,
-                ownerUserId: me?.id ?? null,
-                theme,
-                // The first song becomes the current one when the room loads (paused until someone presses play).
-                items: imported
-                    ? {
-                          create: imported.tracks.map(({ memo, ...t }, position) => ({
-                              ...t,
-                              // Older playlist memos can be longer than a room memo allows.
-                              memo: memo?.slice(0, MAX_MEMO) || null,
-                              position,
-                              // No credit for anonymous posts or deleted accounts; the UI then shows just the channel.
-                              addedBy: authorName(imported.author, imported.anonymous) ?? '',
-                          })),
-                      }
-                    : undefined,
-            },
-            select: { code: true },
-        });
-    const room = claim ? await withDailyClaim(claim, createRoom) : await createRoom();
+    const room = await prisma.room.create({
+        data: {
+            code: name,
+            slug,
+            ownerClientId: clientId,
+            ownerUserId: me?.id ?? null,
+            theme,
+            // The first song becomes the current one when the room loads (paused until someone presses play).
+            items: imported
+                ? {
+                      create: imported.tracks.map(({ memo, ...t }, position) => ({
+                          ...t,
+                          // Older playlist memos can be longer than a room memo allows.
+                          memo: memo?.slice(0, MAX_MEMO) || null,
+                          position,
+                          // No credit for anonymous posts or deleted accounts; the UI then shows just the channel.
+                          addedBy: authorName(imported.author, imported.anonymous) ?? '',
+                      })),
+                  }
+                : undefined,
+        },
+        select: { code: true },
+    });
     return NextResponse.json({ code: room.code }, { status: 201 });
 }

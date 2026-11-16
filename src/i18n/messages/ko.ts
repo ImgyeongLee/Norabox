@@ -4,7 +4,7 @@ import {
   MAX_POST_TRACKS,
   MAX_ROOM_ITEMS,
   MAX_ROOM_MEMBERS,
-  UNVERIFIED_DAILY_ROOMS,
+  ROOMS_PER_MINUTE,
 } from '@/lib/limits';
 import type { Messages } from '@/i18n/messages/en';
 
@@ -182,7 +182,7 @@ export const ko: Messages = {
     continue: 'Norabox로 가기',
     bannerAsk: '본인 확인을 위해 이메일 주소를 인증해 주세요.',
     bannerSent: (email) => `${email}(으)로 인증 링크를 보냈어요. 메일의 링크를 열면 인증이 끝나요.`,
-    bannerLimit: `인증하기 전에는 플레이리스트는 하루 1개, 방은 하루 ${UNVERIFIED_DAILY_ROOMS}개까지 만들 수 있어요.`,
+    bannerLimit: '인증하기 전에는 플레이리스트를 하루에 1개만 만들 수 있어요.',
     send: '인증 메일 보내기',
     resend: '다시 보내기',
     sending: '보내는 중…',
@@ -690,7 +690,7 @@ export const ko: Messages = {
     resetLinkInvalid: '더 이상 쓸 수 없는 재설정 링크예요. 새 링크를 받아 주세요.',
     alreadyVerified: '이미 인증된 이메일 주소예요',
     emailNotVerified: '먼저 이메일 인증을 마쳐 주세요. 보내 드린 메일의 링크를 열면 돼요.',
-    roomDailyLimit: `이메일 인증을 하지 않으면 방은 하루에 ${UNVERIFIED_DAILY_ROOMS}개까지 만들 수 있어요. 내일(KST 자정 이후) 다시 시도하거나, 인증된 계정으로 로그인해 주세요.`,
+    roomRateLimit: `방은 1분에 ${ROOMS_PER_MINUTE}개까지 만들 수 있어요. 잠시 뒤에 다시 시도해 주세요.`,
     unverifiedPlaylistLimit:
       '이메일 인증 전에는 플레이리스트를 하루에 1개만 만들 수 있어요. 아래 배너에서 인증하거나 내일(KST) 다시 시도해 주세요.',
   },

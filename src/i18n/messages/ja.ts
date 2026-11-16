@@ -4,7 +4,7 @@ import {
     MAX_POST_TRACKS,
     MAX_ROOM_ITEMS,
     MAX_ROOM_MEMBERS,
-    UNVERIFIED_DAILY_ROOMS,
+    ROOMS_PER_MINUTE,
 } from '@/lib/limits';
 import type { Messages } from '@/i18n/messages/en';
 
@@ -173,7 +173,7 @@ export const ja: Messages = {
         continue: 'Norabox へ',
         bannerAsk: '本人確認のため、メールアドレスを確認してください。',
         bannerSent: (email) => `${email} に確認リンクを送りました。メールのリンクを開くと完了します。`,
-        bannerLimit: `確認が済むまでは、プレイリストは1日1つ、ルームは1日${UNVERIFIED_DAILY_ROOMS}つまでしか作れません。`,
+        bannerLimit: '確認が済むまでは、プレイリストは1日に1つしか作れません。',
         send: '確認メールを送る',
         resend: '再送する',
         sending: '送信中…',
@@ -681,7 +681,7 @@ export const ja: Messages = {
         resetLinkInvalid: 'この再設定リンクは使えなくなりました。新しいリンクを受け取ってください。',
         alreadyVerified: 'メールアドレスはすでに確認済みです',
         emailNotVerified: '先にメールアドレスを確認してください。お送りしたメールのリンクを開くと完了します。',
-        roomDailyLimit: `メールアドレスを確認していない場合、ルームは1日${UNVERIFIED_DAILY_ROOMS}つまで作れます。明日（KST 0時以降）もう一度お試しいただくか、確認済みのアカウントでログインしてください。`,
+        roomRateLimit: `ルームは1分間に${ROOMS_PER_MINUTE}つまで作れます。少し待ってからもう一度お試しください。`,
         unverifiedPlaylistLimit:
             'メールアドレスの確認が済むまでは、プレイリストは1日に1つしか作れません。下のバナーから確認するか、明日（KST）もう一度お試しください。',
     },

@@ -47,7 +47,7 @@ Norabox(이하 "서비스")를 운영하는 Imgyeong Lee(이하 "운영자")는 
 | Amazon Web Services, Inc. | 프로필 사진 저장 | 미국 |
 | Google LLC (YouTube) | 영상 재생 | 미국 |
 | Cloudflare, Inc. | 가입·로그인·비밀번호 찾기 시 로봇 확인 (Turnstile): IP 주소와 브라우저 정보를 확인 | 미국 등 |
-| Upstash, Inc. | 가입·로그인·메일 요청 시도 횟수 제한(IP 주소를 최대 1시간 보관), 이메일을 인증하지 않은 이용자의 하루 방 만들기 개수 제한(IP 주소와 회원 식별자를 최대 2일 보관) | 미국 |
+| Upstash, Inc. | 가입·로그인·메일 요청·방 만들기 시도 횟수 제한: IP 주소를 최대 1시간 보관 | 미국 |
 | Sendinblue SAS (Brevo) | 본인 확인·비밀번호 재설정 메일 발송: 이메일 주소와 사용자 이름, 메일 내용을 처리하며 발송 기록을 보관 | 프랑스 등 유럽연합 |
 
 방에서 영상을 재생하면 YouTube가 자체 쿠키를 설정할 수 있으며, 이에는 [Google 개인정보처리방침](https://policies.google.com/privacy)이 적용됩니다.
@@ -127,7 +127,7 @@ The Service runs on the following providers' servers, and information is stored 
 | Amazon Web Services, Inc. | Profile image storage | United States |
 | Google LLC (YouTube) | Video playback | United States |
 | Cloudflare, Inc. | Bot check on sign-up, log-in and password recovery (Turnstile): checks your IP address and browser information | United States and elsewhere |
-| Upstash, Inc. | Limits on sign-up, log-in and email requests (keeps your IP address for up to 1 hour), and on how many rooms people without a confirmed email make a day (keeps your IP address and member ID for up to 2 days) | United States |
+| Upstash, Inc. | Limits on sign-up, log-in, email requests and room creation: keeps your IP address for up to 1 hour | United States |
 | Sendinblue SAS (Brevo) | Sending email-verification and password-reset emails: processes your email address, username and the email's content, and keeps sending logs | France and elsewhere in the EU |
 
 When a video plays in a room, YouTube may set its own cookies, which are covered by the [Google Privacy Policy](https://policies.google.com/privacy).
