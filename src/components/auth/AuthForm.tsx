@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Field } from '@/components/auth/Field';
 import { Turnstile } from '@/components/auth/Turnstile';
 import { useI18n } from '@/i18n/client';
+import { emailErrorText } from '@/lib/email-errors';
 import { useJsonForm } from '@/lib/use-json-form';
 
 export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signup'; contactEmail?: string | null }) {
@@ -13,16 +14,21 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
     const params = useSearchParams();
     const next = params.get('next');
     const redirectTo = next?.startsWith('/') && !next.startsWith('//') ? next : '/';
-    const { errors: codes, busy, submit } = useJsonForm();
-    const { t, tError } = useI18n();
+    const { errors: codes, busy, submit, retryAt } = useJsonForm();
+    const { t, tError, locale } = useI18n();
     const [attempts, setAttempts] = useState(0);
     const errors = Object.fromEntries(Object.entries(codes).map(([k, v]) => [k, tError(v)]));
+    // "Today's email limit is reached" (sign-up) also says when to come back.
+    if (codes.form === 'emailQuota') errors.form = emailErrorText(t, locale, 'emailQuota', retryAt);
 
     async function onSubmit(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
         const body = Object.fromEntries(new FormData(e.currentTarget));
         const ok = await submit(`/api/auth/${mode}`, body);
-        if (ok) {
+        if (ok && mode === 'signup') {
+            // Not logged in yet: first they open the link in the confirmation email.
+            router.push('/verify-email/pending');
+        } else if (ok) {
             router.push(redirectTo);
             router.refresh();
         } else {
@@ -113,6 +119,13 @@ export function AuthForm({ mode, contactEmail = null }: { mode: 'login' | 'signu
                 {errors.form && !Object.keys(errors).some((k) => k !== 'form') && (
                     <div role="alert" className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
                         <p>{errors.form}</p>
+                        {codes.form === 'emailNotVerified' && (
+                            <p className="mt-1">
+                                <Link href="/verify-email/pending" className="font-semibold underline underline-offset-2">
+                                    {t.auth.resendVerification}
+                                </Link>
+                            </p>
+                        )}
                         {codes.form === 'accountLocked' && (
                             <p className="mt-1">
                                 <Link href="/forgot-password" className="font-semibold underline underline-offset-2">

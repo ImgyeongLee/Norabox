@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useSendVerification } from '@/components/auth/useSendVerification';
 import { useI18n } from '@/i18n/client';
-import { emailErrorText, VERIFY_LATER_COOKIE } from '@/lib/email-errors';
+import { VERIFY_LATER_COOKIE } from '@/lib/email-errors';
 
 type Props = {
     email: string;
-    /** A verification email was already sent (e.g. at sign-up). */
+    /** A verification email was already sent. */
     sent: boolean;
     /** Today's email limit is reached: when sending works again (ISO). */
     quotaRetryAt: string | null;
@@ -14,31 +15,13 @@ type Props = {
 
 /**
  * Along the bottom of every page, like a cookie banner, for members who haven't confirmed their
- * email address yet: accounts made before verification existed, and new ones until they open the link.
+ * email address: accounts made before confirmation was required (new members can't log in until
+ * they confirm). Until they do, they make at most one room and one playlist a day.
  */
 export function VerifyEmailBanner({ email, sent: sentBefore, quotaRetryAt }: Props) {
-    const { t, locale } = useI18n();
-    const [sent, setSent] = useState(sentBefore);
-    const [busy, setBusy] = useState(false);
+    const { t } = useI18n();
+    const { sent, busy, error, send, label } = useSendVerification(sentBefore, quotaRetryAt);
     const [hidden, setHidden] = useState(false);
-    const [error, setError] = useState<string | null>(
-        quotaRetryAt ? emailErrorText(t, locale, 'emailQuota', quotaRetryAt) : null,
-    );
-
-    async function send() {
-        setBusy(true);
-        setError(null);
-        try {
-            const res = await fetch('/api/auth/verify-email/send', { method: 'POST' });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok || data.error === 'alreadyVerified') setSent(true);
-            else setError(emailErrorText(t, locale, data.error, data.retryAt));
-        } catch {
-            setError(t.errors.network);
-        } finally {
-            setBusy(false);
-        }
-    }
 
     function later() {
         document.cookie = `${VERIFY_LATER_COOKIE}=1; path=/; samesite=lax`;
@@ -55,6 +38,7 @@ export function VerifyEmailBanner({ email, sent: sentBefore, quotaRetryAt }: Pro
             <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="min-w-0 flex-1 text-sm">
                     <p className="break-words">{sent ? t.verify.bannerSent(email) : t.verify.bannerAsk}</p>
+                    <p className="mt-0.5 text-xs text-lime/60">{t.verify.bannerLimit}</p>
                     {error && (
                         <p role="alert" className="mt-1 text-danger">
                             {error}
@@ -63,7 +47,7 @@ export function VerifyEmailBanner({ email, sent: sentBefore, quotaRetryAt }: Pro
                 </div>
                 <div className="flex shrink-0 gap-2">
                     <button type="button" className="btn-primary" onClick={send} disabled={busy}>
-                        {busy ? t.verify.sending : sent ? t.verify.resend : t.verify.send}
+                        {label}
                     </button>
                     <button type="button" className="btn-secondary" onClick={later}>
                         {t.verify.later}

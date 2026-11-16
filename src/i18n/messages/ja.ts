@@ -1,4 +1,11 @@
-import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS, MAX_ROOM_MEMBERS } from '@/lib/limits';
+import {
+    MAX_ANNOUNCEMENT_BODY,
+    MAX_LOGIN_ATTEMPTS,
+    MAX_POST_TRACKS,
+    MAX_ROOM_ITEMS,
+    MAX_ROOM_MEMBERS,
+    UNVERIFIED_DAILY_ROOMS,
+} from '@/lib/limits';
 import type { Messages } from '@/i18n/messages/en';
 
 // Japanese UI text. Typed against the English dictionary, so every key must exist.
@@ -132,6 +139,7 @@ export const ja: Messages = {
         forgotPassword: 'パスワードをお忘れですか？',
         lockedReset: { link: 'メールでパスワードを再設定', after: 'するとロックが解除されます。' },
         lockedNoEmail: 'メールが届かない場合はこちらへご連絡ください：',
+        resendVerification: '確認メールを再送する',
     },
     forgot: {
         title: 'パスワードをお忘れですか？',
@@ -153,12 +161,19 @@ export const ja: Messages = {
     },
     verify: {
         okTitle: 'メールアドレスを確認しました',
-        okBody: 'ありがとうございます！メールアドレスの確認が完了しました。',
+        okBody: 'ありがとうございます！メールアドレスの確認が完了し、ログインしました。',
         invalidTitle: 'このリンクは使えなくなりました',
-        invalidBody: '確認リンクの有効期限は24時間です。ログインして、ページ下部のバナーから新しいリンクを送ってください。',
+        invalidBody: '確認リンクの有効期限は24時間です。ログインすると新しいリンクを受け取れます。',
+        pendingTitle: 'メールをご確認ください',
+        pendingSent: (email) => `${email} に確認リンクを送りました。リンクを開くと登録が完了します。`,
+        pendingNotSent: (email) => `${email} にはまだ確認リンクを送れていません。下のボタンから送ってください。`,
+        pendingHint: '見つからない場合は迷惑メールフォルダもご確認ください。リンクの有効期限は24時間です。',
+        alreadyDone: 'メールアドレスはすでに確認済みです。ログインして続けてください。',
+        toLogin: 'ログインへ',
         continue: 'Norabox へ',
         bannerAsk: '本人確認のため、メールアドレスを確認してください。',
         bannerSent: (email) => `${email} に確認リンクを送りました。メールのリンクを開くと完了します。`,
+        bannerLimit: `確認が済むまでは、プレイリストは1日1つ、ルームは1日${UNVERIFIED_DAILY_ROOMS}つまでしか作れません。`,
         send: '確認メールを送る',
         resend: '再送する',
         sending: '送信中…',
@@ -665,5 +680,9 @@ export const ja: Messages = {
         emailFailed: 'メールを送信できませんでした。しばらくしてからもう一度お試しください。',
         resetLinkInvalid: 'この再設定リンクは使えなくなりました。新しいリンクを受け取ってください。',
         alreadyVerified: 'メールアドレスはすでに確認済みです',
+        emailNotVerified: '先にメールアドレスを確認してください。お送りしたメールのリンクを開くと完了します。',
+        roomDailyLimit: `メールアドレスを確認していない場合、ルームは1日${UNVERIFIED_DAILY_ROOMS}つまで作れます。明日（KST 0時以降）もう一度お試しいただくか、確認済みのアカウントでログインしてください。`,
+        unverifiedPlaylistLimit:
+            'メールアドレスの確認が済むまでは、プレイリストは1日に1つしか作れません。下のバナーから確認するか、明日（KST）もう一度お試しください。',
     },
 };

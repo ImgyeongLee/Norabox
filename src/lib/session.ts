@@ -6,11 +6,16 @@ import { SignJWT, jwtVerify } from "jose";
 
 export const SESSION_COOKIE = "norabox_session";
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+// A new member who hasn't confirmed their email gets this instead of a session: it only lets them
+// see where the confirmation email went and send it again.
+export const PENDING_COOKIE = "norabox_pending";
+export const PENDING_MAX_AGE = 60 * 60 * 24; // 1 day
 const SOCKET_TOKEN_MAX_AGE = 60 * 5; // 5 minutes; fetched fresh on every (re)connect
 
 // Distinct audiences so a socket token can't be used as a session cookie.
 const SESSION_AUD = "norabox:session";
 const SOCKET_AUD = "norabox:socket";
+const PENDING_AUD = "norabox:pending";
 
 /** The key that signs sessions and the links in emails (AUTH_SECRET). */
 export function secretKey() {
@@ -48,3 +53,5 @@ export const signSession = (userId: string) => sign(userId, SESSION_AUD, SESSION
 export const verifySession = (token: unknown) => verify(token, SESSION_AUD);
 export const signSocketToken = (userId: string) => sign(userId, SOCKET_AUD, SOCKET_TOKEN_MAX_AGE);
 export const verifySocketToken = (token: unknown) => verify(token, SOCKET_AUD);
+export const signPending = (userId: string) => sign(userId, PENDING_AUD, PENDING_MAX_AGE);
+export const verifyPending = (token: unknown) => verify(token, PENDING_AUD);

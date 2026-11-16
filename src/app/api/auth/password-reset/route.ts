@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { startSession } from '@/lib/auth';
+import { endPending, startSession } from '@/lib/auth';
 import { jsonError, readJson, validationError } from '@/lib/http';
 import { RESET_COOKIE, resetCookieOptions, resetTarget } from '@/lib/password-reset';
 import { prisma } from '@/lib/prisma';
@@ -41,5 +41,6 @@ export async function POST(req: Request) {
     store.delete(RESET_COOKIE);
     if (count === 0) return jsonError('resetLinkInvalid', 400);
     await startSession(user.id);
+    await endPending();
     return NextResponse.json({ ok: true });
 }

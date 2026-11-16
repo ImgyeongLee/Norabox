@@ -31,6 +31,11 @@ model User {
   // keeps one person from using up the daily email quota (see src/lib/email-flows.ts).
   verifyEmailSentAt DateTime?
   resetEmailSentAt  DateTime?
+  // New sign-ups can't log in until they confirm their email. Accounts made before that rule
+  // (false) can, but until they confirm it they make at most one playlist a day (the time of the
+  // last one is below) and two rooms a day (counted in Redis); see src/lib/unverified-limits.ts.
+  emailVerificationRequired Boolean   @default(false)
+  lastPlaylistCreatedAt     DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

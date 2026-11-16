@@ -1,4 +1,11 @@
-import { MAX_ANNOUNCEMENT_BODY, MAX_LOGIN_ATTEMPTS, MAX_POST_TRACKS, MAX_ROOM_ITEMS, MAX_ROOM_MEMBERS } from '@/lib/limits';
+import {
+    MAX_ANNOUNCEMENT_BODY,
+    MAX_LOGIN_ATTEMPTS,
+    MAX_POST_TRACKS,
+    MAX_ROOM_ITEMS,
+    MAX_ROOM_MEMBERS,
+    UNVERIFIED_DAILY_ROOMS,
+} from '@/lib/limits';
 
 // English UI text. This object's shape is the source of truth: the Korean and Japanese
 // dictionaries are typed against it, so a missing translation fails the typecheck.
@@ -145,6 +152,7 @@ export const en = {
         // Sentence split after a link: [link] after
         lockedReset: { link: 'Reset your password by email', after: ' to unlock it.' },
         lockedNoEmail: "Didn't get the email? Write to",
+        resendVerification: 'Send the confirmation email again',
     },
     forgot: {
         title: 'Forgot your password?',
@@ -166,13 +174,20 @@ export const en = {
     },
     verify: {
         okTitle: 'Email confirmed',
-        okBody: 'Thanks! Your email address is confirmed.',
+        okBody: "Thanks! Your email address is confirmed and you're logged in.",
         invalidTitle: 'This link no longer works',
-        invalidBody: 'Confirmation links work for 24 hours. Log in and send a new one from the banner at the bottom of the page.',
+        invalidBody: 'Confirmation links work for 24 hours. Log in to get a new one.',
+        pendingTitle: 'Check your email',
+        pendingSent: (email: string) => `We sent a confirmation link to ${email}. Open it to finish signing up.`,
+        pendingNotSent: (email: string) => `We couldn't send the confirmation link to ${email} yet. Send it below.`,
+        pendingHint: "Can't find it? Check your spam folder. The link works for 24 hours.",
+        alreadyDone: 'Your email address is already confirmed. Log in to continue.',
+        toLogin: 'Go to log in',
         continue: 'Go to Norabox',
         // The banner at the bottom of every page for members who haven't confirmed their email.
         bannerAsk: 'Please confirm your email address.',
         bannerSent: (email: string) => `We sent a confirmation link to ${email}. Open it to finish.`,
+        bannerLimit: `Until you do, you can make one playlist and ${UNVERIFIED_DAILY_ROOMS} rooms a day.`,
         send: 'Send confirmation email',
         resend: 'Resend',
         sending: 'Sending…',
@@ -688,6 +703,10 @@ export const en = {
         emailFailed: "The email couldn't be sent. Please try again later.",
         resetLinkInvalid: 'This reset link no longer works. Ask for a new one.',
         alreadyVerified: 'Your email address is already confirmed',
+        emailNotVerified: 'Confirm your email address first: open the link we emailed you.',
+        roomDailyLimit: `Without a confirmed email you can make up to ${UNVERIFIED_DAILY_ROOMS} rooms a day. Try again tomorrow (from midnight KST), or log in with a confirmed account.`,
+        unverifiedPlaylistLimit:
+            'Until you confirm your email, you can make one playlist a day. Confirm it from the banner below, or try again tomorrow (KST).',
     },
 };
 

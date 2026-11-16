@@ -21,3 +21,5 @@ export const EMAIL_RESEND_COOLDOWN_SEC = 60;
 /** How long the link in a verification / password-reset email works. */
 export const VERIFY_LINK_TTL_SEC = 60 * 60 * 24;
 export const RESET_LINK_TTL_SEC = 60 * 60;
+/** Rooms a guest (per IP address) or a member who hasn't confirmed their email can make a day (KST). */
+export const UNVERIFIED_DAILY_ROOMS = 10;
