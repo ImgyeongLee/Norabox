@@ -188,16 +188,14 @@ export const en = {
         verifySubject: 'Confirm your email for Norabox',
         verifyHeading: 'Confirm your email address',
         verifyBody: (username: string) =>
-            `Hi ${username}, press the button below to confirm that this email address is yours.`,
-        verifyButton: 'Confirm email',
+            `Hi ${username}, open the link below to confirm that this email address is yours.`,
         verifyExpiry: 'This link works for 24 hours.',
         resetSubject: 'Reset your Norabox password',
         resetHeading: 'Choose a new password',
         resetBody: (username: string) =>
-            `Hi ${username}, press the button below to choose a new password. This also unlocks your account if it was locked.`,
-        resetButton: 'Choose a new password',
+            `Hi ${username}, open the link below to choose a new password. This also unlocks your account if it was locked.`,
         resetExpiry: 'This link works for 1 hour, and only once.',
-        linkFallback: "If the button doesn't work, copy this link into your browser:",
+        linkHint: "If the link can't be clicked, copy it into your browser's address bar.",
         ignore: "If you didn't ask for this, you can ignore this email.",
     },
     profile: {

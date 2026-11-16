@@ -32,24 +32,30 @@ export function appOrigin(req: Request) {
 const escapeHtml = (s: string) =>
     s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-/** Builds the email: a plain-text version plus a simple HTML one with a button. */
+/**
+ * Builds the email: a plain-text version plus a simple HTML one.
+ *
+ * The link is plain text, never an <a> tag: Brevo rewrites every <a href> to go through its
+ * click-tracking domain (r.send.norabox.app), which has no valid HTTPS certificate, and .app
+ * domains only open over HTTPS. Mail apps turn a plain URL into a link by themselves, and
+ * that link goes straight to Norabox.
+ */
 export function renderEmail(kind: Kind, t: Messages, username: string, link: string) {
     const m = t.emails;
-    const [subject, heading, body, button, expiry] =
+    const [subject, heading, body, expiry] =
         kind === 'verify'
-            ? [m.verifySubject, m.verifyHeading, m.verifyBody(username), m.verifyButton, m.verifyExpiry]
-            : [m.resetSubject, m.resetHeading, m.resetBody(username), m.resetButton, m.resetExpiry];
-    const text = [heading, '', body, '', link, '', expiry, m.ignore].join('\n');
-    const href = escapeHtml(link);
+            ? [m.verifySubject, m.verifyHeading, m.verifyBody(username), m.verifyExpiry]
+            : [m.resetSubject, m.resetHeading, m.resetBody(username), m.resetExpiry];
+    const text = [heading, '', body, '', link, '', m.linkHint, expiry, m.ignore].join('\n');
     const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#f4f6ee;font-family:-apple-system,'Segoe UI',Roboto,'Apple SD Gothic Neo','Noto Sans JP',sans-serif;color:#132a13">
 <table role="presentation" width="100%" style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;padding:28px">
 <tr><td>
 <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#31572c">Norabox</p>
 <h1 style="margin:0 0 12px;font-size:20px">${escapeHtml(heading)}</h1>
-<p style="margin:0 0 20px;font-size:15px;line-height:1.6">${escapeHtml(body)}</p>
-<p style="margin:0 0 20px"><a href="${href}" style="display:inline-block;background:#4f772d;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:8px">${escapeHtml(button)}</a></p>
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6">${escapeHtml(body)}</p>
+<p style="margin:0 0 16px;padding:12px;background:#f4f6ee;border:1px solid #90a955;border-radius:8px;font-size:14px;line-height:1.5;word-break:break-all;color:#31572c">${escapeHtml(link)}</p>
+<p style="margin:0 0 8px;font-size:13px;color:#555">${escapeHtml(m.linkHint)}</p>
 <p style="margin:0 0 8px;font-size:13px;color:#555">${escapeHtml(expiry)}</p>
-<p style="margin:0 0 8px;font-size:13px;color:#555">${escapeHtml(m.linkFallback)}<br><a href="${href}" style="color:#31572c;word-break:break-all">${href}</a></p>
 <p style="margin:16px 0 0;font-size:13px;color:#555">${escapeHtml(m.ignore)}</p>
 </td></tr></table></body></html>`;
     return { subject, html, text };

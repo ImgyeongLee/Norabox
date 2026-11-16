@@ -171,16 +171,14 @@ export const ja: Messages = {
     emails: {
         verifySubject: '[Norabox] メールアドレスを確認してください',
         verifyHeading: 'メールアドレスの確認',
-        verifyBody: (username) => `${username} さん、下のボタンを押して、このメールアドレスがご本人のものであることを確認してください。`,
-        verifyButton: 'メールアドレスを確認',
+        verifyBody: (username) => `${username} さん、下のリンクを開いて、このメールアドレスがご本人のものであることを確認してください。`,
         verifyExpiry: 'このリンクの有効期限は24時間です。',
         resetSubject: '[Norabox] パスワードの再設定',
         resetHeading: '新しいパスワードの設定',
         resetBody: (username) =>
-            `${username} さん、下のボタンを押して新しいパスワードを設定してください。アカウントがロックされていた場合は、ロックも解除されます。`,
-        resetButton: '新しいパスワードを設定',
+            `${username} さん、下のリンクを開いて新しいパスワードを設定してください。アカウントがロックされていた場合は、ロックも解除されます。`,
         resetExpiry: 'このリンクは1時間以内に一度だけ使えます。',
-        linkFallback: 'ボタンが動かない場合は、次のリンクをブラウザに貼り付けてください：',
+        linkHint: 'リンクを押せない場合は、コピーしてブラウザのアドレスバーに貼り付けてください。',
         ignore: '心当たりがない場合は、このメールを無視してください。',
     },
     profile: {

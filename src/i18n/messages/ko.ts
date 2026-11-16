@@ -180,16 +180,14 @@ export const ko: Messages = {
   emails: {
     verifySubject: '[Norabox] 이메일 주소를 인증해 주세요',
     verifyHeading: '이메일 주소 인증',
-    verifyBody: (username) => `${username}님, 아래 버튼을 눌러 이 이메일 주소가 본인의 것임을 인증해 주세요.`,
-    verifyButton: '이메일 인증하기',
+    verifyBody: (username) => `${username}님, 아래 링크를 열어 이 이메일 주소가 본인의 것임을 인증해 주세요.`,
     verifyExpiry: '이 링크는 24시간 동안 쓸 수 있어요.',
     resetSubject: '[Norabox] 비밀번호 재설정',
     resetHeading: '새 비밀번호 설정',
     resetBody: (username) =>
-      `${username}님, 아래 버튼을 눌러 새 비밀번호를 정해 주세요. 계정이 잠겨 있었다면 잠금도 함께 풀려요.`,
-    resetButton: '새 비밀번호 정하기',
+      `${username}님, 아래 링크를 열어 새 비밀번호를 정해 주세요. 계정이 잠겨 있었다면 잠금도 함께 풀려요.`,
     resetExpiry: '이 링크는 1시간 동안, 한 번만 쓸 수 있어요.',
-    linkFallback: '버튼이 동작하지 않으면 아래 링크를 브라우저에 붙여 넣어 주세요:',
+    linkHint: '링크가 눌리지 않으면 복사해서 브라우저 주소창에 붙여 넣어 주세요.',
     ignore: '요청한 적이 없다면 이 메일은 무시하셔도 돼요.',
   },
   profile: {
