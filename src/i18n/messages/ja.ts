@@ -563,6 +563,15 @@ export const ja: Messages = {
         title: '探す',
         lead: 'Noraboxのプレイリストに入っている曲から、ランダムに30曲を選びました。毎日0時（韓国時間）に入れ替わります。',
         empty: 'まだ曲がありません。',
+        addedBy: (names) => `追加した人: ${names}`,
+        blur: 'サムネイルを隠す',
+        unblur: '隠すのをやめる',
+        swap: '別の曲に入れ替える',
+        swapTitle: 'この曲を別の曲に入れ替えますか？',
+        swapBody: 'この曲は今後「探す」に表示されなくなり、今日の抽選順で次の曲が代わりに入ります。プレイリストからは削除されません。下のリストから元に戻せます。',
+        hiddenTitle: '「探す」から外した曲',
+        hiddenLead: 'このリストは管理者にだけ表示されます。',
+        restore: '元に戻す',
     },
     legal: {
         available: 'このページは英語と韓国語でご覧いただけます。',
@@ -577,6 +586,8 @@ export const ja: Messages = {
     },
     embed: {
         play: (title) => `${title}を再生`,
+        reveal: (title) => `${title}のサムネイルを表示`,
+        blurred: 'サムネイルを隠しています · クリックで表示',
     },
     errors: {
         generic: '問題が発生しました',

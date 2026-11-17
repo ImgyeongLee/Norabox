@@ -571,6 +571,15 @@ export const ko: Messages = {
     title: '둘러보기',
     lead: 'Norabox 플레이리스트에 담긴 곡 중 무작위 30곡이에요. 매일 자정(한국 시간)에 바뀌어요.',
     empty: '아직 곡이 없어요.',
+    addedBy: (names) => `추가한 사람: ${names}`,
+    blur: '썸네일 가리기',
+    unblur: '가리기 해제',
+    swap: '다른 곡으로 바꾸기',
+    swapTitle: '이 곡을 다른 곡으로 바꿀까요?',
+    swapBody: '이 곡은 둘러보기에서 계속 빠지고, 오늘 추첨 순서의 다음 곡이 대신 들어가요. 플레이리스트에서는 지워지지 않고, 아래 목록에서 되돌릴 수 있어요.',
+    hiddenTitle: '둘러보기에서 뺀 곡',
+    hiddenLead: '이 목록은 관리자에게만 보여요.',
+    restore: '되돌리기',
   },
   legal: {
     available: '이 페이지는 영어와 한국어로 제공돼요.',
@@ -585,6 +594,8 @@ export const ko: Messages = {
   },
   embed: {
     play: (title) => `${title} 재생`,
+    reveal: (title) => `${title} 썸네일 보기`,
+    blurred: '썸네일을 가렸어요 · 눌러서 보기',
   },
   errors: {
     generic: '문제가 발생했어요',

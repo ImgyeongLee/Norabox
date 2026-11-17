@@ -585,6 +585,16 @@ export const en = {
         title: 'Explore',
         lead: '30 random songs from Norabox playlists, new every day at midnight (Korea time).',
         empty: 'No songs yet.',
+        // Only the site admin sees these.
+        addedBy: (names: string) => `Added by ${names}`,
+        blur: 'Blur thumbnail',
+        unblur: 'Unblur',
+        swap: 'Swap for another song',
+        swapTitle: 'Swap this song out?',
+        swapBody: 'It is taken out of Explore for good, and the next song in today’s shuffle takes its place. It stays in its playlists. You can put it back below.',
+        hiddenTitle: 'Taken out of Explore',
+        hiddenLead: 'Only you can see this list.',
+        restore: 'Put back',
     },
     legal: {
         available: 'This page is available in English and Korean.',
@@ -599,6 +609,8 @@ export const en = {
     },
     embed: {
         play: (title: string) => `Play ${title}`,
+        reveal: (title: string) => `Show the thumbnail of ${title}`,
+        blurred: 'Thumbnail hidden · click to show',
     },
     // Error codes returned by the API and the realtime server, plus client-side ones.
     errors: {

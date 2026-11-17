@@ -193,3 +193,15 @@ model Announcement {
 
   @@index([createdAt])
 }
+
+// A song the site admin changed on the Explore page. Keyed by video id, so it holds whenever the
+// song comes up again; the song itself stays in its playlists.
+model ExploreSong {
+  videoId   String   @id
+  // "blur": its thumbnail is blurred until someone clicks it. "hide": never picked for Explore
+  // (the next song in the day's shuffle takes its place).
+  action    String
+  // The song's title when the admin changed it, for the admin's list of hidden songs.
+  title     String
+  createdAt DateTime @default(now())
+}
