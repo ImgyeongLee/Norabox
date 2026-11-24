@@ -20,6 +20,14 @@ function emitAck(socket: RoomSocket, event: keyof ClientToServerEvents, payload?
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL;
 
+/**
+ * How long one token from /api/realtime/token is reused for reconnects. Tokens last 10 minutes
+ * (src/lib/session.ts) and an expired one makes the realtime server treat the user as a guest, so
+ * this stays two minutes under that. Reusing it keeps reconnects (a phone waking up, the realtime host
+ * restarting) from calling a serverless function each time.
+ */
+const TOKEN_REUSE_MS = 8 * 60 * 1000;
+
 /** Identifies signed-in users to the realtime server (null for guests). */
 async function fetchSocketToken(): Promise<string | null> {
     try {
@@ -51,7 +59,7 @@ async function measureClockOffset(socket: RoomSocket): Promise<number | null> {
  * Connects to a room once `name` is set (i.e. the visitor pressed "Join").
  * Returns the live room snapshot plus helpers to act on it.
  */
-export function useRoom(code: string, name: string | null) {
+export function useRoom(code: string, name: string | null, signedIn: boolean) {
     const [snapshot, setSnapshot] = useState<RoomSnapshot | null>(null);
     const [memberId, setMemberId] = useState<string | null>(null);
     const [status, setStatus] = useState<ConnectionStatus>('connecting');
@@ -61,11 +69,18 @@ export function useRoom(code: string, name: string | null) {
 
     useEffect(() => {
         if (name === null) return;
+        // Kept per connection (not per page), so logging into another account never reuses a token.
+        let cached: { token: string; at: number } | null = null;
         const options = {
             transports: ['websocket', 'polling'],
-            // Called on every (re)connect, so the short-lived token is always fresh.
+            // Called on every (re)connect. Guests have no token to fetch.
             auth: (cb: (data: { token: string | null }) => void) => {
-                fetchSocketToken().then((token) => cb({ token }));
+                if (!signedIn) return cb({ token: null });
+                if (cached && Date.now() - cached.at < TOKEN_REUSE_MS) return cb({ token: cached.token });
+                fetchSocketToken().then((token) => {
+                    cached = token ? { token, at: Date.now() } : null;
+                    cb({ token });
+                });
             },
         };
         // In production the realtime server is a separate service; locally it shares the app's origin.
@@ -103,7 +118,7 @@ export function useRoom(code: string, name: string | null) {
             socket.disconnect();
             socketRef.current = null;
         };
-    }, [code, name]);
+    }, [code, name, signedIn]);
 
     const serverNow = useCallback(() => Date.now() + offset.current, []);
 

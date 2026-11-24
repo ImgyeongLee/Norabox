@@ -10,7 +10,7 @@ export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 // see where the confirmation email went and send it again.
 export const PENDING_COOKIE = "norabox_pending";
 export const PENDING_MAX_AGE = 60 * 60 * 24; // 1 day
-const SOCKET_TOKEN_MAX_AGE = 60 * 5; // 5 minutes; fetched fresh on every (re)connect
+const SOCKET_TOKEN_MAX_AGE = 60 * 10; // 10 minutes; reused for up to 8 (TOKEN_REUSE_MS in useRoom.ts)
 
 // Distinct audiences so a socket token can't be used as a session cookie.
 const SESSION_AUD = "norabox:session";

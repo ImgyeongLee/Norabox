@@ -68,7 +68,7 @@ export function RoomClient({ code, user, searchAvailable, motion }: Props) {
     const rejoinName = useSyncExternalStore(noopSubscribe, () => getJoinedName(code), () => null);
     const [joinedName, setJoinedName] = useState<string | null>(null);
     const name = joinedName ?? rejoinName;
-    const room = useRoom(code, name);
+    const room = useRoom(code, name, !!user);
     const { t, tError } = useI18n();
 
     // A failed join (e.g. the room was removed) shouldn't auto-retry on the next refresh.

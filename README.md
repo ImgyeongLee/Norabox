@@ -52,7 +52,7 @@ share the same Neon database and `AUTH_SECRET`:
 
 Run `npm run db:deploy` against Neon when migrations change.
 
-Signed-in users are identified to the realtime server by a 5-minute token from `/api/realtime/token`,
+Signed-in users are identified to the realtime server by a 10-minute token from `/api/realtime/token`,
 because the session cookie isn't sent across domains. Guests need no token.
 
 Locally, `npm run dev` runs both parts in one process, so neither of the two extra variables is needed.
