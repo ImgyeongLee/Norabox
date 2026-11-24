@@ -95,7 +95,10 @@ class Room {
    * songs are the admin's surprises, so only the admin gets them.
    */
   snapshot(forAdmin = false): RoomSnapshot {
-    const members: MemberView[] = [...this.members.values()].map((m) => ({
+    // Members whose last tab closed keep their seat for RECONNECT_GRACE_MS, but drop off the list
+    // right away; a refresh brings them back a moment later.
+    const connected = [...this.members.values()].filter((m) => m.sockets.size > 0);
+    const members: MemberView[] = connected.map((m) => ({
       memberId: m.memberId,
       name: m.name,
       avatarUrl: m.avatarUrl,
@@ -461,7 +464,9 @@ export function attachSocketServer(httpServer: HttpServer, opts: { corsOrigins?:
       const { room, member } = c;
       member.sockets.delete(socket.id);
       if (member.sockets.size > 0) return;
-      // Don't drop the member right away: a refresh reconnects within a few seconds,
+      // Off the member list right away (snapshot leaves out members with no open tab)...
+      room.broadcast();
+      // ...but keep their seat for a moment: a refresh reconnects within a few seconds,
       // and removing them could empty the room and pause playback for everyone.
       if (member.leaveTimer) clearTimeout(member.leaveTimer);
       member.leaveTimer = setTimeout(() => {
