@@ -281,6 +281,10 @@ input[type="range"].slider::-moz-range-thumb {
   overflow: hidden;
   pointer-events: none;
 }
+.theme-backdrop-contained {
+  position: absolute;
+  z-index: 0;
+}
 .theme-backdrop > * {
   position: absolute;
   inset: 0;
@@ -463,11 +467,56 @@ html[data-season="christmas"] .season-hat {
   display: inline;
 }
 
+/* Cyberpunk: a neon grid floor running toward the viewer, and faint CRT scanlines. */
+.theme-backdrop-cyberpunk .cyber-grid {
+  inset: auto -25% -5% -25%;
+  height: 55%;
+  background-image:
+    linear-gradient(to right, rgb(0 229 255 / 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(0 229 255 / 0.18) 1px, transparent 1px);
+  background-size: 56px 56px;
+  transform-origin: bottom center;
+  transform: perspective(480px) rotateX(64deg);
+  -webkit-mask-image: linear-gradient(to top, #000 5%, transparent 90%);
+  mask-image: linear-gradient(to top, #000 5%, transparent 90%);
+  animation: cyber-grid-run 3s linear infinite;
+}
+@keyframes cyber-grid-run {
+  from { transform: perspective(480px) rotateX(64deg) translateY(0); }
+  to { transform: perspective(480px) rotateX(64deg) translateY(56px); }
+}
+.theme-backdrop-cyberpunk .cyber-scanlines {
+  background: repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.03) 0 1px, transparent 1px 3px);
+}
+
+/* Spring Garden: two layers of petals drift down at different speeds. Each layer is one tile taller
+   than the screen and moves down exactly one tile per loop, so the loop is seamless. */
+.garden-petals {
+  bottom: 0;
+}
+.garden-petals-a {
+  top: -420px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420' viewBox='0 0 420 420'%3E%3Cpath fill='%23f2c4cf' fill-opacity='0.8' transform='translate(60 80) rotate(25) scale(1.2)' d='M0 5C3 0 10 0 14 5C10 10 3 10 0 5Z'/%3E%3Cpath fill='%23f7dfc0' fill-opacity='0.85' transform='translate(300 230) rotate(-40) scale(1)' d='M0 5C3 0 10 0 14 5C10 10 3 10 0 5Z'/%3E%3Cpath fill='%23f2c4cf' fill-opacity='0.7' transform='translate(180 360) rotate(70) scale(0.9)' d='M0 5C3 0 10 0 14 5C10 10 3 10 0 5Z'/%3E%3C/svg%3E") 0 0 / 420px 420px;
+  animation: garden-fall-a 64s linear infinite;
+}
+.garden-petals-b {
+  top: -340px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='340' viewBox='0 0 340 340'%3E%3Cpath fill='%23eab3c1' fill-opacity='0.6' transform='translate(230 110) rotate(-15) scale(0.8)' d='M0 5C3 0 10 0 14 5C10 10 3 10 0 5Z'/%3E%3Cpath fill='%23f7dfc0' fill-opacity='0.65' transform='translate(70 260) rotate(50) scale(0.7)' d='M0 5C3 0 10 0 14 5C10 10 3 10 0 5Z'/%3E%3C/svg%3E") 140px 0 / 340px 340px;
+  animation: garden-fall-b 38s linear infinite;
+}
+@keyframes garden-fall-a {
+  to { transform: translate3d(0, 420px, 0); }
+}
+@keyframes garden-fall-b {
+  to { transform: translate3d(0, 340px, 0); }
+}
+
 /* People who turned on "reduce motion" get a still picture: stars at mid brightness, nothing moving. */
 @media (prefers-reduced-motion: reduce) {
   .theme-backdrop > * { animation: none; }
   .backdrop-twinkle { opacity: 0.6; }
   .starry-shooting { display: none; }
+  .theme-backdrop-cyberpunk .cyber-grid { animation: none; }
 }
 
 /* Fonts: Inter (Latin), Pretendard (Korean) and Noto Sans JP (Japanese), each followed by
@@ -494,4 +543,318 @@ html:lang(ja) body {
 :lang(ko) {
   word-break: keep-all;
   overflow-wrap: anywhere;
+}
+
+/* ── Cyberpunk room skin ─────────────────────────────────────────────────────────────────
+   For the limited-time "cyberpunk" theme (src/lib/limited-themes.ts). The room page wraps the
+   room in data-room-skin="cyberpunk" (src/app/room/[code]/page.tsx), so all of this applies only
+   there. The layout stays as it is; shapes, type and effects change. Colors come from the theme's
+   palette (THEME_PALETTES.cyberpunk: --color-moss is the cyan); magenta marks the admin's own
+   things. Fonts: --font-cyber-display / --font-cyber-label, loaded only by cyberpunk rooms. */
+[data-room-skin="cyberpunk"] {
+  --cyber-magenta: #ff2bd6;
+  --cyber-glow: color-mix(in srgb, var(--color-moss) 40%, transparent);
+  --cyber-chamfer: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+/* Square corners everywhere, avatars and status dots included. */
+[data-room-skin="cyberpunk"] [class*="rounded"] {
+  border-radius: 0;
+}
+
+/* Panels: nearly solid, a thin cyan edge, a faint glow and HUD brackets in two corners (drawn as
+   background strips, so no element needs repositioning). "body" outranks the backdrop rule above. */
+body [data-room-skin="cyberpunk"] .card {
+  border-color: color-mix(in srgb, var(--color-moss) 28%, transparent);
+  background-color: rgb(9 13 24 / 0.92);
+  background-image:
+    linear-gradient(var(--color-moss), var(--color-moss)),
+    linear-gradient(var(--color-moss), var(--color-moss)),
+    linear-gradient(var(--color-moss), var(--color-moss)),
+    linear-gradient(var(--color-moss), var(--color-moss));
+  background-size: 16px 2px, 2px 16px, 16px 2px, 2px 16px;
+  background-position: top left, top left, bottom right, bottom right;
+  background-repeat: no-repeat;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.6), 0 0 32px color-mix(in srgb, var(--color-moss) 8%, transparent);
+}
+
+/* Buttons: cut corners on the main ones, outlines on the rest. */
+[data-room-skin="cyberpunk"] .btn-primary,
+[data-room-skin="cyberpunk"] [role="tab"][aria-selected="true"] {
+  clip-path: var(--cyber-chamfer);
+}
+[data-room-skin="cyberpunk"] .btn-secondary {
+  background-color: transparent;
+  border-color: color-mix(in srgb, var(--color-moss) 55%, transparent);
+}
+[data-room-skin="cyberpunk"] .btn-secondary:hover,
+[data-room-skin="cyberpunk"] .icon-btn:hover {
+  background-color: color-mix(in srgb, var(--color-moss) 12%, transparent);
+}
+[data-room-skin="cyberpunk"] [data-play-button] {
+  clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%);
+}
+[data-room-skin="cyberpunk"] [role="tablist"] {
+  background-color: rgb(0 0 0 / 0.45);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+
+/* Type: wide display letters for the room code, squared technical letters for small labels. */
+[data-room-skin="cyberpunk"] .uppercase {
+  font-family: var(--font-cyber-label), var(--font-ko), var(--font-system);
+  letter-spacing: 0.14em;
+}
+[data-room-skin="cyberpunk"] .room-code {
+  position: relative;
+  font-family: var(--font-cyber-display), var(--font-mono);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  word-break: break-all;
+  color: #f2fdff;
+  text-shadow: 0 0 18px var(--cyber-glow);
+}
+/* The glitch: two offset copies, each showing a slice. They wrap exactly like the code itself. */
+[data-room-skin="cyberpunk"] .room-code::before,
+[data-room-skin="cyberpunk"] .room-code::after {
+  content: attr(data-text);
+  content: attr(data-text) / "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  text-shadow: none;
+  opacity: 0.85;
+}
+[data-room-skin="cyberpunk"] .room-code::before {
+  color: var(--cyber-magenta);
+  transform: translate(2px, -1px);
+  clip-path: inset(12% 0 58% 0);
+}
+[data-room-skin="cyberpunk"] .room-code::after {
+  color: var(--color-moss);
+  transform: translate(-2px, 1px);
+  clip-path: inset(62% 0 8% 0);
+}
+
+/* The admin's own things in magenta: their badge, song memos, hidden songs. */
+[data-room-skin="cyberpunk"] [data-role="admin"] {
+  background-color: var(--cyber-magenta);
+  color: var(--color-pine);
+}
+[data-room-skin="cyberpunk"] [data-memo] {
+  background-color: rgb(255 43 214 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(255 43 214 / 0.35);
+  color: #ffd6f6;
+}
+[data-room-skin="cyberpunk"] [data-memo] svg {
+  color: var(--cyber-magenta);
+}
+[data-room-skin="cyberpunk"] [data-state="hidden"] {
+  border-color: rgb(255 43 214 / 0.5);
+  background-color: rgb(255 43 214 / 0.04);
+}
+[data-room-skin="cyberpunk"] [data-state="current"] {
+  background-color: color-mix(in srgb, var(--color-moss) 12%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-moss) 20%, transparent);
+}
+
+/* Sliders: a glowing bar and a diamond handle. */
+[data-room-skin="cyberpunk"] input[type="range"].slider {
+  border-radius: 0;
+  box-shadow: 0 0 10px var(--cyber-glow);
+}
+[data-room-skin="cyberpunk"] input[type="range"].slider::-webkit-slider-thumb {
+  border-radius: 0;
+  background: var(--color-pine);
+  border: 2px solid var(--color-moss);
+  transform: rotate(45deg);
+}
+[data-room-skin="cyberpunk"] input[type="range"].slider::-moz-range-thumb {
+  border-radius: 0;
+  background: var(--color-pine);
+  border: 2px solid var(--color-moss);
+  transform: rotate(45deg);
+}
+
+/* The site header above a cyberpunk room picks up a neon edge. */
+body:has([data-room-skin="cyberpunk"]:not([data-room-preview])) header.sticky {
+  border-bottom-color: color-mix(in srgb, var(--color-moss) 35%, transparent);
+  box-shadow: 0 1px 24px color-mix(in srgb, var(--color-moss) 10%, transparent);
+}
+
+/* Phones: a smaller room code, as the wide letters run long. */
+@media (max-width: 639px) {
+  [data-room-skin="cyberpunk"] .room-code {
+    font-size: 1.375rem;
+    letter-spacing: 0.05em;
+  }
+}
+
+/* ── Spring Garden room skin ─────────────────────────────────────────────────────────────
+   For the limited-time "garden" theme (src/lib/limited-themes.ts), under data-room-skin="garden".
+   Bright and old-world, with few curves: cream paper, ivory panels with a fine inner rule,
+   antique-gold lines, straight-edged shapes, classical capitals for the room code (centered
+   over the player column, with an ornament under it) and a Korean serif for song titles. Rose
+   marks the main buttons and the admin's own things; the leaf green (--color-moss) the rest.
+   Readability first: muted text is a solid ~6.8:1 brown instead of faded ink. */
+[data-room-skin="garden"] {
+  --garden-rose: #a23b5a;
+  --garden-rose-dark: #86304a;
+  --garden-gold: #cdbb8f;
+  --garden-muted: #5f5a48;
+}
+/* Few curves: small, straight-edged corners everywhere. */
+[data-room-skin="garden"] [class*="rounded"] {
+  border-radius: 3px;
+}
+/* Faded ink is hard to read on cream: muted text gets one solid, readable brown. */
+[data-room-skin="garden"] :is(.muted, [class*="text-lime/4"], [class*="text-lime/5"], [class*="text-lime/6"]):not(:hover) {
+  color: var(--garden-muted);
+}
+
+/* Panels: ivory paper, a gold edge, a fine inner rule and a soft shadow. */
+body [data-room-skin="garden"] .card {
+  background-color: #fffaf0;
+  border-color: var(--garden-gold);
+  outline: 1px solid #e6d9b6;
+  outline-offset: -6px;
+  box-shadow: 0 10px 30px rgb(90 70 30 / 0.08);
+}
+
+/* Buttons: rose for the main ones and play, ivory with a gold edge for the rest. */
+[data-room-skin="garden"] .btn-primary,
+[data-room-skin="garden"] [data-play-button] {
+  background-color: var(--garden-rose);
+  color: #fffaf0;
+}
+[data-room-skin="garden"] .btn-primary:not(:disabled):hover,
+[data-room-skin="garden"] [data-play-button]:not(:disabled):hover {
+  background-color: var(--garden-rose-dark);
+}
+[data-room-skin="garden"] [data-play-button] {
+  box-shadow: 0 0 0 4px #fffaf0, 0 0 0 5px #c9b07a, 0 8px 20px rgb(162 59 90 / 0.26);
+}
+[data-room-skin="garden"] .btn-secondary {
+  background-color: #fffaf0;
+  border-color: var(--garden-gold);
+}
+[data-room-skin="garden"] .btn-secondary:hover,
+[data-room-skin="garden"] .icon-btn:hover {
+  background-color: #f3ead3;
+}
+[data-room-skin="garden"] [role="tablist"] {
+  background-color: #f3ead3;
+  box-shadow: inset 0 0 0 1px #e0d2ad;
+}
+
+/* Header: the title block centers over the player column, with an ornament under the room code;
+   on narrow screens (one column) it centers over the page, with the buttons below it. */
+[data-room-skin="garden"] [data-room-header] {
+  flex-direction: column;
+  align-items: stretch;
+}
+[data-room-skin="garden"] [data-room-title] {
+  text-align: center;
+}
+[data-room-skin="garden"] [data-room-title] > :first-child {
+  justify-content: center;
+}
+[data-room-skin="garden"] [data-room-title]::after {
+  content: "";
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  height: 16px;
+  margin: 8px auto 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='16' viewBox='0 0 240 16' fill='none' stroke='%23b39a5e' stroke-width='1.2'%3E%3Cpath d='M0 8h96M144 8h96M0 11h84M156 11h84M120 1l7 7-7 7-7-7zM104 8l5-4 5 4-5 4zM136 8l-5-4-5 4 5 4z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+[data-room-skin="garden"] [data-room-header] > :last-child {
+  justify-content: center;
+}
+@media (min-width: 1024px) {
+  /* The same columns and gap as the room grid below (RoomClient: lg:grid-cols-[1.35fr_1fr], gap-5). */
+  [data-room-skin="garden"] [data-room-header] {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    column-gap: 1.25rem;
+    align-items: end;
+  }
+  [data-room-skin="garden"] [data-room-header] > :last-child {
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+}
+[data-room-skin="garden"] .room-code {
+  font-family: var(--font-garden-display), serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #23331f;
+}
+[data-room-skin="garden"] [data-song-title] {
+  font-family: var(--font-garden-serif), var(--font-ko), serif;
+  font-weight: 700;
+  color: #23331f;
+}
+
+/* Status and role as a quiet engraved line instead of boxes: a green diamond, a gold rule, the role. */
+[data-room-skin="garden"] [data-room-title] [data-status-dot] {
+  width: 6px;
+  height: 6px;
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+[data-room-skin="garden"] [data-room-title] [data-role] {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--garden-muted);
+}
+[data-room-skin="garden"] [data-room-title] [data-role="admin"] {
+  color: var(--garden-rose);
+}
+[data-room-skin="garden"] [data-room-title] [data-role]::before {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 12px;
+  margin-right: 10px;
+  vertical-align: -1px;
+  background: var(--garden-gold);
+}
+
+/* The admin's own things in rose: memos and hidden songs. The playing song in leaf green. */
+[data-room-skin="garden"] [data-memo] {
+  background-color: #fbeff1;
+  box-shadow: inset 0 0 0 1px rgb(162 59 90 / 0.35);
+  color: #4a2330;
+}
+[data-room-skin="garden"] [data-memo] svg {
+  color: var(--garden-rose);
+}
+[data-room-skin="garden"] [data-state="hidden"] {
+  border-color: rgb(162 59 90 / 0.5);
+  background-color: #fdf3f3;
+}
+[data-room-skin="garden"] [data-state="current"] {
+  background-color: #edf2e1;
+  border-color: rgb(63 107 58 / 0.55);
+}
+
+/* Sliders: a thin ruled bar and a diamond handle. */
+[data-room-skin="garden"] input[type="range"].slider {
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px #d6c79f;
+}
+[data-room-skin="garden"] input[type="range"].slider::-webkit-slider-thumb {
+  border-radius: 0;
+  background: #fffaf0;
+  border: 2px solid var(--color-moss);
+  transform: rotate(45deg);
+}
+[data-room-skin="garden"] input[type="range"].slider::-moz-range-thumb {
+  border-radius: 0;
+  background: #fffaf0;
+  border: 2px solid var(--color-moss);
+  transform: rotate(45deg);
 }

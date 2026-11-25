@@ -159,6 +159,8 @@ function Row({
         <li
             ref={setNodeRef}
             style={{ transform: CSS.Transform.toString(transform), transition }}
+            // For room skins (globals.css).
+            data-state={current ? 'current' : item.hidden ? 'hidden' : undefined}
             // relative: keeps the screen-reader-only "Hidden" text (absolutely positioned) inside the
             // row; otherwise it escapes the playlist's scroll box and makes the page much taller.
             className={`group relative flex flex-wrap items-center gap-2 rounded-xl border p-2 transition ${
@@ -208,6 +210,7 @@ function Row({
                 </span>
                 <span className="min-w-0 flex-1">
                     <span
+                        data-song-title
                         className={`line-clamp-2 text-sm font-medium leading-snug ${current ? 'text-lime' : 'text-lime/90'}`}>
                         {item.title}
                     </span>

@@ -15,7 +15,7 @@ const ROLE_STYLE: Record<Role, string> = {
 export function RoleBadge({ role }: { role: Role }) {
     const { t } = useI18n();
     return (
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${ROLE_STYLE[role]}`}>
+        <span data-role={role} className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${ROLE_STYLE[role]}`}>
             {t.members.roles[role]}
         </span>
     );

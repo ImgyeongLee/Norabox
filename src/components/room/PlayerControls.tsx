@@ -49,7 +49,7 @@ export function PlayerControls({ current, playback, loopMode, canControl, hasIte
     return (
         <div className="space-y-3">
             <div>
-                <h2 className="line-clamp-2 text-lg font-semibold leading-snug">
+                <h2 data-song-title className="line-clamp-2 text-lg font-semibold leading-snug">
                     {current?.title ?? t.player.noSong}
                 </h2>
                 <p className="truncate text-sm text-lime/55">
@@ -60,7 +60,7 @@ export function PlayerControls({ current, playback, loopMode, canControl, hasIte
                         : t.player.emptyPlaylist}
                 </p>
                 {current?.memo && (
-                    <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-moss/15 px-2.5 py-1.5 text-sm text-lime/90">
+                    <p data-memo className="mt-2 flex items-start gap-1.5 rounded-lg bg-moss/15 px-2.5 py-1.5 text-sm text-lime/90">
                         <Icon as={LuStickyNote} className="mt-0.5 size-4 shrink-0 text-moss" />
                         <span className="whitespace-pre-wrap wrap-break-word">{current.memo}</span>
                     </p>
@@ -108,6 +108,7 @@ export function PlayerControls({ current, playback, loopMode, canControl, hasIte
                     <PrevIcon />
                 </button>
                 <button
+                    data-play-button
                     className="inline-flex size-14 items-center justify-center rounded-full bg-moss text-pine shadow-lg transition hover:bg-lime disabled:opacity-40"
                     onClick={() => act(playback.isPlaying ? 'player:pause' : 'player:play')}
                     disabled={!canControl || !hasItems}

@@ -6,9 +6,12 @@ import { RoomClient } from '@/components/room/RoomClient';
 import { ThemeBackdrop } from '@/components/room/ThemeBackdrop';
 import { getCurrentUser } from '@/lib/auth';
 import { getI18n } from '@/i18n/server';
+import { shownTheme } from '@/lib/limited-themes';
+import { SKIN_FONTS } from '@/lib/skin-fonts';
 import { prisma } from '@/lib/prisma';
 import {
     hasAnimatedBackdrop,
+    hasSkin,
     isRoomTheme,
     MOTION_COOKIE,
     THEME_PALETTES,
@@ -24,7 +27,9 @@ const getRoom = cache(async (code: string) => {
     return prisma.room.findUnique({ where: { slug: code.toLowerCase() }, select: { code: true, theme: true } });
 });
 
-const themeOf = (room: { theme: string } | null): RoomTheme => (room && isRoomTheme(room.theme) ? room.theme : 'default');
+// A limited-time theme that has ended shows as the default one (src/lib/limited-themes.ts).
+const themeOf = (room: { theme: string } | null): RoomTheme =>
+    room && isRoomTheme(room.theme) ? shownTheme(room.theme) : 'default';
 
 export async function generateMetadata(props: PageProps<'/room/[code]'>): Promise<Metadata> {
     const [{ code }, { t }] = await Promise.all([props.params, getI18n()]);
@@ -60,13 +65,16 @@ export default async function RoomPage(props: PageProps<'/room/[code]'>) {
             {/* data-own-theme: the season's snow stays out of rooms with their own theme (globals.css). */}
             {theme !== 'default' && <style data-own-theme="">{themeCss(theme)}</style>}
             {motion === 'on' && <ThemeBackdrop theme={theme} />}
-            <RoomClient
-                code={room.code}
-                user={user && { username: user.username, avatarUrl: user.avatarUrl }}
-                // Without a YouTube API key, rooms add songs by link only (no search).
-                searchAvailable={!!process.env.YOUTUBE_API_KEY?.trim()}
-                motion={motion}
-            />
+            {/* A skinned theme restyles everything under this attribute (globals.css). */}
+            <div data-room-skin={hasSkin(theme) ? theme : undefined} className={SKIN_FONTS[theme]}>
+                <RoomClient
+                    code={room.code}
+                    user={user && { username: user.username, avatarUrl: user.avatarUrl }}
+                    // Without a YouTube API key, rooms add songs by link only (no search).
+                    searchAvailable={!!process.env.YOUTUBE_API_KEY?.trim()}
+                    motion={motion}
+                />
+            </div>
         </>
     );
 }

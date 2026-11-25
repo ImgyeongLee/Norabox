@@ -237,7 +237,7 @@ function StatusDot({ status }: { status: ConnectionStatus }) {
     const label = t.room.status[status];
     return (
         <span className="inline-flex items-center gap-1.5 text-xs muted">
-            <span className={`size-2 rounded-full ${cls}`} />
+            <span data-status-dot className={`size-2 rounded-full ${cls}`} />
             {label}
         </span>
     );
@@ -359,8 +359,9 @@ function RoomView({
     return (
         <div className="mx-auto max-w-6xl px-4 py-6">
             {/* Room header */}
-            <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-3">
-                <div className="min-w-0">
+            {/* data-room-*: hooks for room skins (globals.css). */}
+            <div data-room-header className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-3">
+                <div data-room-title className="min-w-0">
                     <div className="flex items-center gap-2">
                         <StatusDot status={status} />
                         <RoleBadge role={role} />
@@ -373,7 +374,10 @@ function RoomView({
                             </span>
                         )}
                     </div>
-                    <h1 className="mt-1 break-all font-mono text-2xl font-bold sm:text-3xl">{snapshot.code}</h1>
+                    {/* data-text: the copies a skin may draw over it (globals.css, the cyberpunk glitch). */}
+                    <h1 data-text={snapshot.code} className="room-code mt-1 break-all font-mono text-2xl font-bold sm:text-3xl">
+                        {snapshot.code}
+                    </h1>
                 </div>
                 <div className="flex w-full gap-2 sm:ml-auto sm:w-auto">
                     <CopyButton

@@ -2,14 +2,28 @@
 // the room sees it. A theme swaps the five palette colors every component uses
 // (see @theme in globals.css), plus the page background.
 
-export const ROOM_THEMES = ["default", "mono", "starry", "candy", "cosmos", "roach"] as const;
+export const ROOM_THEMES = ["default", "mono", "white", "starry", "candy", "cosmos", "roach", "cyberpunk", "garden"] as const;
 export type RoomTheme = (typeof ROOM_THEMES)[number];
 
 export const isRoomTheme = (v: unknown): v is RoomTheme => ROOM_THEMES.includes(v as RoomTheme);
 
+/**
+ * Themes that are a variant of another and share its card in the theme picker, which then offers
+ * a switch between them: White & black is Black & white with the colors turned around.
+ */
+export const THEME_VARIANT_OF: Partial<Record<RoomTheme, RoomTheme>> = { white: "mono" };
+
 /** Themes with a moving background (src/components/room/ThemeBackdrop.tsx). */
-const ANIMATED_THEMES: readonly RoomTheme[] = ["starry", "candy", "cosmos"];
+const ANIMATED_THEMES: readonly RoomTheme[] = ["starry", "candy", "cosmos", "cyberpunk", "garden"];
 export const hasAnimatedBackdrop = (theme: RoomTheme) => ANIMATED_THEMES.includes(theme);
+
+/**
+ * Themes that change more than colors: the room page marks its content with
+ * data-room-skin="<theme>", and globals.css restyles shapes, type and effects under it
+ * (the layout stays the same).
+ */
+const SKINNED_THEMES: readonly RoomTheme[] = ["cyberpunk", "garden"];
+export const hasSkin = (theme: RoomTheme) => SKINNED_THEMES.includes(theme);
 
 /** Set to "off" when someone turns room background animations off; read by the room page. */
 export const MOTION_COOKIE = "norabox_motion";
@@ -51,6 +65,19 @@ export const THEME_PALETTES: Record<RoomTheme, Palette> = {
     lime: "#fafafa",
     pageBackground:
       "radial-gradient(1200px 600px at 10% -10%, rgb(255 255 255 / 0.08), transparent 60%), radial-gradient(900px 500px at 110% 10%, rgb(255 255 255 / 0.05), transparent 60%), #0a0a0a",
+  },
+  white: {
+    // Black & white turned around, like the site's white & black look: a soft paper gray instead of
+    // glaring white, lighter cards, off-black text and buttons.
+    pine: "#e7e5e0",
+    fern: "#f7f6f3",
+    leaf: "#a8a49b",
+    moss: "#262626",
+    lime: "#262626",
+    scheme: "light",
+    danger: "#b42335",
+    pageBackground:
+      "radial-gradient(1200px 600px at 10% -10%, rgb(0 0 0 / 0.05), transparent 60%), radial-gradient(900px 500px at 110% 10%, rgb(0 0 0 / 0.035), transparent 60%), #e7e5e0",
   },
   starry: {
     // A calm night sky: low-saturation navy, warm moonlight text, gold only as the accent.
@@ -139,7 +166,59 @@ export const THEME_PALETTES: Record<RoomTheme, Palette> = {
       "#170a08",
     ].join(", "),
   },
+  cyberpunk: {
+    // Neon SF, offered for a limited time (src/lib/limited-themes.ts). Near-black blue floor,
+    // cyan accent (~13:1 on the floor), pale cyan text (~17:1). Magenta marks the admin's own
+    // things (memos, hidden songs, the admin badge) through the skin in globals.css. Errors use a
+    // soft pink-red that stays apart from the cyan.
+    pine: "#05060b",
+    fern: "#0b1020",
+    leaf: "#1d5f73",
+    moss: "#00e5ff",
+    lime: "#dff7ff",
+    danger: "#ff6b8b",
+    pageBackground: [
+      "radial-gradient(1200px 500px at 85% -10%, rgb(255 43 214 / 0.12), transparent 60%)",
+      "radial-gradient(1000px 520px at 0% 110%, rgb(0 229 255 / 0.08), transparent 65%)",
+      "#05060b",
+    ].join(", "),
+  },
+  garden: {
+    // Spring garden, offered for a limited time (src/lib/limited-themes.ts). Bright and old-world
+    // without losing readability: cream paper, ivory cards, antique-gold borders, deep ink text
+    // (~14:1), and a leaf green accent (~5.4:1, cream on green too). Rose marks the main buttons
+    // and the admin's own things through the skin in globals.css.
+    pine: "#f6efdf",
+    fern: "#fffaf0",
+    leaf: "#cdbb8f",
+    moss: "#3f6b3a",
+    lime: "#23221a",
+    scheme: "light",
+    danger: "#b3261e",
+    pageBackground: [
+      // A faint garden trellis over cream paper.
+      "repeating-linear-gradient(45deg, rgb(63 107 58 / 0.06) 0 1px, transparent 1px 28px)",
+      "repeating-linear-gradient(-45deg, rgb(63 107 58 / 0.06) 0 1px, transparent 1px 28px)",
+      "#f6efdf",
+    ].join(", "),
+  },
 };
+
+/**
+ * The theme's colors as CSS variables for one element's inline style, so a part of the page (the
+ * theme preview on the home page) can show a theme without changing the rest.
+ */
+export function paletteVars(p: Palette): Record<string, string> {
+  return {
+    "--color-pine": p.pine,
+    "--color-fern": p.fern,
+    "--color-leaf": p.leaf,
+    "--color-moss": p.moss,
+    "--color-lime": p.lime,
+    ...(p.danger ? { "--color-danger": p.danger } : {}),
+    colorScheme: p.scheme ?? "dark",
+  };
+}
 
 /** CSS that applies a theme to the whole page (used inside a <style> tag). */
 export function themeCss(theme: RoomTheme) {

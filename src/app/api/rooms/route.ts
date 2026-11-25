@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { canViewPost } from '@/lib/post-access';
 import { allowAttempt, clientIp } from '@/lib/rate-limit';
 import { ROOM_THEMES } from '@/lib/room-themes';
+import { isThemeOpen } from '@/lib/limited-themes';
 import { purgeIfExpired } from '@/lib/rooms';
 import { authorName } from '@/lib/users';
 import { roomCodeSchema } from '@/lib/validation';
@@ -26,7 +27,9 @@ export async function POST(req: Request) {
     if (!(await allowAttempt('room', clientIp(req)))) return jsonError('roomRateLimit', 429);
     const parsed = createRoomSchema.safeParse(await readJson(req));
     if (!parsed.success) return validationError(parsed.error);
-    const { name, clientId, theme, importPostId, importShareToken } = parsed.data;
+    const { name, clientId, importPostId, importShareToken } = parsed.data;
+    // A limited theme picked just before it ended: the room starts with the default one instead.
+    const theme = isThemeOpen(parsed.data.theme) ? parsed.data.theme : 'default';
     const me = await getCurrentUser();
     const slug = name.toLowerCase();
 

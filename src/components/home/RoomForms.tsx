@@ -4,10 +4,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { LuArrowRight } from 'react-icons/lu';
+import { Icon } from '@/components/icons';
 import { useI18n } from '@/i18n/client';
-import { ThemePicker } from '@/components/home/ThemePicker';
-import { getClientId } from '@/lib/client-identity';
-import type { RoomTheme } from '@/lib/room-themes';
 import { roomCodeSchema } from '@/lib/validation';
 
 function sanitize(v: string) {
@@ -25,12 +24,27 @@ export type ImportingPlaylist = {
     scenario: string | null;
 };
 
-export function CreateRoomForm({ importing }: { importing?: ImportingPlaylist | null }) {
-    const router = useRouter();
+/**
+ * Step 1 of starting a room: its name (which is also its invite code). "Next" checks that the
+ * name is free, then hands it to step 2, where the theme is picked with a preview
+ * (src/components/home/ThemeStep.tsx) and the room is created.
+ */
+export function CreateRoomForm({
+    importing,
+    initialName = '',
+    initialError = null,
+    onNext,
+}: {
+    importing?: ImportingPlaylist | null;
+    /** Kept when coming back from step 2. */
+    initialName?: string;
+    /** Shown when step 2 found the name taken after all. */
+    initialError?: string | null;
+    onNext: (name: string) => void;
+}) {
     const { t, tError } = useI18n();
-    const [name, setName] = useState('');
-    const [theme, setTheme] = useState<RoomTheme>('default');
-    const [error, setError] = useState<string | null>(null);
+    const [name, setName] = useState(initialName);
+    const [error, setError] = useState<string | null>(initialError);
     const [busy, setBusy] = useState(false);
 
     async function submit(e: React.SubmitEvent) {
@@ -39,25 +53,12 @@ export function CreateRoomForm({ importing }: { importing?: ImportingPlaylist | 
         if (!parsed.success) return setError(tError(parsed.error.issues[0].message));
         setBusy(true);
         setError(null);
-        try {
-            const res = await fetch('/api/rooms', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: parsed.data,
-                    clientId: getClientId(),
-                    theme,
-                    ...(importing ? { importPostId: importing.id } : {}),
-                    ...(importing?.shareToken ? { importShareToken: importing.shareToken } : {}),
-                }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error ?? 'createRoomFailed');
-            router.push(`/room/${data.code}`);
-        } catch (err) {
-            setError(tError(err instanceof Error ? err.message : 'createRoomFailed'));
-            setBusy(false);
-        }
+        // A room with this name already? (The lookup the join form uses; 404 means it's free.) If the
+        // check itself fails, go on: creating the room checks again.
+        const res = await fetch(`/api/rooms/${encodeURIComponent(parsed.data)}`).catch(() => null);
+        setBusy(false);
+        if (res?.ok) return setError(tError('roomNameTaken'));
+        onNext(parsed.data);
     }
 
     return (
@@ -80,9 +81,14 @@ export function CreateRoomForm({ importing }: { importing?: ImportingPlaylist | 
                     </Link>
                 </div>
             )}
-            <label htmlFor="room-name" className="label">
-                {t.roomForms.roomName}
-            </label>
+            <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                <label htmlFor="room-name" className="text-sm font-medium text-lime/85">
+                    {t.roomForms.roomName}
+                </label>
+                <span className="text-xs text-lime/70">
+                    <b className="text-moss">1</b> / 2 · {t.roomForms.stepName}
+                </span>
+            </div>
             <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                     id="room-name"
@@ -95,19 +101,19 @@ export function CreateRoomForm({ importing }: { importing?: ImportingPlaylist | 
                     }}
                     autoComplete="off"
                     spellCheck={false}
-                    maxLength={32}
                     aria-invalid={!!error}
                     aria-describedby="room-name-hint"
-                    autoFocus={!!importing}
+                    autoFocus={!!importing || !!initialName}
                 />
                 <button className="btn-primary shrink-0" disabled={busy || !name}>
-                    {busy ? t.roomForms.creating : t.roomForms.create}
+                    {busy ? t.roomForms.checking : t.roomForms.next}
+                    {!busy && <Icon as={LuArrowRight} className="size-4" />}
                 </button>
             </div>
             <p id="room-name-hint" className={error ? 'field-error' : 'mt-1.5 text-xs text-lime/50'}>
-                {error ?? (importing ? `${t.roomForms.roomNameHint} ${t.home.importHint}` : t.roomForms.roomNameHint)}
+                {error ??
+                    `${t.roomForms.roomNameHint} ${importing ? t.home.importHint : t.roomForms.nextHint}`}
             </p>
-            <ThemePicker value={theme} onChange={setTheme} />
         </form>
     );
 }
