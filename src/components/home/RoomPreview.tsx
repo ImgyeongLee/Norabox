@@ -18,6 +18,8 @@ export function RoomPreview({ theme, code }: { theme: RoomTheme; code: string })
     const { t } = useI18n();
     const p = THEME_PALETTES[theme];
     const songs = t.roomForms.previewSongs;
+    // The cyberpunk room's heads-up details (RoomClient's `hud`), with example values.
+    const hud = theme === 'cyberpunk';
     return (
         <div
             aria-hidden
@@ -29,8 +31,9 @@ export function RoomPreview({ theme, code }: { theme: RoomTheme; code: string })
             <div className="relative z-10 p-4 sm:p-5">
                 <div data-room-header className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-3">
                     <div data-room-title className="min-w-0">
+                        {hud && <p className="cyber-sys-label">SYS://NORABOX · ROOM LINK</p>}
                         <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 text-xs muted">
+                            <span data-status="connected" className="inline-flex items-center gap-1.5 text-xs muted">
                                 <span data-status-dot className="size-2 rounded-full bg-moss" />
                                 {t.room.status.connected}
                             </span>
@@ -45,7 +48,18 @@ export function RoomPreview({ theme, code }: { theme: RoomTheme; code: string })
                 <div className="grid gap-4 sm:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
                     {/* Player */}
                     <div className="card space-y-3 p-3">
-                        <div className="aspect-video rounded-xl bg-black/40" />
+                        <div className="relative aspect-video overflow-hidden rounded-xl bg-black/40">
+                            {hud && (
+                                <div className="cyber-hud absolute inset-0">
+                                    <span className="cyber-hud-tl">FEED_01 // YOUTUBE</span>
+                                    <span className="cyber-hud-tr">● SYNC LOCK</span>
+                                    <span className="cyber-hud-bl">
+                                        TRK 01 / {String(songs.length).padStart(2, '0')}
+                                    </span>
+                                    <span className="cyber-hud-br">2:21</span>
+                                </div>
+                            )}
+                        </div>
                         <div>
                             <p data-song-title className="line-clamp-1 text-base font-semibold leading-snug">
                                 {songs[0]}
@@ -88,6 +102,7 @@ export function RoomPreview({ theme, code }: { theme: RoomTheme; code: string })
                                 {t.room.tabs.people(3)}
                             </span>
                         </div>
+                        {hud && <span className="cyber-total self-end">TOTAL 14:32</span>}
                         {songs.map((title, i) => (
                             <div
                                 key={title}

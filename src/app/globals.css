@@ -556,8 +556,10 @@ html:lang(ja) body {
   --cyber-glow: color-mix(in srgb, var(--color-moss) 40%, transparent);
   --cyber-chamfer: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
 }
-/* Square corners everywhere, avatars and status dots included. */
-[data-room-skin="cyberpunk"] [class*="rounded"] {
+/* Square corners everywhere, avatars and status dots included. Panels, buttons and fields get
+   their rounding from utilities (card, btn-*, icon-btn, input) rather than a rounded-* class, so
+   they are named here too. */
+[data-room-skin="cyberpunk"] :is([class*="rounded"], .card, .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .icon-btn, .input) {
   border-radius: 0;
 }
 
@@ -577,21 +579,95 @@ body [data-room-skin="cyberpunk"] .card {
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.6), 0 0 32px color-mix(in srgb, var(--color-moss) 8%, transparent);
 }
 
-/* Buttons: cut corners on the main ones, outlines on the rest. */
-[data-room-skin="cyberpunk"] .btn-primary,
-[data-room-skin="cyberpunk"] [role="tab"][aria-selected="true"] {
+/* The main buttons, the selected tab and the play button: a cut-corner (play: hexagon) neon shape
+   that glows. clip-path would cut off the glow (and the focus ring) along with the corners, so
+   the shape is drawn by ::before and clipped there, and the element itself, unclipped, glows
+   with a drop-shadow that follows the shape. */
+[data-room-skin="cyberpunk"] :is(.btn-primary, [role="tab"][aria-selected="true"], [data-play-button]) {
+  position: relative;
+  isolation: isolate;
+  background-color: transparent;
+  box-shadow: none;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-moss) 55%, transparent));
+}
+[data-room-skin="cyberpunk"] :is(.btn-primary, [role="tab"][aria-selected="true"], [data-play-button])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--color-moss);
+  transition: background-color 0.15s;
+}
+/* The shapes, each on its own selector so neither outranks the other. */
+[data-room-skin="cyberpunk"] .btn-primary::before,
+[data-room-skin="cyberpunk"] [role="tab"][aria-selected="true"]::before {
   clip-path: var(--cyber-chamfer);
 }
+[data-room-skin="cyberpunk"] [data-play-button]::before {
+  clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%);
+}
+/* The hexagon is the mockup's size: a little bigger than the round button. */
+[data-room-skin="cyberpunk"] [data-play-button] {
+  width: 4rem;
+  height: 4rem;
+}
+[data-room-skin="cyberpunk"] :is(.btn-primary, [data-play-button]):not(:disabled):hover::before {
+  background-color: #7af3ff;
+}
+[data-room-skin="cyberpunk"] :is(.btn-primary, [data-play-button]):not(:disabled):hover {
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--color-moss) 75%, transparent));
+}
+
+/* Outlines for the rest: secondary buttons, and the player's other buttons (as in the mockup). */
 [data-room-skin="cyberpunk"] .btn-secondary {
   background-color: transparent;
   border-color: color-mix(in srgb, var(--color-moss) 55%, transparent);
+}
+[data-room-skin="cyberpunk"] :has(> [data-play-button]) > .icon-btn {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-moss) 30%, transparent);
 }
 [data-room-skin="cyberpunk"] .btn-secondary:hover,
 [data-room-skin="cyberpunk"] .icon-btn:hover {
   background-color: color-mix(in srgb, var(--color-moss) 12%, transparent);
 }
-[data-room-skin="cyberpunk"] [data-play-button] {
-  clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%);
+[data-room-skin="cyberpunk"] :has(> [data-play-button]) > .icon-btn:not(:disabled):hover {
+  box-shadow: inset 0 0 0 1px var(--color-moss), 0 0 10px color-mix(in srgb, var(--color-moss) 35%, transparent);
+}
+/* Leaving the room in magenta. */
+[data-room-skin="cyberpunk"] [data-room-header] .btn-ghost {
+  color: #ff7be6;
+}
+/* The connection status as an outlined label, its dot glowing while live (as in the mockup). */
+[data-room-skin="cyberpunk"] [data-status] {
+  border: 1px solid currentColor;
+  padding: 2px 8px;
+  font-family: var(--font-cyber-label), var(--font-ko), var(--font-system);
+  letter-spacing: 0.1em;
+}
+[data-room-skin="cyberpunk"] [data-status="connected"] {
+  color: var(--color-moss);
+}
+[data-room-skin="cyberpunk"] [data-status-dot].bg-moss {
+  box-shadow: 0 0 8px var(--color-moss);
+}
+/* Song memos get the mockup's magenta "MEMO" tag in place of the note icon. */
+[data-room-skin="cyberpunk"] [data-memo] > svg {
+  display: none;
+}
+[data-room-skin="cyberpunk"] [data-memo]::before {
+  content: "MEMO";
+  content: "MEMO" / "";
+  flex: none;
+  align-self: flex-start;
+  margin-top: 1px;
+  padding: 1px 6px;
+  background: var(--cyber-magenta);
+  color: var(--color-pine);
+  font-family: var(--font-cyber-label), var(--font-system);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.6;
 }
 [data-room-skin="cyberpunk"] [role="tablist"] {
   background-color: rgb(0 0 0 / 0.45);
@@ -632,6 +708,62 @@ body [data-room-skin="cyberpunk"] .card {
   color: var(--color-moss);
   transform: translate(-2px, 1px);
   clip-path: inset(62% 0 8% 0);
+}
+
+/* Heads-up details, rendered only in cyberpunk rooms (RoomClient's `hud`): the system label over
+   the room code, the video HUD (src/components/room/VideoHud.tsx) and the playlist's total time. */
+.cyber-sys-label,
+.cyber-hud > span,
+.cyber-total {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cyber-sys-label,
+.cyber-hud-tl,
+.cyber-hud-tr {
+  font-family: var(--font-cyber-label), var(--font-mono);
+  font-weight: 600;
+}
+.cyber-sys-label {
+  margin-bottom: 4px;
+  color: color-mix(in srgb, var(--color-lime) 60%, transparent);
+}
+.cyber-hud > span {
+  position: absolute;
+  color: color-mix(in srgb, var(--color-lime) 72%, transparent);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.9);
+}
+.cyber-hud-tl { top: 10px; left: 12px; }
+.cyber-hud-tr { top: 10px; right: 12px; color: var(--color-moss) !important; }
+.cyber-hud-tr.cyber-hud-lost { color: var(--color-danger) !important; }
+.cyber-hud-bl { bottom: 10px; left: 12px; }
+.cyber-hud-br { bottom: 10px; right: 12px; }
+.cyber-hud-bl,
+.cyber-hud-br,
+.cyber-total {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+/* CRT scanlines over the video. */
+.cyber-hud::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 3px);
+}
+.cyber-total {
+  margin-left: 4px;
+  line-height: 1.75rem;
+  color: color-mix(in srgb, var(--color-lime) 60%, transparent);
+}
+@media (max-width: 639px) {
+  .cyber-hud > span { font-size: 10px; letter-spacing: 0.08em; }
+  .cyber-hud-tl, .cyber-hud-tr { top: 8px; }
+  .cyber-hud-bl, .cyber-hud-br { bottom: 8px; }
+  .cyber-hud-tl, .cyber-hud-bl { left: 9px; }
+  .cyber-hud-tr, .cyber-hud-br { right: 9px; }
 }
 
 /* The admin's own things in magenta: their badge, song memos, hidden songs. */
@@ -702,7 +834,7 @@ body:has([data-room-skin="cyberpunk"]:not([data-room-preview])) header.sticky {
   --garden-muted: #5f5a48;
 }
 /* Few curves: small, straight-edged corners everywhere. */
-[data-room-skin="garden"] [class*="rounded"] {
+[data-room-skin="garden"] :is([class*="rounded"], .card, .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .icon-btn, .input) {
   border-radius: 3px;
 }
 /* Faded ink is hard to read on cream: muted text gets one solid, readable brown. */
@@ -857,4 +989,20 @@ body [data-room-skin="garden"] .card {
   background: #fffaf0;
   border: 2px solid var(--color-moss);
   transform: rotate(45deg);
+}
+
+/* ── Theme preview (src/components/home/RoomPreview.tsx) ─────────────────────────────────
+   The preview box carries the skin itself, so the skins' corner rules (which reach only what is
+   inside) miss it: give it the skin's corners here, or its rounded edge cuts off the neon grid
+   and glows. Inside the small box the panel glow is kept short so its padding contains it. */
+[data-room-preview][data-room-skin="cyberpunk"] {
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--color-moss) 30%, transparent);
+}
+body [data-room-preview][data-room-skin="cyberpunk"] .card {
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.6), 0 0 12px color-mix(in srgb, var(--color-moss) 10%, transparent);
+}
+[data-room-preview][data-room-skin="garden"] {
+  border-radius: 3px;
+  border-color: var(--garden-gold);
 }

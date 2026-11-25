@@ -17,9 +17,11 @@ import { SaveToPlaylist } from '@/components/room/SaveToPlaylist';
 import { SyncedPlayer } from '@/components/room/SyncedPlayer';
 import { useRoom, type ConnectionStatus } from '@/components/room/useRoom';
 import { MotionToggle } from '@/components/room/MotionToggle';
+import { VideoHud } from '@/components/room/VideoHud';
 import { VolumePanel } from '@/components/room/VolumePanel';
 import { useI18n } from '@/i18n/client';
 import { forgetJoin, getJoinedName, getNickname, rememberJoin, setNickname } from '@/lib/client-identity';
+import { formatDuration } from '@/lib/format';
 import { MAX_POST_TRACKS, MAX_ROOM_ITEMS } from '@/lib/limits';
 import { canControl as canControlRole, type AckResult } from '@/lib/room-types';
 import type { RoomSong, Video } from '@/lib/validation';
@@ -31,6 +33,8 @@ type Props = {
     searchAvailable: boolean;
     /** The theme's moving background for this visitor; null when the theme has none. */
     motion: 'on' | 'off' | null;
+    /** The cyberpunk skin's heads-up details: system label, video HUD, playlist total. */
+    hud?: boolean;
 };
 
 const VOLUME_KEY = 'norabox:volume';
@@ -62,7 +66,7 @@ function writeStored(storage: 'local' | 'session', key: string, value: string) {
     } catch {}
 }
 
-export function RoomClient({ code, user, searchAvailable, motion }: Props) {
+export function RoomClient({ code, user, searchAvailable, motion, hud = false }: Props) {
     // `name` stays null until the visitor presses Join (that click also unlocks audio).
     // After a refresh, the name this tab joined with is restored and we rejoin directly.
     const rejoinName = useSyncExternalStore(noopSubscribe, () => getJoinedName(code), () => null);
@@ -103,6 +107,7 @@ export function RoomClient({ code, user, searchAvailable, motion }: Props) {
             signedIn={!!user}
             searchAvailable={searchAvailable}
             motion={motion}
+            hud={hud}
         />
     );
 }
@@ -172,9 +177,12 @@ function PlaylistToolbar({
     currentId,
     onHideAll,
     onSaveMany,
+    total,
 }: {
     items: RoomReady['snapshot']['items'];
     currentId: string | null;
+    /** The playlist's running time, shown by the cyberpunk HUD ("TOTAL 27:21"). */
+    total?: string;
     /** Admin only. */
     onHideAll?: (hidden: boolean) => void;
     /** Signed-in members: picks songs to save to one of their playlists. */
@@ -184,7 +192,7 @@ function PlaylistToolbar({
     const anyHidden = items.some((i) => i.hidden);
     // Everything but the selected song (which can't be hidden) is already hidden.
     const allHidden = items.every((i) => i.hidden || i.id === currentId);
-    if (!onHideAll && !onSaveMany) return null;
+    if (!onHideAll && !onSaveMany && !total) return null;
     return (
         <div className="mb-2 space-y-1.5">
             <div className="flex flex-wrap justify-end gap-1.5">
@@ -218,6 +226,11 @@ function PlaylistToolbar({
                         {t.playlist.hideAll}
                     </button>
                 )}
+                {total && (
+                    <span aria-hidden className="cyber-total">
+                        TOTAL {total}
+                    </span>
+                )}
             </div>
             {onHideAll && anyHidden && <p className="text-xs text-lime/45">{t.room.hiddenHint}</p>}
         </div>
@@ -236,7 +249,7 @@ function StatusDot({ status }: { status: ConnectionStatus }) {
     const cls = STATUS_STYLE[status];
     const label = t.room.status[status];
     return (
-        <span className="inline-flex items-center gap-1.5 text-xs muted">
+        <span data-status={status} className="inline-flex items-center gap-1.5 text-xs muted">
             <span data-status-dot className={`size-2 rounded-full ${cls}`} />
             {label}
         </span>
@@ -249,12 +262,14 @@ function RoomView({
     signedIn,
     searchAvailable,
     motion,
+    hud,
 }: {
     code: string;
     room: RoomReady;
     signedIn: boolean;
     searchAvailable: boolean;
     motion: Props['motion'];
+    hud: boolean;
 }) {
     const router = useRouter();
     const { t, tError } = useI18n();
@@ -304,7 +319,7 @@ function RoomView({
             if (!res.ok) setToast(tError(res.error));
             return res;
         },
-        [act, tError],
+        [act, tError, setToast],
     );
 
     function changePersonal(v: number) {
@@ -362,6 +377,11 @@ function RoomView({
             {/* data-room-*: hooks for room skins (globals.css). */}
             <div data-room-header className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-3">
                 <div data-room-title className="min-w-0">
+                    {hud && (
+                        <p aria-hidden className="cyber-sys-label">
+                            SYS://NORABOX · ROOM LINK
+                        </p>
+                    )}
                     <div className="flex items-center gap-2">
                         <StatusDot status={status} />
                         <RoleBadge role={role} />
@@ -396,15 +416,26 @@ function RoomView({
                 {/* Player column */}
                 <div className="space-y-5">
                     <div className="card space-y-5 p-3 sm:p-5">
-                        <SyncedPlayer
-                            videoId={current?.videoId ?? null}
-                            itemId={current?.id ?? null}
-                            playback={snapshot.playback}
-                            expectedPosition={expectedPosition}
-                            volume={effectiveVolume}
-                            onEnded={(itemId) => report('player:ended', { itemId })}
-                            onDuration={(itemId, duration) => report('player:duration', { itemId, duration })}
-                        />
+                        <div className="relative">
+                            <SyncedPlayer
+                                videoId={current?.videoId ?? null}
+                                itemId={current?.id ?? null}
+                                playback={snapshot.playback}
+                                expectedPosition={expectedPosition}
+                                volume={effectiveVolume}
+                                onEnded={(itemId) => report('player:ended', { itemId })}
+                                onDuration={(itemId, duration) => report('player:duration', { itemId, duration })}
+                            />
+                            {hud && (
+                                <VideoHud
+                                    playback={snapshot.playback}
+                                    positionOf={positionOf}
+                                    trackNo={current ? snapshot.items.indexOf(current) + 1 : null}
+                                    trackCount={snapshot.items.length}
+                                    synced={status === 'connected'}
+                                />
+                            )}
+                        </div>
                         <div className="px-1 sm:px-0">
                             <PlayerControls
                                 current={current}
@@ -464,6 +495,11 @@ function RoomView({
                                     <PlaylistToolbar
                                         items={snapshot.items}
                                         currentId={snapshot.playback.itemId}
+                                        total={
+                                            hud
+                                                ? formatDuration(snapshot.items.reduce((sum, i) => sum + (i.durationSec ?? 0), 0))
+                                                : undefined
+                                        }
                                         onHideAll={isAdmin ? (hidden) => run('playlist:hideAll', { hidden }) : undefined}
                                         onSaveMany={signedIn ? () => setSavingMany(true) : undefined}
                                     />

@@ -73,6 +73,7 @@ export default async function RoomPage(props: PageProps<'/room/[code]'>) {
                     // Without a YouTube API key, rooms add songs by link only (no search).
                     searchAvailable={!!process.env.YOUTUBE_API_KEY?.trim()}
                     motion={motion}
+                    hud={theme === 'cyberpunk'}
                 />
             </div>
         </>
