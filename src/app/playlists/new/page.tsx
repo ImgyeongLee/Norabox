@@ -23,7 +23,7 @@ export default async function NewPlaylistPage(props: PageProps<'/playlists/new'>
         <div className="mx-auto max-w-4xl px-4 py-10">
             <h1 className="text-3xl font-bold">{t.editor.newTitle}</h1>
             <p className="mb-6 mt-1 muted">{t.editor.newLead}</p>
-            <PostEditor defaultVisibility={visibility} />
+            <PostEditor defaultVisibility={visibility} draftOwner={user.id} />
         </div>
     );
 }

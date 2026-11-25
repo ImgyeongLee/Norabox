@@ -45,7 +45,7 @@ export function YouTubeEmbed({
                     allowFullScreen
                 />
             ) : hidden ? (
-                <button onClick={() => setRevealed(true)} className="group absolute inset-0" aria-label={t.embed.reveal(title)}>
+                <button type="button" onClick={() => setRevealed(true)} className="group absolute inset-0" aria-label={t.embed.reveal(title)}>
                     <img
                         src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
                         alt=""
@@ -57,7 +57,7 @@ export function YouTubeEmbed({
                     </span>
                 </button>
             ) : (
-                <button onClick={() => setActive(true)} className="group absolute inset-0" aria-label={t.embed.play(title)}>
+                <button type="button" onClick={() => setActive(true)} className="group absolute inset-0" aria-label={t.embed.play(title)}>
                     <img
                         src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
                         alt=""

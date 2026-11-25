@@ -23,3 +23,7 @@ export const VERIFY_LINK_TTL_SEC = 60 * 60 * 24;
 export const RESET_LINK_TTL_SEC = 60 * 60;
 /** Rooms anyone (guest or member) can make per minute from one IP address. */
 export const ROOMS_PER_MINUTE = 5;
+/** Drafts of new playlists one account keeps in a browser (Ctrl+S on /playlists/new). */
+export const MAX_DRAFTS = 3;
+/** A draft is deleted this many days after it was last saved. */
+export const DRAFT_TTL_DAYS = 30;
