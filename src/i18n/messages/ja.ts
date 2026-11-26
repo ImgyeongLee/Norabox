@@ -146,6 +146,16 @@ export const ja: Messages = {
         createWith: (code) => `${code}を作成`,
         chosenTheme: (name) => `選んだテーマ：${name}`,
     },
+    myRooms: {
+        title: 'あなたのルームが開いています',
+        hint: '誰もいない状態が6時間続くと消えます。',
+        enter: '入る',
+        enterLabel: (code) => `ルーム${code}に入る`,
+        close: '閉じる',
+        count: (n) => `マイルーム ${n}`,
+        activeNow: 'たった今活動',
+        activeAgo: (ago) => `${ago}に活動`,
+    },
     auth: {
         signupTitle: 'アカウントを作成',
         loginTitle: 'おかえりなさい',

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { LuArrowLeft } from 'react-icons/lu';
 import { Icon } from '@/components/icons';
+import { rememberMadeRoom } from '@/components/home/MyRoomsCard';
 import { RoomPreview } from '@/components/home/RoomPreview';
 import type { ImportingPlaylist } from '@/components/home/RoomForms';
 import { useI18n } from '@/i18n/client';
@@ -64,7 +65,11 @@ export function ThemeStep({
                 }),
             });
             const data = await res.json();
-            if (res.ok) return router.push(`/room/${data.code}`);
+            if (res.ok) {
+                // So the home page can offer this room again later (MyRoomsCard).
+                rememberMadeRoom();
+                return router.push(`/room/${data.code}`);
+            }
             // Someone took the name since step 1: pick another one there.
             if (data.error === 'roomNameTaken') return onBack(tError('roomNameTaken'));
             throw new Error(data.error ?? 'createRoomFailed');

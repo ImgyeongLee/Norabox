@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { PostCard, postCardSelect, postListClass } from '@/components/forum/PostCard';
 import { ViewToggle } from '@/components/forum/ViewToggle';
 import { getCurrentUser } from '@/lib/auth';

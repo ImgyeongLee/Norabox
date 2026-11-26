@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { useRouter } from 'next/navigation';
 import { Field } from '@/components/auth/Field';
 import { useI18n } from '@/i18n/client';

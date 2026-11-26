@@ -160,6 +160,16 @@ export const en = {
     createWith: (code: string) => `Create ${code}`,
     chosenTheme: (name: string) => `Theme: ${name}`,
   },
+  myRooms: {
+    title: 'Your rooms are still open',
+    hint: 'A room closes after 6 hours with nobody in it.',
+    enter: 'Enter',
+    enterLabel: (code: string) => `Enter room ${code}`,
+    close: 'Close',
+    count: (n: number) => (n === 1 ? 'My room' : `My rooms (${n})`),
+    activeNow: 'active just now',
+    activeAgo: (ago: string) => `active ${ago}`,
+  },
   auth: {
     signupTitle: 'Create your account',
     loginTitle: 'Welcome back',

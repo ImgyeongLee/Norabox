@@ -5,6 +5,15 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    // Every page is dynamic, so Next's default link prefetch costs a function run per visible link.
+    rules: {
+      "no-restricted-imports": ["error", {
+        paths: [{ name: "next/link", message: "Use @/components/AppLink (prefetch off by default)." }],
+      }],
+    },
+  },
+  { files: ["src/components/AppLink.tsx"], rules: { "no-restricted-imports": "off" } },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

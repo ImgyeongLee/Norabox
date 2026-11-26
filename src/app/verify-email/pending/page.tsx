@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { redirect } from 'next/navigation';
 import { PendingVerification } from '@/components/auth/PendingVerification';
 import { getI18n } from '@/i18n/server';

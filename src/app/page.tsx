@@ -1,10 +1,11 @@
 import { cookies } from 'next/headers';
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { PlainThemeButton } from '@/components/home/PlainThemeButton';
 import { HomeStart } from '@/components/home/HomeStart';
 import { getCurrentUser } from '@/lib/auth';
 import { getI18n } from '@/i18n/server';
 import { themeOptions } from '@/lib/limited-themes';
+import { liveRoomsOwnedBy } from '@/lib/rooms';
 import { canViewPost } from '@/lib/post-access';
 import { prisma } from '@/lib/prisma';
 import { isPlainTheme, PLAIN_THEME_COOKIE } from '@/lib/site-theme';
@@ -41,13 +42,18 @@ async function importingPlaylist(id: unknown, shareToken: unknown, viewerId: str
 export default async function Home(props: PageProps<'/'>) {
   const { import: importId, s: shareToken } = await props.searchParams;
   const [user, { t }, cookieStore] = await Promise.all([getCurrentUser(), getI18n(), cookies()]);
-  const importing = await importingPlaylist(importId, shareToken, user?.id);
+  // A member's open rooms come with the page; guests' are asked for by the card, if they made any.
+  const [importing, ownRooms] = await Promise.all([
+    importingPlaylist(importId, shareToken, user?.id),
+    user ? liveRoomsOwnedBy({ userId: user.id }) : [],
+  ]);
   const link = 'font-semibold text-moss underline-offset-4 hover:underline';
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:py-16">
       <HomeStart
         importing={importing}
         themes={themeOptions()}
+        ownRooms={ownRooms}
         hero={
           <div className="pt-2">
             <p className="mb-3 inline-block rounded-full border border-moss/40 bg-fern/40 px-3 py-1 text-xs font-medium uppercase tracking-wider text-moss">

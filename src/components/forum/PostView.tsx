@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { cache } from 'react';
 import { LuArrowLeft, LuStickyNote } from 'react-icons/lu';
 import { Avatar } from '@/components/Avatar';

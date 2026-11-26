@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { redirect } from 'next/navigation';
 import { LuPlus } from 'react-icons/lu';
 import { PostCard, postCardSelect, postListClass } from '@/components/forum/PostCard';

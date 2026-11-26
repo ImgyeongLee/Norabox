@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { LuMegaphone } from 'react-icons/lu';
 import { Icon } from '@/components/icons';
 import { getCurrentUser } from '@/lib/auth';

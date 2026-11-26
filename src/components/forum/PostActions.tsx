@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { useState } from 'react';
 import { HeartIcon, ImportIcon, ShareIcon } from '@/components/icons-extra';
 import { useI18n } from '@/i18n/client';

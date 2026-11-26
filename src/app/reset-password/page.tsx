@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
 import { getI18n } from '@/i18n/server';
 import { RESET_COOKIE, resetTarget } from '@/lib/password-reset';

@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { MyRoomsCard } from '@/components/home/MyRoomsCard';
 import { CreateRoomForm, JoinRoomForm, type ImportingPlaylist } from '@/components/home/RoomForms';
 import { ThemeStep } from '@/components/home/ThemeStep';
 import { useI18n } from '@/i18n/client';
 import type { ThemeOption } from '@/lib/limited-themes';
+import type { OwnRoom } from '@/lib/rooms';
 
 /**
  * The home page's start: the intro (`hero`, from the server) beside the "start a room" / "join"
@@ -17,11 +19,14 @@ export function HomeStart({
     after,
     importing,
     themes,
+    ownRooms,
 }: {
     hero: React.ReactNode;
     after: React.ReactNode;
     importing: ImportingPlaylist | null;
     themes: ThemeOption[];
+    /** The signed-in member's open rooms, found with the page. */
+    ownRooms: OwnRoom[];
 }) {
     const { t } = useI18n();
     /** The name that passed step 1 while on step 2, else null. */
@@ -72,6 +77,8 @@ export function HomeStart({
                 </div>
             </section>
             {after}
+            {/* Not during the theme step, whose create button sits at the bottom on phones. */}
+            <MyRoomsCard initial={ownRooms} />
         </>
     );
 }

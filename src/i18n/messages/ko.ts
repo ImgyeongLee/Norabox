@@ -159,6 +159,16 @@ export const ko: Messages = {
     createWith: (code) => `${code} 방 만들기`,
     chosenTheme: (name) => `선택한 테마: ${name}`,
   },
+  myRooms: {
+    title: '내가 만든 방이 열려 있어요',
+    hint: '아무도 없이 6시간이 지나면 사라져요.',
+    enter: '들어가기',
+    enterLabel: (code) => `${code} 방에 들어가기`,
+    close: '닫기',
+    count: (n) => `내 방 ${n}개`,
+    activeNow: '방금 활동',
+    activeAgo: (ago) => `${ago} 활동`,
+  },
   auth: {
     signupTitle: '계정 만들기',
     loginTitle: '다시 오신 걸 환영해요',

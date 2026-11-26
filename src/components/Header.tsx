@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { getCurrentUser } from '@/lib/auth';
 import { getI18n } from '@/i18n/server';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';

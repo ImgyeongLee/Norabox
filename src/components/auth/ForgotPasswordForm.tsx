@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { useState } from 'react';
 import { Field } from '@/components/auth/Field';
 import { Turnstile } from '@/components/auth/Turnstile';

@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- YouTube thumbnails */
-import Link from 'next/link';
+import Link from '@/components/AppLink';
 import { Avatar } from '@/components/Avatar';
 import { HeartIcon } from '@/components/icons-extra';
 import { getI18n } from '@/i18n/server';
